@@ -14,8 +14,8 @@ export default defineConfig({
         name: "CFI Cockpit",
         short_name: "CFI",
         description: "Student roster, mock checkrides, logbook regs and resources for flight instructors.",
-        theme_color: "#13202B",
-        background_color: "#F2F5F8",
+        theme_color: "#222831",
+        background_color: "#EEEEEE",
         display: "standalone",
         start_url: ".",
         icons: [
