@@ -26,7 +26,18 @@ const C = raw as unknown as {
   G_IR: GroundTask[];
   G_CFI: GroundTask[];
   GUIDE: GuideSection[];
+  D87: string[];
+  BSC: [string, number][];
+  PRESOLO: Record<string, PresoloLesson>;
 };
+
+/** sub = [item, 61.87(d) item numbers "1,3", Blitz stage-check items "1.1,1.3"] */
+export interface PresoloLesson {
+  time: string;
+  scen?: string;
+  take?: string;
+  sub: [string, string?, string?][];
+}
 
 export const DAYS = C.DAYS;
 export const SLOTS = C.SLOTS;
@@ -34,6 +45,9 @@ export const GOALS = C.GOALS;
 export const STATUSES = C.STATUSES;
 export const AIRCRAFT = C.AIRCRAFT;
 export const CURR = C.CURR;
+export const D87 = C.D87;
+export const BSC = C.BSC;
+export const PRESOLO = C.PRESOLO;
 export const TAILS = ["N122XP", "N9547W", "N99832", "N402BL", "N301BL", "N603BL", "N2569Q"];
 export const OVERDUE_DAYS = 10;
 
@@ -126,4 +140,37 @@ export function initials(n: string) {
       .join("")
       .toUpperCase() || "?"
   );
+}
+
+export const guideKey = (sec: string, k: string) => sec + "." + k;
+
+/** Progress through the training plan, plus the next G/F lesson not yet complete. */
+export function guideProgress(s: Student) {
+  const g = s.guide ?? {};
+  let done = 0, total = 0;
+  let next: string | null = null;
+  for (const sec of guideFor(s) ?? [])
+    for (const it of sec.items) {
+      total++;
+      if (g[guideKey(sec.id, it[0])]) done++;
+      else if (!next && /^[GF]\d/.test(it[0])) next = it[1];
+    }
+  return { done, total, next };
+}
+
+/** Which 61.87(d) items and Blitz stage-check items the checked pre-solo sub-items cover. */
+export function coverage(guide: Record<string, string>) {
+  const d87 = new Set<number>(), bsc = new Set<string>();
+  for (const [id, L] of Object.entries(PRESOLO))
+    L.sub.forEach((s, i) => {
+      if (!guide["s1." + id + "." + (i + 1)]) return;
+      s[1]?.split(",").forEach((t) => d87.add(+t));
+      s[2]?.split(",").forEach((t) => bsc.add(t));
+    });
+  const stage = BSC.map(([n, cnt], i) => {
+    let d = 0;
+    for (let k = 1; k <= cnt; k++) if (bsc.has(i + 1 + "." + k)) d++;
+    return { n, cnt, d };
+  });
+  return { d87, stage };
 }

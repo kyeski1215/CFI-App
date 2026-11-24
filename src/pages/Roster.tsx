@@ -5,6 +5,8 @@ import {
   DAYS,
   GOALS,
   OVERDUE_DAYS,
+  guideFor,
+  guideProgress,
   SLOTS,
   STATUSES,
   initials,
@@ -79,8 +81,9 @@ export default function Roster() {
         )}
         {shown.map((s) => {
           const d = recency(s);
+          const plan = guideFor(s) ? guideProgress(s) : null;
           const topics = topicsFor(s);
-          const covered = (s.covered ?? []).filter((t) => topics.includes(t)).length;
+          const prog = plan ?? { done: (s.covered ?? []).filter((t) => topics.includes(t)).length, total: topics.length, next: null };
           const lastMock = rides.filter((r) => r.studentId === s.id).sort((a, b) => b.date.localeCompare(a.date))[0];
           return (
             <Link key={s.id} to={"/students/" + s.id} className="lrow">
@@ -103,8 +106,9 @@ export default function Roster() {
                 </div>
               </div>
               <div>
-                <div className="kv">Syllabus {covered}/{topics.length}</div>
-                <Bar value={covered} total={topics.length} />
+                <div className="kv">Syllabus {prog.done}/{prog.total}</div>
+                <Bar value={prog.done} total={prog.total} />
+                {prog.next && <div className="kv clamp" style={{ marginTop: 4 }}>Up next: <b>{prog.next}</b></div>}
                 {lastMock && <div className="kv" style={{ marginTop: 4 }}>Mock {fmtDate(lastMock.date)}</div>}
               </div>
             </Link>

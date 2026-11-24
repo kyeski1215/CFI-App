@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Bar, useCopy } from "../components/ui";
+import LessonExtras from "../components/LessonExtras";
 import { BANKS, bankForGoal } from "../lib/banks";
 import {
   AIRCRAFT,
+  D87,
   DAYS,
   GOALS,
   SLOTS,
@@ -11,8 +13,14 @@ import {
   TAILS,
   groundFor,
   groundKey,
+  PRESOLO,
+  coverage,
   guideFor,
+  guideKey,
+  guideProgress,
   lastFlight,
+  type GuideSection,
+  type PresoloLesson,
   statusClass,
   topicsFor,
   totalHours,
@@ -20,7 +28,7 @@ import {
 import { create, fmtDate, newId, put, remove, todayStr, useCollection, useRecord } from "../lib/store";
 import type { LogEntry, Ride, Student } from "../lib/types";
 
-const TABS = ["Overview", "Log", "Syllabus", "Ground", "Guide", "Mocks"] as const;
+const TABS = ["Overview", "Log", "Syllabus", "Ground", "Mocks"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function StudentPage() {
@@ -90,7 +98,6 @@ export default function StudentPage() {
       {tab === "Log" && <Log s={s} update={update} prefillRegs={params.get("regs") ?? ""} />}
       {tab === "Syllabus" && <Syllabus s={s} update={update} />}
       {tab === "Ground" && <Ground s={s} update={update} />}
-      {tab === "Guide" && <Guide s={s} update={update} />}
       {tab === "Mocks" && <StudentMocks s={s} />}
     </div>
   );
@@ -296,40 +303,182 @@ function EntryForm({ e, onSave, onCancel, onDelete }: { e: LogEntry; onSave: (e:
 }
 
 function Syllabus({ s, update }: P) {
+  const plan = guideFor(s);
+  const g = s.guide ?? {};
+  const toggle = (key: string) => {
+    const n = { ...g };
+    if (n[key]) delete n[key];
+    else n[key] = todayStr();
+    update({ guide: n });
+  };
+  const prog = guideProgress(s);
+  return (
+    <section className="list">
+      {plan ? (
+        <>
+          <div className="card">
+            <div className="row">
+              <h3>Training plan</h3>
+              <span className="spacer" />
+              <span className="mono small">{prog.done}/{prog.total}</span>
+            </div>
+            <Bar value={prog.done} total={prog.total} />
+            {prog.next && <div className="small">Next lesson: <b>{prog.next}</b></div>}
+          </div>
+          {plan.map((sec) => {
+            const n = sec.items.filter((it) => g[guideKey(sec.id, it[0])]).length;
+            const full = n === sec.items.length;
+            return (
+              <details key={sec.id} className="fold stage" open={!full && (n > 0 || sec.id === firstOpen(plan, g))}>
+                <summary>
+                  <span className="ft">{sec.n}</span>
+                  <span className={"mono small " + (full ? "pill p-good" : "muted")}>{n}/{sec.items.length}</span>
+                </summary>
+                <div className="fb">
+                  {sec.note && <p className="secnote">{sec.note}</p>}
+                  {sec.id === "s1" && <Coverage guide={g} />}
+                  <div className="checks">
+                    {sec.items.map((it) => {
+                      const key = guideKey(sec.id, it[0]);
+                      const L = sec.id === "s1" ? PRESOLO[it[0]] : undefined;
+                      return L ? (
+                        <Lesson key={key} k={key} label={it[1]} when={it[2]} L={L} g={g} toggle={toggle} />
+                      ) : (
+                        <CheckRow key={key} label={it[1]} when={it[2]} date={g[key]} onToggle={() => toggle(key)} />
+                      );
+                    })}
+                  </div>
+                  <details className="fold sub">
+                    <summary><span className="ft small">Stage videos & resources</span></summary>
+                    <div className="fb"><LessonExtras k={"guide-" + sec.id} /></div>
+                  </details>
+                </div>
+              </details>
+            );
+          })}
+        </>
+      ) : (
+        <div className="empty">There's no stage plan for {s.goal} yet. Use the maneuver checklist below.</div>
+      )}
+      <Topics s={s} update={update} open={!plan} />
+    </section>
+  );
+}
+
+function firstOpen(plan: GuideSection[], g: Record<string, string>) {
+  return plan.find((sec) => sec.items.some((it) => !g[guideKey(sec.id, it[0])]))?.id;
+}
+
+function CheckRow({ label, when, date, onToggle, strong }: { label: string; when?: string; date?: string; onToggle: () => void; strong?: boolean }) {
+  return (
+    <label className={"check" + (date ? " done" : "")}>
+      <input type="checkbox" checked={!!date} onChange={onToggle} />
+      <span className="ct">
+        <span style={strong ? { fontWeight: 600 } : undefined}>{label}</span>
+        {when && <small>Done when: {when}</small>}
+      </span>
+      {date && <span className="when">{fmtDate(date)}</span>}
+    </label>
+  );
+}
+
+function Lesson({ k, label, when, L, g, toggle }: {
+  k: string; label: string; when?: string; L: PresoloLesson; g: Record<string, string>; toggle: (key: string) => void;
+}) {
+  const nd = L.sub.filter((_, i) => g[k + "." + (i + 1)]).length;
+  const done = g[k];
+  return (
+    <details className="lesson">
+      <summary>
+        <span className="lcode">{label.split(" — ")[0]}</span>
+        <span className={"ln" + (done ? " ldone" : "")}>{label.split(" — ").slice(1).join(" — ") || label}</span>
+        <span className="mono small muted">{nd}/{L.sub.length}</span>
+        {done && <span className="when">{fmtDate(done)}</span>}
+      </summary>
+      <div className="lbody">
+        <p className="secnote"><b>{L.time}</b>{L.scen ? " · " + L.scen : ""}</p>
+        <div className="checks">
+          {L.sub.map((sub, i) => {
+            const sk = k + "." + (i + 1);
+            return (
+              <label key={sk} className={"check" + (g[sk] ? " done" : "")}>
+                <input type="checkbox" checked={!!g[sk]} onChange={() => toggle(sk)} />
+                <span className="ct"><span>{sub[0]}</span></span>
+                {sub[1] && <span className="tag" title="61.87(d) solo endorsement items">{sub[1].split(",").map((x) => "d" + x).join(" ")}</span>}
+                {sub[2] && <span className="tag bsc" title="Blitz first-solo stage check items">SC {sub[2].replace(/,/g, " ")}</span>}
+              </label>
+            );
+          })}
+        </div>
+        {L.take && <p className="take">Student takes over: <b>{L.take}</b></p>}
+        <LessonExtras k={k} />
+        <div className="checks lessondone">
+          <CheckRow label="Lesson complete" when={when} date={done} onToggle={() => toggle(k)} strong />
+        </div>
+      </div>
+    </details>
+  );
+}
+
+function Coverage({ guide }: { guide: Record<string, string> }) {
+  const { d87, stage } = coverage(guide);
+  const bd = stage.reduce((a, x) => a + x.d, 0), bt = stage.reduce((a, x) => a + x.cnt, 0);
+  return (
+    <div className="cov">
+      <div className="kv">61.87(d) solo endorsement items covered · <b className="mono">{D87.filter((_, i) => d87.has(i + 1)).length}/{D87.length}</b></div>
+      <div className="covg">
+        {D87.map((t, i) => <span key={i} className={"cv" + (d87.has(i + 1) ? " on" : "")}>({i + 1}) {t}</span>)}
+      </div>
+      <div className="kv">Blitz first solo stage check items covered · <b className="mono">{bd}/{bt}</b></div>
+      <div className="covg">
+        {stage.map((x, i) => (
+          <span key={i} className={"cv" + (x.d === x.cnt ? " on" : x.d ? " part" : "")}>{i + 1}. {x.n} <span className="mono">{x.d}/{x.cnt}</span></span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Topics({ s, update, open }: P & { open: boolean }) {
   const topics = topicsFor(s);
   const covered = new Set(s.covered ?? []);
   const [extra, setExtra] = useState("");
   const done = topics.filter((t) => covered.has(t)).length;
   return (
-    <section className="card">
-      <div className="row"><h3>{s.goal} syllabus</h3><span className="spacer" /><span className="mono small">{done}/{topics.length}</span></div>
-      <Bar value={done} total={topics.length} />
-      <div className="checks">
-        {topics.map((t) => (
-          <label key={t} className={"check" + (covered.has(t) ? " done" : "")}>
-            <input type="checkbox" checked={covered.has(t)} onChange={() => {
-              const n = new Set(covered);
-              n.has(t) ? n.delete(t) : n.add(t);
-              update({ covered: [...n] });
-            }} />
-            <span className="ct"><span>{t}</span></span>
-          </label>
-        ))}
+    <details className="fold" open={open}>
+      <summary>
+        <span className="ft">Maneuver checklist</span>
+        <span className="mono small muted">{done}/{topics.length}</span>
+      </summary>
+      <div className="fb">
+        <div className="checks">
+          {topics.map((t) => (
+            <label key={t} className={"check" + (covered.has(t) ? " done" : "")}>
+              <input type="checkbox" checked={covered.has(t)} onChange={() => {
+                const n = new Set(covered);
+                n.has(t) ? n.delete(t) : n.add(t);
+                update({ covered: [...n] });
+              }} />
+              <span className="ct"><span>{t}</span></span>
+            </label>
+          ))}
+        </div>
+        <form className="row" style={{ marginTop: 8 }} onSubmit={(e) => {
+          e.preventDefault();
+          if (extra.trim()) update({ extraTopics: [...(s.extraTopics ?? []), extra.trim()] });
+          setExtra("");
+        }}>
+          <input placeholder="Add a topic for this student…" value={extra} onChange={(e) => setExtra(e.target.value)} style={{ flex: 1 }} />
+          <button className="btn">Add</button>
+        </form>
       </div>
-      <form className="row" onSubmit={(e) => {
-        e.preventDefault();
-        if (extra.trim()) update({ extraTopics: [...(s.extraTopics ?? []), extra.trim()] });
-        setExtra("");
-      }}>
-        <input placeholder="Add a topic for this student…" value={extra} onChange={(e) => setExtra(e.target.value)} style={{ flex: 1 }} />
-        <button className="btn">Add</button>
-      </form>
-    </section>
+    </details>
   );
 }
 
 function Ground({ s, update }: P) {
   const g = groundFor(s);
+  const prefix = "gr-" + (s.goal === "Instrument" || s.goal === "CFII" ? "ir" : s.goal === "CFI" ? "cfi" : "ppl") + "-";
   const done = new Set(s.ground ?? []);
   const toggle = (k: string) => {
     const n = new Set(done);
@@ -349,58 +498,20 @@ function Ground({ s, update }: P) {
               <span className="ft">{t.n}</span>
               <span className="mono small muted">{n}/{items.length}</span>
             </summary>
-            <div className="fb checks">
-              {t.i.map((i) =>
-                i.startsWith("#") ? (
-                  <div key={i} className="ghead">{i.slice(1)}</div>
-                ) : (
-                  <label key={i} className={"check" + (done.has(groundKey(t.t, i)) ? " done" : "")}>
-                    <input type="checkbox" checked={done.has(groundKey(t.t, i))} onChange={() => toggle(groundKey(t.t, i))} />
-                    <span className="ct"><span>{i}</span></span>
-                  </label>
-                ),
-              )}
-            </div>
-          </details>
-        );
-      })}
-    </section>
-  );
-}
-
-function Guide({ s, update }: P) {
-  const g = guideFor(s);
-  if (!g) return <div className="empty">No onboarding guide for {s.goal} yet.</div>;
-  const done = s.guide ?? {};
-  return (
-    <section className="list">
-      {g.map((sec) => {
-        const n = sec.items.filter((it) => done[sec.id + "." + it[0]]).length;
-        return (
-          <details key={sec.id} className="fold" open={n < sec.items.length && n > 0}>
-            <summary>
-              <span className="ft">{sec.n}</span>
-              <span className="mono small muted">{n}/{sec.items.length}</span>
-            </summary>
             <div className="fb">
-              {sec.note && <p className="muted small" style={{ marginTop: 0, fontStyle: "italic" }}>{sec.note}</p>}
               <div className="checks">
-                {sec.items.map(([k, label, when]) => {
-                  const key = sec.id + "." + k;
-                  return (
-                    <label key={key} className={"check" + (done[key] ? " done" : "")}>
-                      <input type="checkbox" checked={!!done[key]} onChange={() => {
-                        const n2 = { ...done };
-                        if (n2[key]) delete n2[key];
-                        else n2[key] = todayStr();
-                        update({ guide: n2 });
-                      }} />
-                      <span className="ct"><span>{label}</span>{when && <small>Done when: {when}</small>}</span>
-                      {done[key] && <span className="when">{fmtDate(done[key])}</span>}
+                {t.i.map((i) =>
+                  i.startsWith("#") ? (
+                    <div key={i} className="ghead">{i.slice(1)}</div>
+                  ) : (
+                    <label key={i} className={"check" + (done.has(groundKey(t.t, i)) ? " done" : "")}>
+                      <input type="checkbox" checked={done.has(groundKey(t.t, i))} onChange={() => toggle(groundKey(t.t, i))} />
+                      <span className="ct"><span>{i}</span></span>
                     </label>
-                  );
-                })}
+                  ),
+                )}
               </div>
+              <LessonExtras k={prefix + t.t} />
             </div>
           </details>
         );
