@@ -25,10 +25,8 @@ npm run dev        # http://localhost:5173
 
 1. Create a free project at [supabase.com](https://supabase.com).
 2. In the project: **SQL Editor → New query**, paste `supabase/schema.sql`, run it.
-3. **Project Settings → API**: copy the *Project URL* and the *anon public* key.
-4. For local dev, copy `.env.example` to `.env.local` and fill them in.
-   For the deployed site, add them as GitHub repo **Settings → Secrets and variables → Actions → Variables**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`. (The anon key is meant to be public; row-level security keeps each user's data private.)
-5. Open the app → Settings → create an account. Everything already on the device uploads.
+3. The project URL and publishable key are already built into `src/lib/sync.ts`. To use a different project, set `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` in `.env.local` (or as GitHub Actions variables for the deployed site).
+4. Open the app → Settings → create an account. Everything already on the device uploads.
 
 Without these keys the app still works fully, saving on the device only.
 

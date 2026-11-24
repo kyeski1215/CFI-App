@@ -14,8 +14,10 @@ import {
   takeDirty,
 } from "./store";
 
-const URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+// The publishable key is designed to ship in client code; row-level security protects the data.
+// Env vars override these (e.g. to point a dev build at a different project).
+const URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined) || "https://rhegqbbsnvsalkmslext.supabase.co";
+const KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) || "sb_publishable_-ftazVXaXQcBgvx-ireUZQ_9rvRBBVA";
 export const supabase: SupabaseClient | null = URL && KEY ? createClient(URL, KEY) : null;
 export const syncConfigured = !!supabase;
 
