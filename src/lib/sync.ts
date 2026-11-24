@@ -18,7 +18,9 @@ import {
 // Env vars override these (e.g. to point a dev build at a different project).
 const URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined) || "https://rhegqbbsnvsalkmslext.supabase.co";
 const KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) || "sb_publishable_-ftazVXaXQcBgvx-ireUZQ_9rvRBBVA";
-export const supabase: SupabaseClient | null = URL && KEY ? createClient(URL, KEY) : null;
+// VITE_DISABLE_SYNC=1 builds an on-device-only preview (e.g. for hosts that block outside connections).
+const DISABLED = import.meta.env.VITE_DISABLE_SYNC === "1";
+export const supabase: SupabaseClient | null = !DISABLED && URL && KEY ? createClient(URL, KEY) : null;
 export const syncConfigured = !!supabase;
 
 type SyncState = {
