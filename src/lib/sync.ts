@@ -20,7 +20,10 @@ const URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined) || "https:
 const KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) || "sb_publishable_-ftazVXaXQcBgvx-ireUZQ_9rvRBBVA";
 // VITE_DISABLE_SYNC=1 builds an on-device-only preview (e.g. for hosts that block outside connections).
 const DISABLED = import.meta.env.VITE_DISABLE_SYNC === "1";
-export const supabase: SupabaseClient | null = !DISABLED && URL && KEY ? createClient(URL, KEY) : null;
+// PKCE puts the email-confirmation result in ?code= instead of the #hash, which the app's router uses.
+export const supabase: SupabaseClient | null =
+  !DISABLED && URL && KEY ? createClient(URL, KEY, { auth: { flowType: "pkce", detectSessionInUrl: true } }) : null;
+const appUrl = () => window.location.origin + window.location.pathname;
 export const syncConfigured = !!supabase;
 
 type SyncState = {
@@ -153,7 +156,7 @@ export async function signIn(email: string, password: string) {
 }
 export async function signUp(email: string, password: string) {
   if (!supabase) throw new Error("Sync isn't configured");
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: appUrl() } });
   if (error) throw error;
   return !!data.session; // false → confirmation email sent
 }
