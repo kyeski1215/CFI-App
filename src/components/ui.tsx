@@ -1,0 +1,90 @@
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+
+/* ---- icons (inline so they work offline) ---- */
+const P = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" } as const;
+export const Icon = {
+  roster: () => (
+    <svg viewBox="0 0 24 24" {...P}><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5" /><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.9.7 3 2.4 3.5 5.2" /></svg>
+  ),
+  mock: () => (
+    <svg viewBox="0 0 24 24" {...P}><rect x="5" y="3.5" width="14" height="18" rx="2" /><path d="M9 3.5h6v3H9zM8.5 11l1.5 1.5 3-3M8.5 16.5h7" /></svg>
+  ),
+  regs: () => (
+    <svg viewBox="0 0 24 24" {...P}><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5zM20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z" /><path d="M7 8h1.5M7 11h1.5M16 8h1M16 11h1" /></svg>
+  ),
+  resources: () => (
+    <svg viewBox="0 0 24 24" {...P}><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><path d="M17 14v6M14 17h6" /></svg>
+  ),
+  settings: () => (
+    <svg viewBox="0 0 24 24" {...P}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
+  ),
+};
+
+/* ---- toast ---- */
+const ToastCtx = createContext<(msg: string) => void>(() => {});
+export function ToastProvider({ children }: { children: ReactNode }) {
+  const [msg, setMsg] = useState<string | null>(null);
+  useEffect(() => {
+    if (!msg) return;
+    const t = setTimeout(() => setMsg(null), 1800);
+    return () => clearTimeout(t);
+  }, [msg]);
+  return (
+    <ToastCtx.Provider value={setMsg}>
+      {children}
+      {msg && <div className="toast" role="status">{msg}</div>}
+    </ToastCtx.Provider>
+  );
+}
+export const useToast = () => useContext(ToastCtx);
+
+/* ---- clipboard ---- */
+export function useCopy() {
+  const toast = useToast();
+  return useCallback(
+    async (text: string, label = "Copied") => {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+      }
+      toast(label + " ✓");
+    },
+    [toast],
+  );
+}
+
+/* ---- modal ---- */
+export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", k);
+    return () => window.removeEventListener("keydown", k);
+  }, [onClose]);
+  return (
+    <div className="scrim" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal" role="dialog" aria-modal="true" aria-label={title}>
+        <div className="row">
+          <h2>{title}</h2>
+          <span className="spacer" />
+          <button className="btn sm" onClick={onClose}>Close</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export function Bar({ value, total, color }: { value: number; total: number; color?: string }) {
+  const pct = total ? Math.round((value / total) * 100) : 0;
+  return (
+    <div className="bar" aria-label={`${value} of ${total}`}>
+      <i style={{ width: pct + "%", background: color }} />
+    </div>
+  );
+}
