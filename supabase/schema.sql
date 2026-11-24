@@ -29,6 +29,11 @@ drop trigger if exists records_touch on public.records;
 create trigger records_touch before insert or update on public.records
 for each row execute function public.records_touch();
 
+-- Signed-in users can use the table (row-level security below still limits them to their own rows).
+-- Newer Supabase projects don't grant this automatically. Logged-out visitors get nothing.
+grant select, insert, update, delete on public.records to authenticated;
+revoke all on public.records from anon;
+
 alter table public.records enable row level security;
 
 drop policy if exists "own rows" on public.records;
