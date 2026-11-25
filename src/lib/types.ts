@@ -40,6 +40,7 @@ export interface Student extends BaseRec {
   ground?: string[]; // "taskLetter|item text"
   guide?: Record<string, string>; // "section.key" -> date done
   log?: LogEntry[];
+  logDraft?: LogEntry; // lesson being written; saved on every keystroke
 }
 
 export interface Ride extends BaseRec {

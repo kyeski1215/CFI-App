@@ -205,28 +205,44 @@ function Overview({ s, update, onDelete }: P & { onDelete: () => void }) {
 }
 
 const blankEntry = (regs = ""): LogEntry => ({ id: newId(), kind: "flight", date: todayStr(), tail: "", hrs: "", lesson: "", notes: "", regs });
+const isBlank = (e: LogEntry) => !["tail", "hrs", "night", "ldgDay", "ldgNight", "lesson", "notes", "regs"].some((k) => String(e[k as keyof LogEntry] ?? "").trim());
 
+// Everything typed here is written to the student record on each change (local storage first, then sync),
+// so a dead phone or closed app never loses it. A draft only goes away by saving it to the log or discarding it.
 function Log({ s, update, prefillRegs }: P & { prefillRegs: string }) {
-  const [form, setForm] = useState<LogEntry | null>(prefillRegs ? blankEntry(prefillRegs) : null);
   const [editing, setEditing] = useState<string | null>(null);
+  const [, setParams] = useSearchParams();
   const copy = useCopy();
+  const draft = s.logDraft;
+
+  // Regs sent from the Reg Logger: add them to the draft once, then drop them from the URL.
   useEffect(() => {
-    if (prefillRegs) setForm(blankEntry(prefillRegs));
+    if (!prefillRegs) return;
+    const d = s.logDraft ?? blankEntry();
+    const regs = d.regs ? (d.regs.includes(prefillRegs) ? d.regs : d.regs + "; " + prefillRegs) : prefillRegs;
+    update({ logDraft: { ...d, regs } });
+    setParams({ tab: "Log" }, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefillRegs]);
+
   const log = [...(s.log ?? [])].sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
-  const save = (e: LogEntry) => {
-    const others = (s.log ?? []).filter((x) => x.id !== e.id);
-    update({ log: [...others, e] });
-    setForm(null);
-    setEditing(null);
-  };
+  const patchEntry = (id: string, p: Partial<LogEntry>) =>
+    update({ log: (s.log ?? []).map((x) => (x.id === id ? { ...x, ...p } : x)) });
+
   return (
     <>
-      {form && !editing ? (
-        <EntryForm e={form} onSave={save} onCancel={() => setForm(null)} />
+      {draft ? (
+        <EntryForm
+          e={draft}
+          title="New lesson"
+          onChange={(p) => update({ logDraft: { ...draft, ...p } })}
+          primary={{ label: "Save to log", run: () => update({ log: [...(s.log ?? []), draft], logDraft: undefined }) }}
+          remove={{ label: "Discard draft", confirm: "Discard this draft? What you typed will be deleted.", run: () => update({ logDraft: undefined }), skipConfirm: isBlank(draft) }}
+          note="Draft saved automatically. It stays here until you save it to the log or discard it."
+        />
       ) : (
         <div className="row">
-          <button className="btn primary" onClick={() => setForm(blankEntry())}>+ Log a lesson</button>
+          <button className="btn primary" onClick={() => update({ logDraft: blankEntry() })}>+ Log a lesson</button>
           <Link className="btn" to={`/regs?student=${s.id}`}>Pick regs first</Link>
         </div>
       )}
@@ -235,8 +251,15 @@ function Log({ s, update, prefillRegs }: P & { prefillRegs: string }) {
         {log.length === 0 && <div className="muted small">No lessons logged yet.</div>}
         {log.map((e) =>
           editing === e.id ? (
-            <EntryForm key={e.id} e={e} onSave={save} onCancel={() => setEditing(null)}
-              onDelete={() => { update({ log: (s.log ?? []).filter((x) => x.id !== e.id) }); setEditing(null); }} />
+            <EntryForm
+              key={e.id}
+              e={e}
+              title="Edit lesson"
+              onChange={(p) => patchEntry(e.id, p)}
+              primary={{ label: "Done", run: () => setEditing(null) }}
+              remove={{ label: "Delete", confirm: "Delete this lesson from the log?", run: () => { update({ log: (s.log ?? []).filter((x) => x.id !== e.id) }); setEditing(null); } }}
+              note="Changes save as you type."
+            />
           ) : (
             <div key={e.id} className={"entry " + e.kind}>
               <div className="top">
@@ -259,45 +282,62 @@ function Log({ s, update, prefillRegs }: P & { prefillRegs: string }) {
   );
 }
 
-function EntryForm({ e, onSave, onCancel, onDelete }: { e: LogEntry; onSave: (e: LogEntry) => void; onCancel: () => void; onDelete?: () => void }) {
-  const [f, setF] = useState(e);
-  const set = (p: Partial<LogEntry>) => setF({ ...f, ...p });
+function EntryForm({ e, title, onChange, primary, remove, note }: {
+  e: LogEntry;
+  title: string;
+  onChange: (p: Partial<LogEntry>) => void;
+  primary: { label: string; run: () => void };
+  remove: { label: string; confirm: string; run: () => void; skipConfirm?: boolean };
+  note: string;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  const set = onChange;
   return (
-    <form className="card" onSubmit={(ev) => { ev.preventDefault(); onSave(f); }}>
+    <form className="card" onSubmit={(ev) => ev.preventDefault()}>
+      <div className="row"><h3>{title}</h3><span className="spacer" /><span className="small savednote">✓ Saved</span></div>
       <div className="fields">
         <label className="f">Type
-          <select value={f.kind} onChange={(ev) => set({ kind: ev.target.value as LogEntry["kind"] })}>
+          <select value={e.kind} onChange={(ev) => set({ kind: ev.target.value as LogEntry["kind"] })}>
             <option value="flight">Flight</option>
             <option value="ground">Ground</option>
           </select>
         </label>
-        <label className="f">Date<input type="date" value={f.date} onChange={(ev) => set({ date: ev.target.value })} /></label>
-        {f.kind === "flight" && (
+        <label className="f">Date<input type="date" value={e.date} onChange={(ev) => set({ date: ev.target.value })} /></label>
+        {e.kind === "flight" && (
           <>
             <label className="f">Tail
-              <input list="tails" value={f.tail ?? ""} onChange={(ev) => set({ tail: ev.target.value.toUpperCase() })} />
+              <input list="tails" value={e.tail ?? ""} onChange={(ev) => set({ tail: ev.target.value.toUpperCase() })} />
               <datalist id="tails">{TAILS.map((t) => <option key={t} value={t} />)}</datalist>
             </label>
-            <label className="f">Hours<input inputMode="decimal" value={f.hrs ?? ""} onChange={(ev) => set({ hrs: ev.target.value })} /></label>
-            <label className="f">Night hrs<input inputMode="decimal" value={f.night ?? ""} onChange={(ev) => set({ night: ev.target.value })} /></label>
+            <label className="f">Hours<input inputMode="decimal" value={e.hrs ?? ""} onChange={(ev) => set({ hrs: ev.target.value })} /></label>
+            <label className="f">Night hrs<input inputMode="decimal" value={e.night ?? ""} onChange={(ev) => set({ night: ev.target.value })} /></label>
             <label className="f">Landings day / night
               <div className="row" style={{ flexWrap: "nowrap" }}>
-                <input inputMode="numeric" aria-label="Day landings" value={f.ldgDay ?? ""} onChange={(ev) => set({ ldgDay: ev.target.value })} />
-                <input inputMode="numeric" aria-label="Night landings" value={f.ldgNight ?? ""} onChange={(ev) => set({ ldgNight: ev.target.value })} />
+                <input inputMode="numeric" aria-label="Day landings" value={e.ldgDay ?? ""} onChange={(ev) => set({ ldgDay: ev.target.value })} />
+                <input inputMode="numeric" aria-label="Night landings" value={e.ldgNight ?? ""} onChange={(ev) => set({ ldgNight: ev.target.value })} />
               </div>
             </label>
           </>
         )}
-        <label className="f full">Lesson<input value={f.lesson ?? ""} placeholder="e.g. F5 — The traffic pattern" onChange={(ev) => set({ lesson: ev.target.value })} /></label>
-        <label className="f full">Notes / debrief<textarea value={f.notes ?? ""} onChange={(ev) => set({ notes: ev.target.value })} /></label>
-        <label className="f full">Regs (from the Reg Logger)<input className="mono" value={f.regs ?? ""} onChange={(ev) => set({ regs: ev.target.value })} /></label>
+        <label className="f full">Lesson<input value={e.lesson ?? ""} placeholder="e.g. F5 — The traffic pattern" onChange={(ev) => set({ lesson: ev.target.value })} /></label>
+        <label className="f full">Notes / debrief<textarea style={{ minHeight: 140 }} value={e.notes ?? ""} onChange={(ev) => set({ notes: ev.target.value })} /></label>
+        <label className="f full">Regs (from the Reg Logger)<input className="mono" value={e.regs ?? ""} onChange={(ev) => set({ regs: ev.target.value })} /></label>
       </div>
-      <div className="row">
-        {onDelete && <button type="button" className="btn danger sm" onClick={onDelete}>Delete</button>}
-        <span className="spacer" />
-        <button type="button" className="btn" onClick={onCancel}>Cancel</button>
-        <button className="btn primary">Save</button>
-      </div>
+      <div className="small muted">{note}</div>
+      {confirming ? (
+        <div key="confirm" className="row confirmbar">
+          <span className="small">{remove.confirm}</span>
+          <span className="spacer" />
+          <button type="button" className="btn" onClick={() => setConfirming(false)}>Keep it</button>
+          <button type="button" className="btn danger" onClick={() => { setConfirming(false); remove.run(); }}>{remove.label}</button>
+        </div>
+      ) : (
+        <div key="actions" className="row">
+          <button type="button" className="btn danger sm" onClick={() => (remove.skipConfirm ? remove.run() : setConfirming(true))}>{remove.label}</button>
+          <span className="spacer" />
+          <button type="button" className="btn primary" onClick={primary.run}>{primary.label}</button>
+        </div>
+      )}
     </form>
   );
 }

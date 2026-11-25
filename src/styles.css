@@ -257,3 +257,5 @@ details.fold.sub { margin-top: 10px; background: var(--bg); }
 .resadd select { width: auto !important; flex: none; font-size: 14px !important; }
 .resadd input { flex: 1 1 160px; font-size: 14px !important; }
 .when { font-size: 11px; color: var(--accent); font-family: var(--f-mono); flex: none; }
+.savednote { color: var(--good); font-weight: 600; }
+.confirmbar { background: var(--bad-soft); border-radius: 8px; padding: 8px 10px; }
