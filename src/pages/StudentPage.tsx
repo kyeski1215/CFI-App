@@ -29,7 +29,6 @@ import {
   guideFor,
   guideKey,
   guideProgress,
-  type GuideSection,
   type PresoloLesson,
   statusClass,
   topicsFor,
@@ -668,7 +667,7 @@ function Syllabus({ s, update }: P) {
             const n = sec.items.filter((it) => g[guideKey(sec.id, it[0])]).length;
             const full = n === sec.items.length;
             return (
-              <details key={sec.id} className="fold stage" open={!full && (n > 0 || sec.id === firstOpen(plan, g))}>
+              <details key={sec.id} className="fold stage">
                 <summary>
                   <span className="ft">{sec.n}</span>
                   <span className={"mono small " + (full ? "pill p-good" : "muted")}>{n}/{sec.items.length}</span>
@@ -697,13 +696,9 @@ function Syllabus({ s, update }: P) {
       ) : (
         <div className="empty">There's no stage plan for {s.goal} yet. Use the maneuver checklist below.</div>
       )}
-      <Topics s={s} update={update} open={!plan} />
+      <Topics s={s} update={update} open={false} />
     </section>
   );
-}
-
-function firstOpen(plan: GuideSection[], g: Record<string, string>) {
-  return plan.find((sec) => sec.items.some((it) => !g[guideKey(sec.id, it[0])]))?.id;
 }
 
 function CheckRow({ label, when, date, onToggle, strong }: { label: string; when?: string; date?: string; onToggle: () => void; strong?: boolean }) {
