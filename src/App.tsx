@@ -1,21 +1,24 @@
+import { Suspense, lazy } from "react";
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { Icon } from "./components/ui";
 import { useMyCards, useSharedFleet, useSync } from "./lib/sync";
 import { useCollection } from "./lib/store";
 import { applyUpdate, useUpdateAvailable } from "./lib/updates";
-import Weather from "./pages/Weather";
-import Aircraft from "./pages/Aircraft";
-import MyTraining from "./pages/MyTraining";
-import More from "./pages/More";
-import ImportLogbook from "./pages/ImportLogbook";
-import ImportCleanup from "./pages/ImportCleanup";
 import Roster from "./pages/Roster";
 import StudentPage from "./pages/StudentPage";
-import Mocks from "./pages/Mocks";
-import MockRide from "./pages/MockRide";
-import RegLogger from "./pages/RegLogger";
-import Resources from "./pages/Resources";
-import Settings from "./pages/Settings";
+
+// Less-used pages load on first visit so the app starts faster.
+const Weather = lazy(() => import("./pages/Weather"));
+const Aircraft = lazy(() => import("./pages/Aircraft"));
+const MyTraining = lazy(() => import("./pages/MyTraining"));
+const More = lazy(() => import("./pages/More"));
+const ImportLogbook = lazy(() => import("./pages/ImportLogbook"));
+const ImportCleanup = lazy(() => import("./pages/ImportCleanup"));
+const Mocks = lazy(() => import("./pages/Mocks"));
+const MockRide = lazy(() => import("./pages/MockRide"));
+const RegLogger = lazy(() => import("./pages/RegLogger"));
+const Resources = lazy(() => import("./pages/Resources"));
+const Settings = lazy(() => import("./pages/Settings"));
 
 // Adding a new module = add a route + an entry in these lists.
 const MAIN = [
@@ -71,6 +74,7 @@ export default function App() {
             <button className="btn primary sm" onClick={applyUpdate}>Update now</button>
           </div>
         )}
+        <Suspense fallback={<div className="page"><div className="muted small">Loading…</div></div>}>
         <Routes>
           <Route path="/" element={<Navigate to={home} replace />} />
           <Route path="/students" element={<Roster />} />
@@ -88,6 +92,7 @@ export default function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to={home} replace />} />
         </Routes>
+        </Suspense>
       </main>
       <nav className="tabbar" aria-label="Main" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)` }}>
         {tabs.map((n) => (

@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "prebuild": "node scripts/bank-index.mjs",
+    "predev": "node scripts/bank-index.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.46.1",

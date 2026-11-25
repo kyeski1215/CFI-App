@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Bar, useCopy } from "../components/ui";
-import { BANKS, GRADE_LABEL, KINDS, RESULTS, type Question } from "../lib/banks";
+import { BANKS, GRADE_LABEL, KINDS, RESULTS, useFullBank, type Question } from "../lib/banks";
 import { fmtDate, put, remove, useCollection, useRecord } from "../lib/store";
 import type { Grade, Ride, Student } from "../lib/types";
 
@@ -18,15 +18,19 @@ export default function MockRide() {
   const [only, setOnly] = useState<"all" | "open" | "weak">("all");
   const [confirmDel, setConfirmDel] = useState(false);
 
-  const bank = r ? BANKS[r.bank] : undefined;
+  const bank = useFullBank(r?.bank);
+  const meta = r ? BANKS[r.bank] : undefined;
   const counts = useMemo(() => {
     const c = { S: 0, W: 0, U: 0 };
     Object.values(r?.grades ?? {}).forEach((g) => c[g]++);
     return c;
   }, [r?.grades]);
 
-  if (!r || !bank) {
+  if (!r || !meta) {
     return <div className="page"><div className="empty">Mock checkride not found. <Link to="/mocks">Back</Link></div></div>;
+  }
+  if (!bank) {
+    return <div className="page"><div className="empty">Loading {meta.name} questions…</div></div>;
   }
   const examinerFocus = focus || r.examiner || "";
   const update = (p: Partial<Ride>) => put("rides", { ...r, ...p });

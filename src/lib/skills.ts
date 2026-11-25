@@ -61,8 +61,8 @@ export function mockSummary(rides: Ride[], studentId: string) {
   const solid: { topic: string; s: number }[] = [];
   for (const sec of bank.sections) {
     let s = 0, w = 0, u = 0;
-    for (const q of sec.qs) {
-      const g = ride.grades[q[0]];
+    for (const qid of sec.qids) {
+      const g = ride.grades[qid];
       if (g === "S") s++;
       else if (g === "W") w++;
       else if (g === "U") u++;
