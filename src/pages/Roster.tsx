@@ -2,14 +2,11 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Bar, Modal } from "../components/ui";
 import {
-  DAYS,
   GOALS,
   OVERDUE_DAYS,
   guideFor,
   guideProgress,
-  SLOTS,
   STATUSES,
-  initials,
   isActive,
   lastFlight,
   statusClass,
@@ -114,34 +111,6 @@ export default function Roster() {
             </Link>
           );
         })}
-      </section>
-
-      <section>
-        <div className="page-head" style={{ marginBottom: 10 }}>
-          <h2>Who's free when</h2>
-          <span className="muted small">Active students' usual availability</span>
-        </div>
-        <div className="gridwrap">
-          <table className="week">
-            <thead>
-              <tr><th></th>{DAYS.map((d) => <th key={d}>{d}</th>)}</tr>
-            </thead>
-            <tbody>
-              {SLOTS.map(([k, label]) => (
-                <tr key={k}>
-                  <td className="slotname">{label}</td>
-                  {DAYS.map((d) => (
-                    <td key={d}>
-                      {active.filter((s) => s.avail?.includes(d + "-" + k)).map((s) => (
-                        <Link key={s.id} className="ini" to={"/students/" + s.id} title={s.name}>{initials(s.name)}</Link>
-                      ))}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </section>
 
       {adding && <AddStudent onClose={() => setAdding(false)} />}
