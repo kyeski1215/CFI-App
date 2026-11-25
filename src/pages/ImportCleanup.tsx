@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "../components/ui";
 import { findImportDuplicates, isImported } from "../lib/foreflight";
-import { fmtDate, put, remove, useCollection } from "../lib/store";
+import { fmtDate, put, remove, restoreSnapshot, snapshot, useCollection } from "../lib/store";
 import type { LogEntry, Student } from "../lib/types";
 
 /** Undo or tidy a ForeFlight import. Imported lessons have ids starting with "ff-"; nothing else is touched. */
@@ -27,6 +27,7 @@ export default function ImportCleanup() {
   const createdCount = plan.filter((x) => x.onlyImported).length;
 
   const run = () => {
+    const snap = snapshot(mode === "undo" ? "Before undoing an import" : "Before removing import duplicates");
     let removed = 0, studentsRemoved = 0;
     for (const x of plan) {
       if (mode === "undo" && x.onlyImported) { remove("students", x.s.id); studentsRemoved++; removed += x.imported.length; continue; }
@@ -35,7 +36,7 @@ export default function ImportCleanup() {
       put("students", { ...x.s, log: (x.s.log ?? []).filter((e) => !drop.has(e)) });
       removed += drop.size;
     }
-    toast(`Removed ${removed} imported lesson${removed === 1 ? "" : "s"}${studentsRemoved ? ` and ${studentsRemoved} imported student${studentsRemoved === 1 ? "" : "s"}` : ""}`);
+    toast(`Removed ${removed} imported lesson${removed === 1 ? "" : "s"}${studentsRemoved ? ` and ${studentsRemoved} imported student${studentsRemoved === 1 ? "" : "s"}` : ""}`, { label: "Undo", run: () => restoreSnapshot(snap) });
     nav("/students");
   };
 

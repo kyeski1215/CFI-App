@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "../components/ui";
 import { GOALS, STATUSES } from "../lib/curriculum";
 import { groupByStudent, newForStudent, parseForeFlight, type Candidate, type FFFlight } from "../lib/foreflight";
-import { create, fmtDate, put, useCollection } from "../lib/store";
+import { create, fmtDate, put, restoreSnapshot, snapshot, useCollection } from "../lib/store";
 import type { Student } from "../lib/types";
 
 interface Choice { include: boolean; name: string; goal: string; target: string /* "" = new student, else student id */; email?: string }
@@ -47,6 +47,7 @@ export default function ImportLogbook() {
   };
   const run = () => {
     if (!result) return;
+    const snap = snapshot("Before ForeFlight import");
     let made = 0, flightsAdded = 0;
     for (const c of result.candidates) {
       const ch = choices[c.key];
@@ -66,7 +67,7 @@ export default function ImportLogbook() {
       }
       flightsAdded += merge(s, result.unassigned);
     }
-    toast(`Imported ${flightsAdded} lessons${made ? ` · ${made} new student${made === 1 ? "" : "s"}` : ""}`);
+    toast(`Imported ${flightsAdded} lessons${made ? ` · ${made} new student${made === 1 ? "" : "s"}` : ""}`, { label: "Undo", run: () => restoreSnapshot(snap) });
     nav("/students");
   };
 

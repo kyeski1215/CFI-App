@@ -301,3 +301,52 @@ function sameContent(a: BaseRec, b: BaseRec) {
   };
   return same(norm(x), norm(y));
 }
+
+/* ---- safety copies before big changes ---- */
+const SNAP_KEY = PREFIX + "snapshots";
+export interface Snapshot { id: string; label: string; at: number; data: Partial<Record<Collection, BaseRec[]>> }
+export function listSnapshots(): Snapshot[] {
+  return read<Snapshot[]>(SNAP_KEY, []);
+}
+/** Save a copy of these collections before a bulk change. Keeps the last 5; drops the oldest if storage is full. */
+export function snapshot(label: string, cols: Collection[] = ["students"]): string {
+  const snap: Snapshot = { id: newId(), label, at: Date.now(), data: {} };
+  for (const c of cols) snap.data[c] = [...data.get(c)!.values()];
+  let list = [snap, ...listSnapshots()].slice(0, 5);
+  while (list.length) {
+    try {
+      localStorage.setItem(SNAP_KEY, JSON.stringify(list));
+      break;
+    } catch {
+      list = list.slice(0, -1); // storage full: drop the oldest copy and try again
+    }
+  }
+  snapSubs.forEach((f) => f());
+  return snap.id;
+}
+/** Put the saved collections back as they were. The restore is itself a normal edit, so it syncs everywhere. */
+export function restoreSnapshot(id: string): boolean {
+  const snap = listSnapshots().find((x) => x.id === id);
+  if (!snap) return false;
+  snapshot("Before restoring “" + snap.label + "”", Object.keys(snap.data) as Collection[]);
+  for (const [c, recs] of Object.entries(snap.data) as [Collection, BaseRec[]][]) {
+    const keep = new Set(recs.map((r) => r.id));
+    for (const r of recs) {
+      const cur = data.get(c)!.get(r.id);
+      if (!cur || !sameContent(cur, r)) put(c, { ...r });
+    }
+    for (const [rid, cur] of data.get(c)!) if (!keep.has(rid) && !cur.deleted) put(c, { ...cur, deleted: true });
+  }
+  return true;
+}
+const snapSubs = new Set<() => void>();
+export function useSnapshots() {
+  return useSyncExternalStore((l) => (snapSubs.add(l), () => snapSubs.delete(l)), listSnapshotsCached);
+}
+let cache: { raw: string | null; list: Snapshot[] } = { raw: null, list: [] };
+function listSnapshotsCached() {
+  let raw: string | null = null;
+  try { raw = localStorage.getItem(SNAP_KEY); } catch { /* ignore */ }
+  if (raw !== cache.raw) cache = { raw, list: raw ? JSON.parse(raw) : [] };
+  return cache.list;
+}

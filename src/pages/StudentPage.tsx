@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Bar, useCopy } from "../components/ui";
+import { Bar, useCopy, useToast } from "../components/ui";
 import LessonExtras from "../components/LessonExtras";
 import { mockSummary, skillSummary, type SkillStat } from "../lib/skills";
 import { claudePrompt, firstName, smsHref, studentText } from "../lib/studentText";
@@ -35,7 +35,7 @@ import {
   topicsFor,
   totalHours,
 } from "../lib/curriculum";
-import { create, daysBetween, fmtDate, newId, put, remove, todayStr, useCollection, useRecord } from "../lib/store";
+import { create, daysBetween, fmtDate, newId, put, remove, restoreSnapshot, snapshot, todayStr, useCollection, useRecord } from "../lib/store";
 import type { LogEntry, Ride, Student } from "../lib/types";
 
 const TABS = ["Overview", "Log", "Syllabus", "Ground", "Mocks"] as const;
@@ -47,6 +47,7 @@ export default function StudentPage() {
   const [params, setParams] = useSearchParams();
   const tab = (TABS.includes(params.get("tab") as Tab) ? params.get("tab") : "Overview") as Tab;
   const nav = useNavigate();
+  const toast = useToast();
 
   if (!s) {
     return (
@@ -106,7 +107,7 @@ export default function StudentPage() {
         ))}
       </div>
 
-      {tab === "Overview" && <Overview s={s} update={update} goTo={setTab} onDelete={() => { remove("students", s.id); nav("/students"); }} />}
+      {tab === "Overview" && <Overview s={s} update={update} goTo={setTab} onDelete={() => { const snap = snapshot("Before deleting " + s.name); remove("students", s.id); nav("/students"); toast(s.name + " deleted", { label: "Undo", run: () => restoreSnapshot(snap) }); }} />}
       {tab === "Log" && <Log s={s} update={update} prefillRegs={params.get("regs") ?? ""} />}
       {tab === "Syllabus" && <Syllabus s={s} update={update} />}
       {tab === "Ground" && <Ground s={s} update={update} />}

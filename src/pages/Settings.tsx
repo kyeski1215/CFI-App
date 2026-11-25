@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useToast } from "../components/ui";
 import { importLegacy } from "../lib/legacy";
-import { exportAll, useCollection } from "../lib/store";
+import { exportAll, restoreSnapshot, snapshot, useCollection, useSnapshots } from "../lib/store";
 import { signIn, signOut, signUp, syncConfigured, syncNow, useSharedLibrary, useSync } from "../lib/sync";
 import BlitzAccess from "../components/BlitzAccess";
 
@@ -55,6 +55,8 @@ export default function Settings() {
 
       {sync.session && lib.isOwner && <BlitzAccess />}
 
+      <SafetyCopies />
+
       <section className="card">
         <h3>Backup</h3>
         <p className="small muted" style={{ margin: 0 }}>{students.length} students · {rides.length} mock checkrides on this device.</p>
@@ -65,7 +67,9 @@ export default function Settings() {
             const f = e.target.files?.[0];
             if (!f) return;
             try {
-              const r = importLegacy(JSON.parse(await f.text()));
+              const parsed = JSON.parse(await f.text());
+              snapshot("Before restoring " + f.name, ["students", "rides", "resources", "lessons", "aircraft"]);
+              const r = importLegacy(parsed);
               toast(`Imported ${r.students} records${r.rides ? `, ${r.rides} mocks` : ""}`);
             } catch {
               toast("That file isn't a CFI backup");
@@ -84,7 +88,9 @@ export default function Settings() {
         <div className="row">
           <button className="btn primary" disabled={!legacy.trim()} onClick={() => {
             try {
-              const r = importLegacy(JSON.parse(legacy));
+              const parsed = JSON.parse(legacy);
+              snapshot("Before importing old artifact data", ["students", "rides"]);
+              const r = importLegacy(parsed);
               toast(`Imported ${r.students} students, ${r.rides} mocks`);
               setLegacy("");
             } catch (err) {
@@ -139,5 +145,35 @@ function SignIn() {
       </div>
       <p className="full small muted" style={{ margin: 0 }}>Anything already on this device uploads when you sign in.</p>
     </form>
+  );
+}
+
+function SafetyCopies() {
+  const snaps = useSnapshots();
+  const toast = useToast();
+  const [confirm, setConfirm] = useState<string | null>(null);
+  return (
+    <section className="card">
+      <h3>Safety copies</h3>
+      <p className="small muted" style={{ margin: 0 }}>
+        The app saves a copy before big changes (imports, cleanups, restores, deleting a student or aircraft). Restoring puts things back exactly as they were at that moment, on every device.
+      </p>
+      {snaps.length === 0 && <div className="small muted">No safety copies yet.</div>}
+      {snaps.map((x) => (
+        <div key={x.id} className="memberrow">
+          <span className="ct" style={{ display: "flex", flexDirection: "column" }}>
+            <span className="small" style={{ fontWeight: 600 }}>{x.label}</span>
+            <span className="small muted">{new Date(x.at).toLocaleString()}</span>
+          </span>
+          <span className="spacer" />
+          {confirm === x.id ? (
+            <>
+              <button className="btn danger sm" onClick={() => { restoreSnapshot(x.id); setConfirm(null); toast("Restored"); }}>Restore</button>
+              <button className="btn sm" onClick={() => setConfirm(null)}>Cancel</button>
+            </>
+          ) : <button className="btn sm" onClick={() => setConfirm(x.id)}>Restore</button>}
+        </div>
+      ))}
+    </section>
   );
 }

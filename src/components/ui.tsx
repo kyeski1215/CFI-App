@@ -30,18 +30,26 @@ export const Icon = {
 };
 
 /* ---- toast ---- */
-const ToastCtx = createContext<(msg: string) => void>(() => {});
+type ToastAction = { label: string; run: () => void };
+type ToastFn = (msg: string, action?: ToastAction) => void;
+const ToastCtx = createContext<ToastFn>(() => {});
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [msg, setMsg] = useState<string | null>(null);
+  const [t, setT] = useState<{ msg: string; action?: ToastAction } | null>(null);
   useEffect(() => {
-    if (!msg) return;
-    const t = setTimeout(() => setMsg(null), 1800);
-    return () => clearTimeout(t);
-  }, [msg]);
+    if (!t) return;
+    const h = setTimeout(() => setT(null), t.action ? 8000 : 1800);
+    return () => clearTimeout(h);
+  }, [t]);
+  const show = useCallback<ToastFn>((msg, action) => setT({ msg, action }), []);
   return (
-    <ToastCtx.Provider value={setMsg}>
+    <ToastCtx.Provider value={show}>
       {children}
-      {msg && <div className="toast" role="status">{msg}</div>}
+      {t && (
+        <div className="toast" role="status">
+          {t.msg}
+          {t.action && <button className="toastbtn" onClick={() => { t.action!.run(); setT(null); }}>{t.action.label}</button>}
+        </div>
+      )}
     </ToastCtx.Provider>
   );
 }

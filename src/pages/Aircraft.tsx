@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useCopy } from "../components/ui";
-import { create, fmtDate, newId, put, remove, todayStr, useCollection, type BaseRec } from "../lib/store";
+import { create, fmtDate, newId, put, remove, snapshot, todayStr, useCollection, type BaseRec } from "../lib/store";
 import { useSharedFleet, type AircraftShared } from "../lib/sync";
 
 export interface AircraftLink { title: string; url: string; kind: string }
@@ -167,7 +167,7 @@ function AircraftDetail({ a, update }: { a: AircraftRec; update: (p: Partial<Air
         {confirmDel ? (
           <>
             <span className="small">Delete {a.name}?</span>
-            <button className="btn danger sm" onClick={() => remove("aircraft", a.id)}>Yes, delete</button>
+            <button className="btn danger sm" onClick={() => { snapshot("Before deleting " + a.name, ["aircraft"]); remove("aircraft", a.id); }}>Yes, delete</button>
             <button className="btn sm" onClick={() => setConfirmDel(false)}>Cancel</button>
           </>
         ) : (
