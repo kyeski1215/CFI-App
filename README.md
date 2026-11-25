@@ -36,7 +36,7 @@ Resources added by the library owner show for every CFI and student using the ap
 
 ## Blitz fleet
 
-Aircraft on the library owner's account are visible (read-only) only to Blitz Aviation members and the students they share with. Set up once: Supabase → SQL Editor → run `supabase/blitz-fleet.sql` (after `shared-library.sql`) with each Blitz CFI's email in the last insert. Other accounts keep their own private aircraft list.
+Aircraft on the library owner's account are visible (read-only) only to Blitz Aviation members and the students they share with. Set up once: Supabase → SQL Editor → run `supabase/blitz-fleet.sql` (after `shared-library.sql`) with each Blitz CFI's email in the last insert. Other accounts keep their own private aircraft list. To manage Blitz CFIs from the app instead of SQL, also run `supabase/blitz-admin.sql`; the owner then gets Settings → Blitz Aviation access (add by email, even before they sign up; remove).
 
 ## Weather
 

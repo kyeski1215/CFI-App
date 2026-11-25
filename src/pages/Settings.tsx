@@ -2,10 +2,12 @@ import { useRef, useState } from "react";
 import { useToast } from "../components/ui";
 import { importLegacy } from "../lib/legacy";
 import { exportAll, useCollection } from "../lib/store";
-import { signIn, signOut, signUp, syncConfigured, syncNow, useSync } from "../lib/sync";
+import { signIn, signOut, signUp, syncConfigured, syncNow, useSharedLibrary, useSync } from "../lib/sync";
+import BlitzAccess from "../components/BlitzAccess";
 
 export default function Settings() {
   const sync = useSync();
+  const lib = useSharedLibrary();
   const toast = useToast();
   const students = useCollection("students");
   const rides = useCollection("rides");
@@ -50,6 +52,8 @@ export default function Settings() {
           <SignIn />
         )}
       </section>
+
+      {sync.session && lib.isOwner && <BlitzAccess />}
 
       <section className="card">
         <h3>Backup</h3>

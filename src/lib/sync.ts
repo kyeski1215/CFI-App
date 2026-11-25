@@ -332,3 +332,18 @@ export async function loadSharedFleet() {
   fleetState = { items, loaded: true };
   fleetSubs.forEach((f) => f());
 }
+
+/* ---- Blitz access management (library owner only; enforced in the database) ---- */
+export type BlitzMember = { email: string; signed_up: boolean; is_owner: boolean };
+async function rpc<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
+  if (!supabase) throw new Error("Cloud sync isn't set up.");
+  const { data, error } = await supabase.rpc(fn, args);
+  if (error) {
+    if (/Could not find the function|does not exist/i.test(error.message)) throw new Error("Run supabase/blitz-admin.sql in Supabase first.");
+    throw new Error(error.message);
+  }
+  return data as T;
+}
+export const listBlitzMembers = () => rpc<BlitzMember[]>("blitz_member_list");
+export const addBlitzMember = (email: string) => rpc<null>("blitz_add", { member_email: email });
+export const removeBlitzMember = (email: string) => rpc<null>("blitz_remove", { member_email: email });
