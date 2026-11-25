@@ -17,6 +17,10 @@ import { create, daysBetween, fmtDate, todayStr, useCollection } from "../lib/st
 import type { Ride, Student } from "../lib/types";
 
 const FILTERS = ["Active", "All", "Overdue", "Ready", "Done / hold"];
+type SortKey = "name" | "recent" | "overdue" | "progress";
+const GOAL_SHORT: Record<string, string> = { "Private Pilot": "PPL", Instrument: "IR", Commercial: "CPL", "Multi-Engine": "AMEL", CFI: "CFI", CFII: "CFII", Other: "Other" };
+const readPref = (k: string) => { try { return localStorage.getItem("cfi.v1.roster." + k) ?? ""; } catch { return ""; } };
+const writePref = (k: string, v: string) => { try { localStorage.setItem("cfi.v1.roster." + k, v); } catch { /* private mode */ } };
 
 function recency(s: Student) {
   const lf = lastFlight(s);
@@ -30,7 +34,25 @@ export default function Roster() {
   const [q, setQ] = useState("");
   const [adding, setAdding] = useState(false);
 
-  const sorted = useMemo(() => [...students].sort((a, b) => a.name.localeCompare(b.name)), [students]);
+  const [sortBy, setSortBy] = useState<SortKey>(() => (readPref("sort") as SortKey) || "name");
+  const [compact, setCompact] = useState(() => readPref("compact") === "1");
+  const sorted = useMemo(() => {
+    const progressOf = (s: Student) => {
+      const p = guideFor(s) ? guideProgress(s) : null;
+      const t = topicsFor(s);
+      const done = p ? p.done : (s.covered ?? []).filter((x) => t.includes(x)).length;
+      const total = p ? p.total : t.length;
+      return total ? done / total : 0;
+    };
+    const days = (s: Student) => recency(s) ?? 9999;
+    const list = [...students];
+    const byName = (a: Student, b: Student) => a.name.localeCompare(b.name);
+    if (sortBy === "recent") list.sort((a, b) => days(a) - days(b) || byName(a, b));
+    else if (sortBy === "overdue") list.sort((a, b) => days(b) - days(a) || byName(a, b));
+    else if (sortBy === "progress") list.sort((a, b) => progressOf(b) - progressOf(a) || byName(a, b));
+    else list.sort(byName);
+    return list;
+  }, [students, sortBy]);
   const active = sorted.filter(isActive);
   const overdue = active.filter((s) => (recency(s) ?? 999) >= OVERDUE_DAYS);
   const week = active.filter((s) => (recency(s) ?? 999) <= 7);
@@ -68,6 +90,13 @@ export default function Roster() {
       <section className="list">
         <div className="row">
           <input className="search" type="search" placeholder="Search students…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 260 }} />
+          <select value={sortBy} aria-label="Sort" style={{ width: "auto", fontSize: 14 }} onChange={(e) => { setSortBy(e.target.value as SortKey); writePref("sort", e.target.value); }}>
+            <option value="name">Sort: Name</option>
+            <option value="recent">Sort: Flew most recently</option>
+            <option value="overdue">Sort: Longest since flying</option>
+            <option value="progress">Sort: Closest to checkride</option>
+          </select>
+          <button className="chip" aria-pressed={compact} onClick={() => { setCompact(!compact); writePref("compact", compact ? "0" : "1"); }}>Compact</button>
           <div className="chips">
             {FILTERS.map((f) => (
               <button key={f} className="chip" aria-pressed={filter === f} onClick={() => setFilter(f)}>{f}</button>
@@ -85,6 +114,18 @@ export default function Roster() {
           const topics = topicsFor(s);
           const prog = plan ?? { done: (s.covered ?? []).filter((t) => topics.includes(t)).length, total: topics.length, next: null };
           const lastMock = rides.filter((r) => r.studentId === s.id).sort((a, b) => b.date.localeCompare(a.date))[0];
+          if (compact) {
+            const pct = prog.total ? Math.round((prog.done / prog.total) * 100) : 0;
+            return (
+              <Link key={s.id} to={"/students/" + s.id} className="crow">
+                <span className={"cdot " + statusClass(s.status)} title={s.status} />
+                <span className="cname">{s.name || "Unnamed"}</span>
+                <span className="cgoal">{GOAL_SHORT[s.goal] ?? s.goal}</span>
+                <span className={"cdays mono " + (d == null ? "muted" : d >= OVERDUE_DAYS ? "bad" : d >= 6 ? "warn" : "good")}>{d == null ? "—" : d === 0 ? "today" : d + "d"}</span>
+                <span className="cpct mono">{pct}%</span>
+              </Link>
+            );
+          }
           return (
             <Link key={s.id} to={"/students/" + s.id} className="lrow">
               <div className="who">
