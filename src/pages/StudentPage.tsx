@@ -17,8 +17,15 @@ import {
   TAILS,
   groundFor,
   groundKey,
+  MARK_LABEL,
   PRESOLO,
   coverage,
+  guideMark,
+  isGradedItem,
+  setGuideMark,
+  setTopicMark,
+  topicMark,
+  type Mark,
   guideFor,
   guideKey,
   guideProgress,
@@ -642,8 +649,10 @@ function Syllabus({ s, update }: P) {
     update({ guide: n });
   };
   const prog = guideProgress(s);
+  const mark = (key: string, m: Mark | null) => update(setGuideMark(s, key, m));
   return (
     <section className="list">
+      <MarkLegend />
       {plan ? (
         <>
           <div className="card">
@@ -671,11 +680,9 @@ function Syllabus({ s, update }: P) {
                     {sec.items.map((it) => {
                       const key = guideKey(sec.id, it[0]);
                       const L = sec.id === "s1" ? PRESOLO[it[0]] : undefined;
-                      return L ? (
-                        <Lesson key={key} k={key} label={it[1]} when={it[2]} L={L} g={g} toggle={toggle} />
-                      ) : (
-                        <CheckRow key={key} label={it[1]} when={it[2]} date={g[key]} onToggle={() => toggle(key)} />
-                      );
+                      if (L) return <Lesson key={key} k={key} label={it[1]} when={it[2]} L={L} s={s} mark={mark} />;
+                      if (isGradedItem(it[0])) return <MarkRow key={key} label={it[1]} when={it[2]} value={guideMark(s, key)} onSet={(m) => mark(key, m)} />;
+                      return <CheckRow key={key} label={it[1]} when={it[2]} date={g[key]} onToggle={() => toggle(key)} />;
                     })}
                   </div>
                   <details className="fold sub">
@@ -712,18 +719,22 @@ function CheckRow({ label, when, date, onToggle, strong }: { label: string; when
   );
 }
 
-function Lesson({ k, label, when, L, g, toggle }: {
-  k: string; label: string; when?: string; L: PresoloLesson; g: Record<string, string>; toggle: (key: string) => void;
+function Lesson({ k, label, when, L, s, mark }: {
+  k: string; label: string; when?: string; L: PresoloLesson; s: Student; mark: (key: string, m: Mark | null) => void;
 }) {
-  const nd = L.sub.filter((_, i) => g[k + "." + (i + 1)]).length;
-  const done = g[k];
+  const subs = L.sub.map((_, i) => guideMark(s, k + "." + (i + 1))?.m);
+  const cnt = (m: Mark) => subs.filter((x) => x === m).length;
+  const result = guideMark(s, k);
   return (
     <details className="lesson">
       <summary>
         <span className="lcode">{label.split(" — ")[0]}</span>
-        <span className={"ln" + (done ? " ldone" : "")}>{label.split(" — ").slice(1).join(" — ") || label}</span>
-        <span className="mono small muted">{nd}/{L.sub.length}</span>
-        {done && <span className="when">{fmtDate(done)}</span>}
+        <span className={"ln" + (result?.m === "G" ? " ldone" : "")}>{label.split(" — ").slice(1).join(" — ") || label}</span>
+        <span className="mcount">
+          {(["G", "Y", "R"] as Mark[]).map((m) => (cnt(m) ? <span key={m} className={"mdot " + m}>{cnt(m)}</span> : null))}
+          <span className="mono small muted">/{L.sub.length}</span>
+        </span>
+        {result && <span className={"mdot big " + result.m} title={MARK_LABEL[result.m]} />}
       </summary>
       <div className="lbody">
         <p className="secnote"><b>{L.time}</b>{L.scen ? " · " + L.scen : ""}</p>
@@ -731,22 +742,51 @@ function Lesson({ k, label, when, L, g, toggle }: {
           {L.sub.map((sub, i) => {
             const sk = k + "." + (i + 1);
             return (
-              <label key={sk} className={"check" + (g[sk] ? " done" : "")}>
-                <input type="checkbox" checked={!!g[sk]} onChange={() => toggle(sk)} />
-                <span className="ct"><span>{sub[0]}</span></span>
-                {sub[1] && <span className="tag" title="61.87(d) solo endorsement items">{sub[1].split(",").map((x) => "d" + x).join(" ")}</span>}
-                {sub[2] && <span className="tag bsc" title="Blitz first-solo stage check items">SC {sub[2].replace(/,/g, " ")}</span>}
-              </label>
+              <MarkRow key={sk} label={sub[0]} value={guideMark(s, sk)} onSet={(m) => mark(sk, m)}
+                tags={<>
+                  {sub[1] && <span className="tag" title="61.87(d) solo endorsement items">{sub[1].split(",").map((x) => "d" + x).join(" ")}</span>}
+                  {sub[2] && <span className="tag bsc" title="Blitz first-solo stage check items">SC {sub[2].replace(/,/g, " ")}</span>}
+                </>} />
             );
           })}
         </div>
         {L.take && <p className="take">Student takes over: <b>{L.take}</b></p>}
         <LessonExtras k={k} />
         <div className="checks lessondone">
-          <CheckRow label="Lesson complete" when={when} date={done} onToggle={() => toggle(k)} strong />
+          <MarkRow label="Lesson result" when={when} value={result} onSet={(m) => mark(k, m)} strong />
         </div>
       </div>
     </details>
+  );
+}
+
+function MarkLegend() {
+  return (
+    <div className="mlegend small">
+      {(["G", "Y", "R"] as Mark[]).map((m) => <span key={m}><span className={"mdot " + m} /> {MARK_LABEL[m]}</span>)}
+      <span className="muted">Tap a color again to clear it.</span>
+    </div>
+  );
+}
+
+function MarkRow({ label, when, value, onSet, strong, tags }: {
+  label: string; when?: string; value?: { m: Mark; d?: string }; onSet: (m: Mark | null) => void; strong?: boolean; tags?: React.ReactNode;
+}) {
+  return (
+    <div className={"check mrow" + (value ? " m" + value.m : "")}>
+      <span className="ct">
+        <span style={strong ? { fontWeight: 600 } : undefined}>{label}</span>
+        {when && <small>Done when: {when}</small>}
+        {value?.d && <small className="mdate">{MARK_LABEL[value.m]} · {fmtDate(value.d)}</small>}
+        {tags && <span className="tagline">{tags}</span>}
+      </span>
+      <span className="mpick" role="group" aria-label={label}>
+        {(["G", "Y", "R"] as Mark[]).map((m) => (
+          <button key={m} type="button" className={"mp " + m} aria-pressed={value?.m === m} title={MARK_LABEL[m]} aria-label={MARK_LABEL[m]}
+            onClick={() => onSet(value?.m === m ? null : m)} />
+        ))}
+      </span>
+    </div>
   );
 }
 
@@ -771,27 +811,21 @@ function Coverage({ guide }: { guide: Record<string, string> }) {
 
 function Topics({ s, update, open }: P & { open: boolean }) {
   const topics = topicsFor(s);
-  const covered = new Set(s.covered ?? []);
   const [extra, setExtra] = useState("");
-  const done = topics.filter((t) => covered.has(t)).length;
+  const marks = topics.map((t) => topicMark(s, t)?.m);
+  const cnt = (m: Mark) => marks.filter((x) => x === m).length;
   return (
     <details className="fold" open={open}>
       <summary>
         <span className="ft">Maneuver checklist</span>
-        <span className="mono small muted">{done}/{topics.length}</span>
+        <span className="mcount">
+          {(["G", "Y", "R"] as Mark[]).map((m) => (cnt(m) ? <span key={m} className={"mdot " + m}>{cnt(m)}</span> : null))}
+          <span className="mono small muted">/{topics.length}</span>
+        </span>
       </summary>
       <div className="fb">
         <div className="checks">
-          {topics.map((t) => (
-            <label key={t} className={"check" + (covered.has(t) ? " done" : "")}>
-              <input type="checkbox" checked={covered.has(t)} onChange={() => {
-                const n = new Set(covered);
-                n.has(t) ? n.delete(t) : n.add(t);
-                update({ covered: [...n] });
-              }} />
-              <span className="ct"><span>{t}</span></span>
-            </label>
-          ))}
+          {topics.map((t) => <MarkRow key={t} label={t} value={topicMark(s, t)} onSet={(m) => update(setTopicMark(s, t, m))} />)}
         </div>
         <form className="row" style={{ marginTop: 8 }} onSubmit={(e) => {
           e.preventDefault();

@@ -4,6 +4,7 @@ import BriefingCard from "../components/BriefingCard";
 import { Bar, useCopy } from "../components/ui";
 import { planProgress, type StudentCard } from "../lib/card";
 import { fmtDate } from "../lib/store";
+import { MARK_LABEL } from "../lib/curriculum";
 import { loadMyCards, syncConfigured, useMyCards, useSync } from "../lib/sync";
 
 export default function MyTraining() {
@@ -85,8 +86,8 @@ function CardView({ c }: { c: StudentCard }) {
                   <div className="fb checks">
                     {sec.note && <p className="secnote">{sec.note}</p>}
                     {sec.items.map((it, i) => (
-                      <div key={i} className={"check" + (it.done ? " done" : "")}>
-                        <span className={"mk" + (it.done ? " on" : "")} aria-hidden="true">{it.done ? "✓" : ""}</span>
+                      <div key={i} className={"check" + (it.mark ? " mrow m" + it.mark : "")}>
+                        {it.mark ? <span className={"mdot big " + it.mark} title={MARK_LABEL[it.mark]} /> : <span className="mk" aria-hidden="true" />}
                         <span className="ct"><span>{it.label}</span>{it.when && <small>Done when: {it.when}</small>}</span>
                         {it.done && <span className="when">{fmtDate(it.done)}</span>}
                       </div>
@@ -98,8 +99,16 @@ function CardView({ c }: { c: StudentCard }) {
           </>
         ) : (
           <>
-            <div className="row small"><span>{topicsDone} of {c.topics.length} maneuvers & topics</span></div>
+            <div className="row small"><span>{topicsDone} of {c.topics.length} maneuvers checkride ready</span></div>
             <Bar value={topicsDone} total={c.topics.length} />
+            <div className="checks">
+              {c.topics.map((t) => (
+                <div key={t.t} className={"check" + (t.mark ? " mrow m" + t.mark : "")}>
+                  {t.mark ? <span className={"mdot big " + t.mark} title={MARK_LABEL[t.mark]} /> : <span className="mk" aria-hidden="true" />}
+                  <span className="ct"><span>{t.t}</span>{t.mark && <small>{MARK_LABEL[t.mark]}</small>}</span>
+                </div>
+              ))}
+            </div>
           </>
         )}
       </section>

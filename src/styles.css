@@ -373,3 +373,28 @@ details.fold.sub { margin-top: 10px; background: var(--bg); }
 .libtag { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); border-radius: 4px; padding: 1px 6px; margin-right: 6px; }
 .facts.vfacts { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
 .memberrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 0; border-top: 1px solid var(--line); } .memail { font-size: 14px; overflow-wrap: anywhere; }
+
+/* green / yellow / red grading */
+.mrow { align-items: center; cursor: default; }
+.mrow.mG { background: linear-gradient(90deg, var(--good-soft), transparent 60%); }
+.mrow.mY { background: linear-gradient(90deg, var(--warn-soft), transparent 60%); }
+.mrow.mR { background: linear-gradient(90deg, var(--bad-soft), transparent 60%); }
+.mrow .ct { padding-left: 6px; }
+.mdate { font-family: var(--f-mono); font-size: 11px !important; }
+.mpick { display: flex; gap: 6px; flex: none; }
+.mp { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); padding: 0; }
+.mp.G { border-color: var(--good); } .mp.Y { border-color: var(--warn); } .mp.R { border-color: var(--bad); }
+.mp.G[aria-pressed="true"] { background: var(--good); }
+.mp.Y[aria-pressed="true"] { background: var(--warn); }
+.mp.R[aria-pressed="true"] { background: var(--bad); }
+.mdot { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; font: 600 11px var(--f-mono); color: var(--surface); }
+.mdot:empty { width: 10px; min-width: 10px; height: 10px; padding: 0; }
+.mdot.big:empty { width: 14px; min-width: 14px; height: 14px; }
+.mdot.G { background: var(--good); } .mdot.Y { background: var(--warn); } .mdot.R { background: var(--bad); }
+.mcount { display: inline-flex; gap: 3px; align-items: center; }
+.mlegend { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+.mlegend > span { display: inline-flex; gap: 5px; align-items: center; }
+.mrow .ct { flex: 1; min-width: 0; }
+.mrow .mpick { margin-left: auto; align-self: center; }
+.tagline { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+@media (max-width: 600px) { .mp { width: 28px; height: 28px; } }

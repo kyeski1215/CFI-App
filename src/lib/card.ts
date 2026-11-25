@@ -3,7 +3,7 @@
 // matches studentEmail read it. Private fields (your notes, phone, availability notes) stay out unless
 // "share lesson notes" is on for that student.
 import { buildBriefing, type Briefing } from "./briefing";
-import { guideFor, guideKey, isActive, lastFlight, topicsFor, totalHours } from "./curriculum";
+import { guideFor, guideKey, guideMark, topicMark, isActive, lastFlight, topicsFor, totalHours } from "./curriculum";
 import { mockSummary, skillSummary } from "./skills";
 import { daysBetween, todayStr } from "./store";
 import type { Rating } from "./skills";
@@ -21,8 +21,8 @@ export interface StudentCard {
   status: string;
   updated: string;
   stats: { hours: number; night: number; landings: number; flights30: number; lastFlight: string | null };
-  plan: { n: string; note?: string; items: { label: string; when?: string; done?: string }[] }[] | null;
-  topics: { t: string; done: boolean }[];
+  plan: { n: string; note?: string; items: { label: string; when?: string; done?: string; mark?: "G" | "Y" | "R" }[] }[] | null;
+  topics: { t: string; done: boolean; mark?: "G" | "Y" | "R" }[];
   skills: { strengths: string[]; improving: string[]; needsWork: string[] };
   mock: { date: string; bank: string; weak: string[]; solid: string[]; result?: string } | null;
   briefing: Briefing | null;
@@ -58,9 +58,9 @@ export function buildCard(s: Student, rides: Ride[], instructor?: string, librar
       lastFlight: lastFlight(s),
     },
     plan: plan
-      ? plan.map((sec) => ({ n: sec.n, note: sec.note, items: sec.items.map(([k, label, when]) => ({ label, when, done: s.guide?.[guideKey(sec.id, k)] })) }))
+      ? plan.map((sec) => ({ n: sec.n, note: sec.note, items: sec.items.map(([k, label, when]) => ({ label, when, done: s.guide?.[guideKey(sec.id, k)], mark: guideMark(s, guideKey(sec.id, k))?.m })) }))
       : null,
-    topics: topicsFor(s).map((t) => ({ t, done: covered.has(t) })),
+    topics: topicsFor(s).map((t) => ({ t, done: covered.has(t), mark: topicMark(s, t)?.m })),
     skills: { strengths: sk.strengths.map((x) => x.skill), improving: sk.improving.map((x) => x.skill), needsWork: sk.needsWork.map((x) => x.skill) },
     mock: mk ? { date: mk.ride.date, bank: mk.bankShort, weak: mk.weak.map((w) => w.topic), solid: mk.solid.map((x) => x.topic), result: mk.ride.result } : null,
     briefing: buildBriefing(s),

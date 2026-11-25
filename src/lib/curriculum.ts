@@ -1,5 +1,6 @@
 // Curriculum content ported from the Student Roster artifact (src/data/curriculum.json).
 import raw from "../data/curriculum.json";
+import { todayStr } from "./store";
 import type { Student } from "./types";
 
 export interface GroundTask {
@@ -177,4 +178,39 @@ export function coverage(guide: Record<string, string>) {
     return { n, cnt, d };
   });
   return { d87, stage };
+}
+
+/* ---- green / yellow / red grading ---- */
+export type Mark = "G" | "Y" | "R";
+export const MARK_LABEL: Record<Mark, string> = { G: "Checkride ready", Y: "Needs work", R: "Unsatisfactory" };
+/** Lessons (G1, F3…) and their items get colors; paperwork and endorsements stay checkboxes. */
+export const isGradedItem = (k: string) => /^[GF]\d/.test(k);
+
+export function guideMark(s: Student, key: string): { m: Mark; d: string } | undefined {
+  const ym = s.guideMarks?.[key];
+  if (ym) return ym;
+  const d = s.guide?.[key];
+  return d ? { m: "G", d } : undefined;
+}
+export function setGuideMark(s: Student, key: string, m: Mark | null): Partial<Student> {
+  const guide = { ...s.guide };
+  const marks = { ...s.guideMarks };
+  delete guide[key];
+  delete marks[key];
+  if (m === "G") guide[key] = todayStr();
+  else if (m) marks[key] = { m, d: todayStr() };
+  return { guide, guideMarks: marks };
+}
+export function topicMark(s: Student, t: string): { m: Mark; d?: string } | undefined {
+  const ym = s.topicMarks?.[t];
+  if (ym) return ym;
+  return s.covered?.includes(t) ? { m: "G" } : undefined;
+}
+export function setTopicMark(s: Student, t: string, m: Mark | null): Partial<Student> {
+  const covered = (s.covered ?? []).filter((x) => x !== t);
+  const marks = { ...s.topicMarks };
+  delete marks[t];
+  if (m === "G") covered.push(t);
+  else if (m) marks[t] = { m, d: todayStr() };
+  return { covered, topicMarks: marks };
 }

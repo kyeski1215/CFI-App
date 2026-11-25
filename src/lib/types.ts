@@ -42,6 +42,9 @@ export interface Student extends BaseRec {
   extraTopics?: string[];
   ground?: string[]; // "taskLetter|item text"
   guide?: Record<string, string>; // "section.key" -> date done
+  // Yellow / red grades. Green ("checkride ready") is stored as done: guide[key] / covered[].
+  guideMarks?: Record<string, { m: "Y" | "R"; d: string }>;
+  topicMarks?: Record<string, { m: "Y" | "R"; d: string }>;
   log?: LogEntry[];
   solo?: { maxWind?: string; maxGust?: string; maxXwind?: string; minCeiling?: string; minVis?: string }; // written solo limitations
   shareWithStudent?: boolean; // publish a read-only card the student can see (matched by email)
