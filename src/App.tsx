@@ -2,6 +2,7 @@ import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { Icon } from "./components/ui";
 import { useMyCards, useSharedFleet, useSync } from "./lib/sync";
 import { useCollection } from "./lib/store";
+import { applyUpdate, useUpdateAvailable } from "./lib/updates";
 import Weather from "./pages/Weather";
 import Aircraft from "./pages/Aircraft";
 import MyTraining from "./pages/MyTraining";
@@ -38,6 +39,7 @@ const STUDENT_NAV = [
 
 export default function App() {
   const sync = useSync();
+  const updateReady = useUpdateAvailable();
   const { cards } = useMyCards();
   const students = useCollection("students");
   const studentMode = cards.length > 0 && students.length === 0;
@@ -63,6 +65,12 @@ export default function App() {
         </div>
       </nav>
       <main className="main">
+        {updateReady && (
+          <div className="updatebar" role="status">
+            <span>A new version of the app is ready.</span>
+            <button className="btn primary sm" onClick={applyUpdate}>Update now</button>
+          </div>
+        )}
         <Routes>
           <Route path="/" element={<Navigate to={home} replace />} />
           <Route path="/students" element={<Roster />} />
