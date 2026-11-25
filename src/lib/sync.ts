@@ -15,7 +15,7 @@ import {
   all,
 } from "./store";
 import { buildCard, type StudentCard } from "./card";
-import type { Ride, Student } from "./types";
+import type { Resource, Ride, Student } from "./types";
 
 // The publishable key is designed to ship in client code; row-level security protects the data.
 // Env vars override these (e.g. to point a dev build at a different project).
@@ -213,11 +213,12 @@ async function publishCards(uid: string) {
   let sent: Record<string, string> = {};
   try { sent = JSON.parse(localStorage.getItem(CARD_HASH) ?? "{}"); } catch { /* first run */ }
   const rides = all<Ride>("rides");
+  const library = all<Resource>("resources");
   const instructor = state.session?.user.email ?? undefined;
   const rows: Record<string, unknown>[] = [];
   const next: Record<string, string> = {};
   for (const st of all<Student>("students")) {
-    const card = buildCard(st, rides, instructor);
+    const card = buildCard(st, rides, instructor, library);
     if (!card) continue;
     const { updated: _u, ...stable } = card;
     const hash = JSON.stringify(stable);

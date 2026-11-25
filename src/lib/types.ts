@@ -69,10 +69,14 @@ export interface Ride extends BaseRec {
 export interface Resource extends BaseRec {
   title: string;
   url: string;
-  category: string;
+  ratings?: string[]; // RATINGS this is recommended for
+  topic?: string; // e.g. "Stalls", "Approaches"
+  note?: string; // why / when to watch it
+  pinned?: boolean;
+  // Older records from the first Resources page; ignored by the new page.
+  category?: string;
+  builtinId?: string;
+  hidden?: boolean;
   desc?: string;
   icon?: string;
-  pinned?: boolean;
-  builtinId?: string; // set when it overrides/hides a built-in
-  hidden?: boolean;
 }

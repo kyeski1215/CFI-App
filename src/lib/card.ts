@@ -7,7 +7,8 @@ import { guideFor, guideKey, isActive, lastFlight, topicsFor, totalHours } from 
 import { mockSummary, skillSummary } from "./skills";
 import { daysBetween, todayStr } from "./store";
 import type { Rating } from "./skills";
-import type { Ride, Student } from "./types";
+import type { Resource, Ride, Student } from "./types";
+import { libraryFor, type LibraryItem } from "./library";
 
 export interface StudentCard {
   v: 1;
@@ -25,10 +26,11 @@ export interface StudentCard {
   skills: { strengths: string[]; improving: string[]; needsWork: string[] };
   mock: { date: string; bank: string; weak: string[]; solid: string[]; result?: string } | null;
   briefing: Briefing | null;
+  resources?: LibraryItem[]; // instructor's recommended videos/links for this student's rating + General
   log: { date: string; kind: string; tail?: string; hrs?: string; lesson?: string; text?: string; notes?: string; ratings?: Record<string, Rating> }[];
 }
 
-export function buildCard(s: Student, rides: Ride[], instructor?: string): StudentCard | null {
+export function buildCard(s: Student, rides: Ride[], instructor?: string, library: Resource[] = []): StudentCard | null {
   const email = (s.email ?? "").trim().toLowerCase();
   if (!s.shareWithStudent || !email || !isActive(s) && s.status !== "Done") return null;
   const today = todayStr();
@@ -62,6 +64,7 @@ export function buildCard(s: Student, rides: Ride[], instructor?: string): Stude
     skills: { strengths: sk.strengths.map((x) => x.skill), improving: sk.improving.map((x) => x.skill), needsWork: sk.needsWork.map((x) => x.skill) },
     mock: mk ? { date: mk.ride.date, bank: mk.bankShort, weak: mk.weak.map((w) => w.topic), solid: mk.solid.map((x) => x.topic), result: mk.ride.result } : null,
     briefing: buildBriefing(s),
+    resources: libraryFor(s, library),
     log: [...(s.log ?? [])]
       .filter((e) => e.date)
       .sort((a, b) => b.date.localeCompare(a.date))

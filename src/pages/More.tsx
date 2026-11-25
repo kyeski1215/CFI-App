@@ -3,7 +3,7 @@ import { Icon } from "../components/ui";
 
 export const MORE_LINKS = [
   { to: "/aircraft", label: "Aircraft", desc: "POHs, checklists, V-speeds and squawks", icon: Icon.plane },
-  { to: "/resources", label: "Resources", desc: "Guides, FAA links and your saved links", icon: Icon.resources },
+  { to: "/resources", label: "Resources", desc: "Your recommended videos and links by rating", icon: Icon.resources },
   { to: "/me", label: "My training", desc: "What a student sees when they sign in", icon: Icon.roster },
   { to: "/settings", label: "Settings", desc: "Sign-in, sync, backup and import", icon: Icon.settings },
 ];

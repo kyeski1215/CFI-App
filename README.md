@@ -9,7 +9,7 @@ An installable web app for flight instructors: student roster, mock checkride gr
 | **Roster** | Students, status, hours, overdue warnings, who's free when. Each student has a profile, lesson log, syllabus checklist, ACS Area I ground checklist, onboarding guide and their mock checkrides. |
 | **Mocks** | 794 questions across PPL, IFR, Commercial, CFI, CFII and AMEL, tagged by examiner gouge. Grade S/W/U, add notes, filter to one examiner's gouge, copy a debrief. |
 | **Regs** | Tap what you covered, get a compact reg line (e.g. `61.107(b)(1)(i, ii, iv)`) to copy into the logbook, or add it straight to a student's lesson log. |
-| **Resources** | Your artifacts and FAA/weather links. Add your own, pin, edit, hide. |
+| **Resources** | Your recommended YouTube videos and links, by rating (Private → CFII, plus General) and topic. Students see the ones for their rating. |
 | **Settings** | Sign in for sync, backup/restore, import from the old artifacts. |
 
 Content came from the earlier Claude artifacts and lives in `src/data/*.json` and `src/lib/{regs,resources,curriculum}.ts`.
