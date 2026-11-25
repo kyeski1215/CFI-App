@@ -2,8 +2,8 @@
 // mirrored to Supabase by sync.ts when the user is signed in.
 import { useSyncExternalStore } from "react";
 
-export type Collection = "students" | "rides" | "resources" | "lessons";
-export const COLLECTIONS: Collection[] = ["students", "rides", "resources", "lessons"];
+export type Collection = "students" | "rides" | "resources" | "lessons" | "aircraft";
+export const COLLECTIONS: Collection[] = ["students", "rides", "resources", "lessons", "aircraft"];
 
 export interface BaseRec {
   id: string;
@@ -69,6 +69,11 @@ export function all<T extends BaseRec>(c: Collection): T[] {
 export function get<T extends BaseRec>(c: Collection, id: string): T | undefined {
   const r = data.get(c)!.get(id);
   return r && !r.deleted ? (r as T) : undefined;
+}
+
+/** True if a record with this id was ever stored, including deleted ones. */
+export function has(c: Collection, id: string) {
+  return data.get(c)!.has(id);
 }
 
 export function put<T extends BaseRec>(c: Collection, rec: T): T {

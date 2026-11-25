@@ -149,13 +149,17 @@ export function guideProgress(s: Student) {
   const g = s.guide ?? {};
   let done = 0, total = 0;
   let next: string | null = null;
+  let nextItem: { sec: GuideSection; item: GuideSection["items"][number] } | null = null;
   for (const sec of guideFor(s) ?? [])
     for (const it of sec.items) {
       total++;
       if (g[guideKey(sec.id, it[0])]) done++;
-      else if (!next && /^[GF]\d/.test(it[0])) next = it[1];
+      else if (!next && /^[GF]\d/.test(it[0])) {
+        next = it[1];
+        nextItem = { sec, item: it };
+      }
     }
-  return { done, total, next };
+  return { done, total, next, nextItem };
 }
 
 /** Which 61.87(d) items and Blitz stage-check items the checked pre-solo sub-items cover. */

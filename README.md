@@ -30,6 +30,20 @@ npm run dev        # http://localhost:5173
 
 Without these keys the app still works fully, saving on the device only.
 
+## Weather
+
+The Weather tab shows METAR/TAF, flight category, density altitude, runway head/crosswinds and a check of each student's solo limits. aviationweather.gov doesn't allow browser requests from other sites, so the app asks a small Supabase Edge Function (no key, no cost):
+
+Supabase → **Edge Functions → Deploy a new function → Via editor** → name it `wx` → paste `supabase/functions/wx/index.ts` → Deploy.
+
+## Student view
+
+Students sign in to the same app and see a read-only **My training** page: progress, the next lesson briefing, homework and videos, ✓/✗ ratings and the texts you made. Your private notes, their phone and availability stay out unless you turn on "Also show my raw lesson notes".
+
+One-time setup: Supabase → **SQL Editor** → run `supabase/student-access.sql`. Keep **Authentication → Providers → Email → Confirm email** turned on (it is by default): that's what proves a student owns the email their card is shared with.
+
+Per student: Edit profile → make sure their email is filled in → Student access → **Share with …** → **Copy invite text** and send it.
+
 ## Strengths & needs work
 
 Built on the device, at no cost: when you log a lesson, tap ✓ or ✗ on the skills you covered ("How did it go?"). The Overview lists each skill as a strength (only ✓ in its last 4 ratings), improving (✓ now, ✗ recently) or needs work (✗ on its latest rating), plus weak and solid topics from the latest mock checkride.

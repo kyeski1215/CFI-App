@@ -312,3 +312,34 @@ details.fold.sub { margin-top: 10px; background: var(--bg); }
 .mocksum { display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--line); padding-top: 10px; }
 .txtbox { display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--bg); }
 .txtbox textarea { min-height: 200px; background: var(--surface); }
+/* briefing */
+.briefing { border-color: var(--accent); }
+.btitle { display: flex; gap: 8px; align-items: center; }
+.btitle h3 { font-size: 22px; }
+.bscen { margin: 0; font-size: 14px; font-style: italic; color: var(--muted); }
+.bobj { margin: 4px 0 0; padding-left: 18px; font-size: 14px; display: flex; flex-direction: column; gap: 3px; }
+.bobj li.done { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--line); }
+/* weather */
+.wxcard .facts { grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr)); }
+.raw { margin: 0; font: 12.5px/1.45 var(--f-mono); white-space: pre-wrap; overflow-wrap: anywhere; background: var(--bg); border-radius: 6px; padding: 8px 10px; }
+.rwys { display: flex; flex-wrap: wrap; gap: 6px; }
+.rwy { font: 12px var(--f-mono); padding: 3px 8px; border-radius: 6px; background: var(--good-soft); color: var(--good); }
+.rwy.tail { background: var(--bg); color: var(--muted); }
+.solorow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 8px 0; border-top: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+/* aircraft */
+.acsum { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: 0; padding: 0; text-align: left; color: var(--ink); }
+.acsum > span:first-child { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.acname { font: 600 21px/1.1 var(--f-display); }
+.acsum .chev { color: var(--muted); font-size: 20px; transition: transform .15s; }
+.acsum[aria-expanded="true"] .chev { transform: rotate(90deg); }
+.aclinks { display: flex; flex-wrap: wrap; gap: 6px; }
+.chiplink { font-size: 13px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--accent); text-decoration: none; background: var(--bg); }
+.acdetail { display: flex; flex-direction: column; gap: 14px; }
+.acgroup { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.vgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+/* more + student view */
+.morerow { grid-template-columns: auto 1fr !important; }
+.moreic { width: 40px; height: 40px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+.moreic svg { width: 22px; height: 22px; }
+.check .mk { width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid var(--line); flex: none; display: grid; place-items: center; font-size: 12px; color: var(--surface); margin-top: 1px; }
+.check .mk.on { background: var(--accent); border-color: var(--accent); }

@@ -43,6 +43,9 @@ export interface Student extends BaseRec {
   ground?: string[]; // "taskLetter|item text"
   guide?: Record<string, string>; // "section.key" -> date done
   log?: LogEntry[];
+  solo?: { maxWind?: string; maxGust?: string; maxXwind?: string; minCeiling?: string; minVis?: string }; // written solo limitations
+  shareWithStudent?: boolean; // publish a read-only card the student can see (matched by email)
+  shareNotes?: boolean; // include raw lesson notes on that card
   logDraft?: LogEntry; // lesson being written; saved on every keystroke
 }
 

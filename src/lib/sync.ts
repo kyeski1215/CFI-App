@@ -12,7 +12,10 @@ import {
   mergeRemote,
   setOnChange,
   takeDirty,
+  all,
 } from "./store";
+import { buildCard, type StudentCard } from "./card";
+import type { Ride, Student } from "./types";
 
 // The publishable key is designed to ship in client code; row-level security protects the data.
 // Env vars override these (e.g. to point a dev build at a different project).
@@ -97,6 +100,7 @@ export async function syncNow() {
       const { data, error } = await supabase
         .from("records")
         .select("collection,data,server_ts")
+        .eq("user_id", uid) // only my own records; cards shared with me are read separately
         .gt("server_ts", cursor)
         .order("server_ts")
         .range(from, from + 999);
@@ -109,6 +113,7 @@ export async function syncNow() {
       if (!data || data.length < 1000) break;
     }
     commitMerged(changed);
+    await publishCards(uid);
     localStorage.setItem(CURSOR_KEY, newest);
     set({ status: "idle", lastSync: Date.now() });
   } catch (e) {
@@ -129,22 +134,31 @@ function onSession(session: Session | null) {
   if (localStorage.getItem(OWNER_KEY) !== session.user.id) {
     localStorage.setItem(OWNER_KEY, session.user.id);
     localStorage.removeItem(CURSOR_KEY);
+    localStorage.removeItem(CARD_HASH);
     markAllDirty();
   }
   syncNow();
+  loadMyCards();
 }
 
 export function initSync() {
   setOnChange(() => scheduleSync());
   if (!supabase) return;
   supabase.auth.getSession().then(({ data }) => onSession(data.session));
-  supabase.auth.onAuthStateChange((_e, session) => {
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_OUT") {
+      try { localStorage.removeItem(MY_CARDS); } catch { /* ignore */ }
+      setCards({ cards: [], loaded: false });
+    }
     if (session?.user.id !== state.session?.user.id) onSession(session);
     else set({ session });
   });
   window.addEventListener("online", () => syncNow());
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") syncNow();
+    if (document.visibilityState === "visible") {
+      syncNow();
+      loadMyCards();
+    }
   });
   window.setInterval(() => document.visibilityState === "visible" && syncNow(), 60_000);
 }
@@ -188,4 +202,66 @@ export async function summarizeStudent(s: {
     throw new Error(msg);
   }
   return data;
+}
+
+/* ---- student cards ---- */
+const CARD_HASH = "cfi.v1.cardhash";
+
+/** Publish a read-only card for each student with sharing on; withdraw cards that were turned off. */
+async function publishCards(uid: string) {
+  if (!supabase) return;
+  let sent: Record<string, string> = {};
+  try { sent = JSON.parse(localStorage.getItem(CARD_HASH) ?? "{}"); } catch { /* first run */ }
+  const rides = all<Ride>("rides");
+  const instructor = state.session?.user.email ?? undefined;
+  const rows: Record<string, unknown>[] = [];
+  const next: Record<string, string> = {};
+  for (const st of all<Student>("students")) {
+    const card = buildCard(st, rides, instructor);
+    if (!card) continue;
+    const { updated: _u, ...stable } = card;
+    const hash = JSON.stringify(stable);
+    next[st.id] = String(hash.length) + ":" + simpleHash(hash);
+    if (sent[st.id] !== next[st.id]) rows.push({ user_id: uid, collection: "cards", id: st.id, data: card, updated_ms: Date.now(), deleted: false });
+  }
+  for (const id of Object.keys(sent))
+    if (!next[id]) rows.push({ user_id: uid, collection: "cards", id, data: {}, updated_ms: Date.now(), deleted: true });
+  if (!rows.length) return;
+  const { error } = await supabase.from("records").upsert(rows);
+  if (error) throw error;
+  localStorage.setItem(CARD_HASH, JSON.stringify(next));
+}
+function simpleHash(str: string) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
+}
+
+const MY_CARDS = "cfi.v1.mycards";
+type CardsState = { cards: StudentCard[]; loaded: boolean; error?: string };
+let cardsState: CardsState = { cards: readMyCards(), loaded: false };
+const cardSubs = new Set<() => void>();
+function readMyCards(): StudentCard[] {
+  try { return JSON.parse(localStorage.getItem(MY_CARDS) ?? "[]"); } catch { return []; }
+}
+function setCards(p: Partial<CardsState>) {
+  cardsState = { ...cardsState, ...p };
+  cardSubs.forEach((f) => f());
+}
+/** Training cards other instructors shared with the signed-in account (the student view). */
+export function useMyCards() {
+  return useSyncExternalStore((l) => (cardSubs.add(l), () => cardSubs.delete(l)), () => cardsState);
+}
+export async function loadMyCards() {
+  if (!supabase || !state.session) return;
+  const { data, error } = await supabase
+    .from("records")
+    .select("data")
+    .eq("collection", "cards")
+    .eq("deleted", false)
+    .neq("user_id", state.session.user.id);
+  if (error) return setCards({ loaded: true, error: error.message });
+  const cards = (data ?? []).map((r) => r.data as StudentCard).filter((c) => c?.v === 1);
+  try { localStorage.setItem(MY_CARDS, JSON.stringify(cards)); } catch { /* ignore */ }
+  setCards({ cards, loaded: true, error: undefined });
 }

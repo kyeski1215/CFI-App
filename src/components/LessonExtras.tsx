@@ -2,7 +2,7 @@
 // Built-in content comes from src/data/lessons.json; edits are saved as a "lessons" record with id = lesson key.
 import { useState, type ReactNode } from "react";
 import raw from "../data/lessons.json";
-import { put, useRecord, type BaseRec } from "../lib/store";
+import { get, put, useRecord, type BaseRec } from "../lib/store";
 
 type Hw = [string, string];
 interface LinkItem { title: string; url: string }
@@ -70,6 +70,44 @@ export function linkify(type: string, text: string): ReactNode {
   if (D.HB[type]) return A(D.HB[type], text, 0);
   if (type === "Chart") return A(chartUrl(text), text, 0);
   return text;
+}
+
+export type LessonContent = { hw: Hw[]; items: LinkItem[] };
+/** Homework and videos for a lesson key, outside React (for briefings and student cards). */
+export function lessonContent(k: string): LessonContent {
+  const rec = get<LessonRec>("lessons", k);
+  const def = D.LESSONS[k] ?? {};
+  return { hw: rec?.hw ?? def.hw ?? [], items: rec?.items ?? def.items ?? [] };
+}
+
+/** Read-only homework + videos list. */
+export function ExtrasView({ hw, items }: LessonContent) {
+  if (!hw.length && !items.length) return null;
+  return (
+    <div className="extras">
+      {hw.length > 0 && <div className="xhead"><span>Homework & study</span></div>}
+      {hw.map(([t, txt], i) => (
+        <div key={i} className="hwrow">
+          <span className={"hwk" + (t === "Do" ? " do" : t === "FAR" ? " far" : "")}>{t}</span>
+          <span className="hwt">{linkify(t, txt)}</span>
+        </div>
+      ))}
+      {items.length > 0 && <div className="xhead"><span>Videos & resources</span></div>}
+      {items.map((r, i) => {
+        const h = hostOf(r.url);
+        const yt = /youtu/.test(h);
+        return (
+          <div key={i} className="resrow">
+            <a className="res" href={r.url} target="_blank" rel="noreferrer">
+              <span className={"play" + (yt ? " yt" : "")} aria-hidden="true">{yt ? "▶" : "↗"}</span>
+              <span className="rtitle">{r.title || h}</span>
+              <span className="kv">{yt ? "YouTube" : h}</span>
+            </a>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 function useLesson(k: string) {

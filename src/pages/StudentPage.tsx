@@ -4,6 +4,9 @@ import { Bar, useCopy } from "../components/ui";
 import LessonExtras from "../components/LessonExtras";
 import { mockSummary, skillSummary, type SkillStat } from "../lib/skills";
 import { claudePrompt, firstName, smsHref, studentText } from "../lib/studentText";
+import BriefingCard from "../components/BriefingCard";
+import { useSync } from "../lib/sync";
+import { buildBriefing, briefingText } from "../lib/briefing";
 import { BANKS, bankForGoal } from "../lib/banks";
 import {
   AIRCRAFT,
@@ -134,6 +137,7 @@ function Select({ s, update, k, label, opts }: P & { k: keyof Student; label: st
 function Overview({ s, update, onDelete, goTo }: P & { onDelete: () => void; goTo: (t: Tab) => void }) {
   const [editing, setEditing] = useState(false);
   const rides = useCollection<Ride>("rides");
+  const copy = useCopy();
   if (editing) return <ProfileEditor s={s} update={update} onDelete={onDelete} onDone={() => setEditing(false)} />;
 
   const today = todayStr();
@@ -150,6 +154,7 @@ function Overview({ s, update, onDelete, goTo }: P & { onDelete: () => void; goT
   const covered = (s.covered ?? []).filter((t) => topics.includes(t)).length;
   const lastMock = rides.filter((r) => r.studentId === s.id).sort((a, b) => b.date.localeCompare(a.date))[0];
   const target = num(s.targetPerWeek);
+  const brief = buildBriefing(s);
 
   return (
     <>
@@ -202,6 +207,10 @@ function Overview({ s, update, onDelete, goTo }: P & { onDelete: () => void; goT
           <b>{s.nextLesson || prog.next || "Not set"}</b>
         </div>
       </section>
+
+      {brief && (
+        <BriefingCard b={brief} actions={<button className="btn ghost sm" onClick={() => copy(briefingText(brief, firstName(s.name)), "Briefing copied")}>Copy for {firstName(s.name)}</button>} />
+      )}
 
       <section className="card">
         <div className="row">
@@ -264,6 +273,37 @@ function StudentTextBox({ s, e, onText }: { s: Student; e: LogEntry; onText: (t:
         , paste into the Claude app, then paste its reply back in here.
       </div>
     </div>
+  );
+}
+
+function StudentAccess({ s, update }: P) {
+  const copy = useCopy();
+  const sync = useSync();
+  const appUrl = window.location.origin + window.location.pathname;
+  const email = (s.email ?? "").trim();
+  const invite = `Hi ${firstName(s.name)}! You can follow your flight training in my app: progress, your next lesson's plan and homework, and my notes after each flight.\n\n1. Open ${appUrl}\n2. Settings → Create an account with this email: ${email}\n3. Confirm the email, sign in, and tap My training.\n\nOn iPhone: Share → Add to Home Screen to keep it like an app.`;
+  return (
+    <section className="card">
+      <h3>Student access</h3>
+      <p className="small muted" style={{ margin: 0 }}>
+        Lets {firstName(s.name)} sign in to this app and see a read-only page of their own training: progress, the next lesson briefing, homework, ratings and the texts you made. Your phone, availability and private notes stay hidden.
+      </p>
+      <label className="check">
+        <input type="checkbox" checked={!!s.shareWithStudent} onChange={() => update({ shareWithStudent: !s.shareWithStudent })} />
+        <span className="ct"><span>Share with {firstName(s.name)}</span><small>{email ? `They sign in with ${email}` : "Add their email above first"}</small></span>
+      </label>
+      {s.shareWithStudent && (
+        <>
+          <label className="check">
+            <input type="checkbox" checked={!!s.shareNotes} onChange={() => update({ shareNotes: !s.shareNotes })} />
+            <span className="ct"><span>Also show my raw lesson notes</span><small>Off: they see only the student texts you made</small></span>
+          </label>
+          {!email && <div className="small" style={{ color: "var(--warn)" }}>Nothing is shared until there's an email on this profile.</div>}
+          {!sync.session && <div className="small" style={{ color: "var(--warn)" }}>Sign in under Settings so the app can publish this.</div>}
+          {email && <div className="row"><button className="btn sm" onClick={() => copy(invite, "Invite copied")}>Copy invite text</button></div>}
+        </>
+      )}
+    </section>
   );
 }
 
@@ -464,6 +504,18 @@ function ProfileEditor({ s, update, onDelete, onDone }: P & { onDelete: () => vo
           <input value={s.availNotes ?? ""} onChange={(e) => update({ availNotes: e.target.value })} placeholder="e.g. works nights, free after 3 on Fridays" />
         </label>
       </section>
+      <section className="card">
+        <h3>Solo limitations</h3>
+        <p className="small muted" style={{ margin: 0 }}>The written limits on their solo endorsement. The Weather page checks these against the current METAR. Leave blank for no limit.</p>
+        <div className="fields">
+          {([["maxWind", "Max wind (kt)"], ["maxGust", "Max gust (kt)"], ["maxXwind", "Max crosswind (kt)"], ["minCeiling", "Min ceiling (ft AGL)"], ["minVis", "Min visibility (SM)"]] as const).map(([k, label]) => (
+            <label key={k} className="f">{label}
+              <input inputMode="decimal" value={s.solo?.[k] ?? ""} onChange={(e) => update({ solo: { ...s.solo, [k]: e.target.value } })} />
+            </label>
+          ))}
+        </div>
+      </section>
+      <StudentAccess s={s} update={update} />
       <div className="row">
         {!confirm ? (
           <button className="btn danger" onClick={() => setConfirm(true)}>Delete student</button>

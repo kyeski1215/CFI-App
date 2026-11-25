@@ -39,3 +39,13 @@ alter table public.records enable row level security;
 drop policy if exists "own rows" on public.records;
 create policy "own rows" on public.records
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- Student view (also in student-access.sql): a student can read the card shared with their email.
+drop policy if exists "students read their card" on public.records;
+create policy "students read their card" on public.records
+  for select to authenticated
+  using (
+    collection = 'cards'
+    and not deleted
+    and lower(data->>'studentEmail') = lower(coalesce(auth.jwt()->>'email', ''))
+  );
