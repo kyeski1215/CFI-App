@@ -30,9 +30,13 @@ npm run dev        # http://localhost:5173
 
 Without these keys the app still works fully, saving on the device only.
 
-## AI summaries (strengths & needs work)
+## Strengths & needs work
 
-The **✨ Summarize from log** button on a student's Overview sends that student's lesson notes to Claude and suggests strengths and needs-work for you to review before saving. It runs as a Supabase Edge Function so the Anthropic API key never ships in the app.
+Built on the device, at no cost: when you log a lesson, tap ✓ or ✗ on the skills you covered ("How did it go?"). The Overview lists each skill as a strength (only ✓ in its last 4 ratings), improving (✓ now, ✗ recently) or needs work (✗ on its latest rating), plus weak and solid topics from the latest mock checkride.
+
+## AI summaries (optional, not wired into the app)
+
+`supabase/functions/student-summary` is an Edge Function that sends a student's lesson notes to Claude for an AI-written summary; `summarizeStudent()` in `src/lib/sync.ts` calls it. It is kept for later and has no button in the app, so it uses no API credit.
 
 One-time setup:
 1. Get an API key at [console.anthropic.com](https://console.anthropic.com) → API Keys (pay-as-you-go; add a small credit balance).

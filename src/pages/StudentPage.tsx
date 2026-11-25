@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Bar, useCopy } from "../components/ui";
 import LessonExtras from "../components/LessonExtras";
-import { summarizeStudent } from "../lib/sync";
+import { mockSummary, skillSummary, type SkillStat } from "../lib/skills";
 import { BANKS, bankForGoal } from "../lib/banks";
 import {
   AIRCRAFT,
@@ -211,7 +211,7 @@ function Overview({ s, update, onDelete, goTo }: P & { onDelete: () => void; goT
         {last ? <LastLesson e={last} /> : <div className="muted small">Nothing logged yet.</div>}
       </section>
 
-      <StrengthsCard s={s} update={update} />
+      <StrengthsCard s={s} goTo={goTo} />
 
       <section className="card">
         <div className="row">
@@ -235,56 +235,102 @@ function Overview({ s, update, onDelete, goTo }: P & { onDelete: () => void; goT
   );
 }
 
-function StrengthsCard({ s, update }: P) {
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState("");
-  const [draft, setDraft] = useState<{ strengths: string; needsWork: string; lessons: number } | null>(null);
-  const hasNotes = (s.log ?? []).some((e) => (e.notes ?? "").trim());
-  const run = async () => {
-    setBusy(true);
-    setErr("");
-    try {
-      setDraft(await summarizeStudent(s));
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e));
-    } finally {
-      setBusy(false);
-    }
+function SkillRater({ skills, ratings, onChange }: { skills: string[]; ratings: Record<string, "good" | "work">; onChange: (r: Record<string, "good" | "work">) => void }) {
+  const n = Object.keys(ratings).length;
+  const cycle = (k: string) => {
+    const next = { ...ratings };
+    if (!next[k]) next[k] = "good";
+    else if (next[k] === "good") next[k] = "work";
+    else delete next[k];
+    onChange(next);
   };
+  const extra = Object.keys(ratings).filter((k) => !skills.includes(k));
+  return (
+    <details className="fold full rater" open>
+      <summary>
+        <span className="ft">How did it go?</span>
+        {n > 0 && <span className="small muted">{n} rated</span>}
+      </summary>
+      <div className="fb">
+        <p className="small muted" style={{ margin: "0 0 8px" }}>Tap once for ✓ good, twice for ✗ needs work, a third time to clear.</p>
+        {skills.length + extra.length === 0 ? (
+          <div className="small muted">No skills for this rating yet. Add some under Syllabus → Maneuver checklist.</div>
+        ) : (
+          <div className="ratechips">
+            {[...skills, ...extra].map((k) => (
+              <button key={k} type="button" className={"ratechip " + (ratings[k] ?? "")} aria-label={`${k}: ${ratings[k] === "good" ? "good" : ratings[k] === "work" ? "needs work" : "not rated"}`} onClick={() => cycle(k)}>
+                <span className="mark" aria-hidden="true">{ratings[k] === "good" ? "✓" : ratings[k] === "work" ? "✗" : ""}</span>
+                {k}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </details>
+  );
+}
+
+function RatingChips({ ratings }: { ratings?: Record<string, "good" | "work"> }) {
+  const list = Object.entries(ratings ?? {});
+  if (!list.length) return null;
+  list.sort((a, b) => (a[1] === b[1] ? 0 : a[1] === "work" ? -1 : 1));
+  return (
+    <div className="ratedlist">
+      {list.map(([k, r]) => <span key={k} className={"rated " + r}>{r === "good" ? "✓" : "✗"} {k}</span>)}
+    </div>
+  );
+}
+
+function StrengthsCard({ s, goTo }: { s: Student; goTo: (t: Tab) => void }) {
+  const rides = useCollection<Ride>("rides");
+  const sk = skillSummary(s);
+  const mock = mockSummary(rides, s.id);
+  const evid = (x: SkillStat) => x.latest === "work" ? `✗ ${fmtDate(x.lastDate)}` : `✓ ${x.good} of last ${x.good + x.work}`;
+  const empty = !sk.ratedLessons && !mock;
   return (
     <section className="card">
       <div className="row">
         <h3>Strengths & needs work</h3>
         <span className="spacer" />
-        <button className="btn sm" disabled={busy || !hasNotes} onClick={run} title={hasNotes ? "" : "Log a lesson with notes first"}>
-          {busy ? "Reading the log…" : "✨ Summarize from log"}
-        </button>
+        <span className="small muted">{sk.ratedLessons ? `From ${sk.ratedLessons} rated lesson${sk.ratedLessons === 1 ? "" : "s"}` : ""}</span>
       </div>
-      {err && <div className="small" style={{ color: "var(--bad)" }}>{err}</div>}
-      {draft ? (
-        <div className="aisum">
-          <div className="small muted">Suggested from {draft.lessons} lesson{draft.lessons === 1 ? "" : "s"}. Check it before saving.</div>
-          <div className="sw">
-            <label className="f">Strengths<textarea value={draft.strengths} onChange={(e) => setDraft({ ...draft, strengths: e.target.value })} /></label>
-            <label className="f">Needs work<textarea value={draft.needsWork} onChange={(e) => setDraft({ ...draft, needsWork: e.target.value })} /></label>
+      {empty && (
+        <div className="small muted">
+          Fills in automatically. When you log a lesson, tap ✓ or ✗ on the skills you covered under “How did it go?”. Mock checkride grades count too.
+          <div style={{ marginTop: 8 }}><button className="btn sm" onClick={() => goTo("Log")}>Go to the log</button></div>
+        </div>
+      )}
+      {sk.ratedLessons > 0 && (
+        <div className="sw">
+          <div>
+            <span className="kv">Strengths</span>
+            {sk.strengths.length ? sk.strengths.slice(0, 6).map((x) => <div key={x.skill} className="skrow good"><span>{x.skill}</span><span className="mono">{evid(x)}</span></div>) : <span className="small muted">None consistent yet</span>}
+            {sk.improving.length > 0 && <>
+              <span className="kv" style={{ marginTop: 6 }}>Improving</span>
+              {sk.improving.slice(0, 4).map((x) => <div key={x.skill} className="skrow imp"><span>{x.skill}</span><span className="mono">✓ {fmtDate(x.lastDate)}, ✗ before</span></div>)}
+            </>}
           </div>
-          <div className="row">
-            <span className="spacer" />
-            <button className="btn" onClick={() => setDraft(null)}>Keep current</button>
-            <button className="btn primary" onClick={() => {
-              update({ strengths: draft.strengths, weaknesses: draft.needsWork, summaryAt: todayStr() });
-              setDraft(null);
-            }}>Use these</button>
+          <div>
+            <span className="kv">Needs work</span>
+            {sk.needsWork.length ? sk.needsWork.slice(0, 6).map((x) => <div key={x.skill} className="skrow work"><span>{x.skill}</span><span className="mono">{evid(x)}{x.work > 1 ? ` · ${x.work}×` : ""}</span></div>) : <span className="small muted">Nothing marked ✗ on the latest lessons</span>}
           </div>
         </div>
-      ) : (
-        <>
-          <div className="sw">
-            <div><span className="kv">Strengths</span><p className="clamp3">{s.strengths || <span className="muted">Not written yet</span>}</p></div>
-            <div><span className="kv">Needs work</span><p className="clamp3">{s.weaknesses || <span className="muted">Not written yet</span>}</p></div>
+      )}
+      {mock && (mock.weak.length > 0 || mock.solid.length > 0) && (
+        <div className="mocksum">
+          <span className="kv">From the {mock.bankShort} mock {fmtDate(mock.ride.date)} · <Link to={"/mocks/" + mock.ride.id}>open</Link></span>
+          {mock.weak.length > 0 && <div className="small"><b>Weak:</b> {mock.weak.map((w) => `${w.topic} (${[w.u && w.u + " U", w.w && w.w + " W"].filter(Boolean).join(", ")})`).join(" · ")}</div>}
+          {mock.solid.length > 0 && <div className="small"><b>Solid:</b> {mock.solid.map((x) => x.topic).join(" · ")}</div>}
+        </div>
+      )}
+      {(s.strengths || s.weaknesses) && (
+        <details className="fold sub">
+          <summary><span className="ft small">Your written notes</span></summary>
+          <div className="fb small">
+            {s.strengths && <p style={{ margin: "0 0 6px" }}><b>Strengths:</b> {s.strengths}</p>}
+            {s.weaknesses && <p style={{ margin: 0 }}><b>Needs work:</b> {s.weaknesses}</p>}
           </div>
-          {s.summaryAt && <div className="small muted">From AI summary {fmtDate(s.summaryAt)} · edit any time under Edit profile</div>}
-        </>
+        </details>
       )}
     </section>
   );
@@ -431,6 +477,7 @@ function Log({ s, update, prefillRegs }: P & { prefillRegs: string }) {
       {draft ? (
         <EntryForm
           e={draft}
+          skills={topicsFor(s)}
           title="New lesson"
           onChange={(p) => update({ logDraft: { ...draft, ...p } })}
           primary={{ label: "Save to log", run: () => update({ log: [...(s.log ?? []), draft], logDraft: undefined }) }}
@@ -451,6 +498,7 @@ function Log({ s, update, prefillRegs }: P & { prefillRegs: string }) {
             <EntryForm
               key={e.id}
               e={e}
+              skills={topicsFor(s)}
               title="Edit lesson"
               onChange={(p) => patchEntry(e.id, p)}
               primary={{ label: "Done", run: () => setEditing(null) }}
@@ -466,6 +514,7 @@ function Log({ s, update, prefillRegs }: P & { prefillRegs: string }) {
                 <span className="mono muted">{fmtDate(e.date)}{e.tail ? " · " + e.tail : ""}{e.hrs ? " · " + e.hrs + " hr" : ""}{e.night ? ` (${e.night} night)` : ""}{e.ldgDay || e.ldgNight ? ` · ${e.ldgDay || 0}/${e.ldgNight || 0} ldg` : ""}</span>
               </div>
               {e.notes && <p>{e.notes}</p>}
+              <RatingChips ratings={e.ratings} />
               {e.regs && <div className="regs">{e.regs}</div>}
               <div className="row">
                 <button className="linkbtn" onClick={() => setEditing(e.id)}>Edit</button>
@@ -479,8 +528,9 @@ function Log({ s, update, prefillRegs }: P & { prefillRegs: string }) {
   );
 }
 
-function EntryForm({ e, title, onChange, primary, remove, note }: {
+function EntryForm({ e, skills, title, onChange, primary, remove, note }: {
   e: LogEntry;
+  skills: string[];
   title: string;
   onChange: (p: Partial<LogEntry>) => void;
   primary: { label: string; run: () => void };
@@ -518,6 +568,7 @@ function EntryForm({ e, title, onChange, primary, remove, note }: {
         )}
         <label className="f full">Lesson<input value={e.lesson ?? ""} placeholder="e.g. F5 — The traffic pattern" onChange={(ev) => set({ lesson: ev.target.value })} /></label>
         <label className="f full">Notes / debrief<textarea style={{ minHeight: 140 }} value={e.notes ?? ""} onChange={(ev) => set({ notes: ev.target.value })} /></label>
+        <SkillRater skills={skills} ratings={e.ratings ?? {}} onChange={(ratings) => set({ ratings })} />
         <label className="f full">Regs (from the Reg Logger)<input className="mono" value={e.regs ?? ""} onChange={(ev) => set({ regs: ev.target.value })} /></label>
       </div>
       <div className="small muted">{note}</div>
