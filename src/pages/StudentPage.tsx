@@ -760,11 +760,13 @@ function Lesson({ k, label, when, L, s, mark }: {
   );
 }
 
+const NEXT_MARK: Record<string, Mark | null> = { "": "G", G: "Y", Y: "R", R: null };
+
 function MarkLegend() {
   return (
     <div className="mlegend small">
       {(["G", "Y", "R"] as Mark[]).map((m) => <span key={m}><span className={"mdot " + m} /> {MARK_LABEL[m]}</span>)}
-      <span className="muted">Tap a color again to clear it.</span>
+      <span className="muted">Tap the circle to change: blank → green → yellow → red → blank.</span>
     </div>
   );
 }
@@ -780,12 +782,10 @@ function MarkRow({ label, when, value, onSet, strong, tags }: {
         {value?.d && <small className="mdate">{MARK_LABEL[value.m]} · {fmtDate(value.d)}</small>}
         {tags && <span className="tagline">{tags}</span>}
       </span>
-      <span className="mpick" role="group" aria-label={label}>
-        {(["G", "Y", "R"] as Mark[]).map((m) => (
-          <button key={m} type="button" className={"mp " + m} aria-pressed={value?.m === m} title={MARK_LABEL[m]} aria-label={MARK_LABEL[m]}
-            onClick={() => onSet(value?.m === m ? null : m)} />
-        ))}
-      </span>
+      <button type="button" className={"mball" + (value ? " " + value.m : "")}
+        aria-label={`${label}: ${value ? MARK_LABEL[value.m] : "not graded"}. Tap to change.`}
+        title={value ? MARK_LABEL[value.m] : "Not graded"}
+        onClick={() => onSet(NEXT_MARK[value?.m ?? ""])} />
     </div>
   );
 }

@@ -398,3 +398,9 @@ details.fold.sub { margin-top: 10px; background: var(--bg); }
 .mrow .mpick { margin-left: auto; align-self: center; }
 .tagline { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
 @media (max-width: 600px) { .mp { width: 28px; height: 28px; } }
+
+.mball { width: 32px; height: 32px; flex: none; margin-left: auto; align-self: center; border-radius: 50%; border: 2px solid var(--muted); background: var(--surface); padding: 0; transition: background .12s, border-color .12s, transform .08s; }
+.mball:active { transform: scale(.9); }
+.mball.G { background: var(--good); border-color: var(--good); }
+.mball.Y { background: var(--warn); border-color: var(--warn); }
+.mball.R { background: var(--bad); border-color: var(--bad); }
