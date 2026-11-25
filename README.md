@@ -30,6 +30,10 @@ npm run dev        # http://localhost:5173
 
 Without these keys the app still works fully, saving on the device only.
 
+## Shared resource library
+
+Resources added by the library owner show for every CFI and student using the app (other CFIs see them read-only, marked "Library"). Resources anyone else adds stay private to them and their students. Set it up once: Supabase → SQL Editor → run `supabase/shared-library.sql` with the owner's account email on the last line.
+
 ## Weather
 
 The Weather tab shows METAR/TAF, flight category, density altitude, runway head/crosswinds and a check of each student's solo limits. aviationweather.gov doesn't allow browser requests from other sites, so the app asks a small Supabase Edge Function (no key, no cost):

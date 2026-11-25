@@ -139,11 +139,13 @@ function onSession(session: Session | null) {
   }
   syncNow();
   loadMyCards();
+  loadSharedLibrary();
 }
 
 export function initSync() {
   setOnChange(() => scheduleSync());
   if (!supabase) return;
+  loadSharedLibrary(); // readable even before sign-in
   supabase.auth.getSession().then(({ data }) => onSession(data.session));
   supabase.auth.onAuthStateChange((event, session) => {
     if (event === "SIGNED_OUT") {
@@ -158,6 +160,7 @@ export function initSync() {
     if (document.visibilityState === "visible") {
       syncNow();
       loadMyCards();
+      loadSharedLibrary();
     }
   });
   window.setInterval(() => document.visibilityState === "visible" && syncNow(), 60_000);
@@ -265,4 +268,35 @@ export async function loadMyCards() {
   const cards = (data ?? []).map((r) => r.data as StudentCard).filter((c) => c?.v === 1);
   try { localStorage.setItem(MY_CARDS, JSON.stringify(cards)); } catch { /* ignore */ }
   setCards({ cards, loaded: true, error: undefined });
+}
+
+/* ---- shared resource library ---- */
+// Resources added by the library owner (listed in app_admins) are readable by every user via RLS.
+const SHARED_LIB = "cfi.v1.sharedlib";
+type LibState = { items: Resource[]; isOwner: boolean; loaded: boolean };
+let libState: LibState = { items: readSharedLib(), isOwner: false, loaded: false };
+const libSubs = new Set<() => void>();
+function readSharedLib(): Resource[] {
+  try { return JSON.parse(localStorage.getItem(SHARED_LIB) ?? "[]"); } catch { return []; }
+}
+function setLib(p: Partial<LibState>) {
+  libState = { ...libState, ...p };
+  libSubs.forEach((f) => f());
+}
+export function useSharedLibrary() {
+  return useSyncExternalStore((l) => (libSubs.add(l), () => libSubs.delete(l)), () => libState);
+}
+export async function loadSharedLibrary() {
+  if (!supabase) return;
+  const me = state.session?.user.id;
+  let q = supabase.from("records").select("data").eq("collection", "resources").eq("deleted", false);
+  if (me) q = q.neq("user_id", me);
+  const [{ data, error }, owner] = await Promise.all([
+    q,
+    me ? supabase.rpc("is_app_admin", { uid: me }) : Promise.resolve({ data: false }),
+  ]);
+  if (error) return setLib({ loaded: true }); // library not set up yet: keep any cached copy
+  const items = (data ?? []).map((r) => r.data as Resource).filter((r) => r && r.url && !r.builtinId && !r.hidden);
+  try { localStorage.setItem(SHARED_LIB, JSON.stringify(items)); } catch { /* ignore */ }
+  setLib({ items, isOwner: owner.data === true, loaded: true });
 }

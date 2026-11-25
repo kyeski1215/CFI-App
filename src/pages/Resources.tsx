@@ -1,29 +1,44 @@
 import { useMemo, useState } from "react";
 import { Modal } from "../components/ui";
-import { RATINGS, fetchYoutubeTitle, hostOf, isLibraryItem, ratingsOf, youtubeId, type LibraryItem } from "../lib/library";
+import { RATINGS, fetchYoutubeTitle, goalToRating, hostOf, isLibraryItem, ratingsOf, youtubeId, type LibraryItem } from "../lib/library";
 import { create, put, remove, useCollection } from "../lib/store";
-import { useMyCards } from "../lib/sync";
+import { useMyCards, useSharedLibrary } from "../lib/sync";
 import type { Resource } from "../lib/types";
 
-type Item = LibraryItem & { id?: string; rec?: Resource };
+type Item = LibraryItem & { id?: string; rec?: Resource; shared?: boolean };
 
 export default function Resources() {
   const recs = useCollection<Resource>("resources");
   const students = useCollection("students");
   const { cards } = useMyCards();
-  // A signed-in student (no roster of their own) sees what their instructor recommends for them.
-  if (students.length === 0 && cards.length > 0) {
+  const lib = useSharedLibrary();
+  const toItem = (r: Resource, shared: boolean): Item => ({
+    id: shared ? undefined : r.id, rec: shared ? undefined : r, shared,
+    title: r.title, url: r.url, ratings: ratingsOf(r), topic: r.topic, note: r.note, pinned: !shared && r.pinned,
+  });
+  const dedupe = (list: Item[]) => {
     const seen = new Set<string>();
-    const items = cards.flatMap((c) => c.resources ?? []).filter((r) => !seen.has(r.url) && (seen.add(r.url), true));
-    return <Library items={items} title="Videos & links" eyebrow="Recommended by your instructor" />;
+    return list.filter((i) => !seen.has(i.url) && (seen.add(i.url), true));
+  };
+
+  // A signed-in student (no roster of their own): their instructor's picks plus the shared library for their rating.
+  if (students.length === 0 && cards.length > 0) {
+    const mine = new Set(["General", ...cards.map((c) => goalToRating(c.goal))]);
+    const shared = lib.items.filter(isLibraryItem).filter((r) => ratingsOf(r).some((x) => mine.has(x))).map((r) => toItem(r, true));
+    const items = dedupe([...cards.flatMap((c) => c.resources ?? []).map((r) => ({ ...r, shared: false })), ...shared]);
+    return <Library items={items} title="Videos & links" eyebrow="Recommended for your training" />;
   }
-  const items: Item[] = recs.filter(isLibraryItem).map((r) => ({
-    id: r.id, rec: r, title: r.title, url: r.url, ratings: ratingsOf(r), topic: r.topic, note: r.note, pinned: r.pinned,
-  }));
-  return <Library items={items} title="Resources" eyebrow="Videos & links by rating" editable />;
+  const own = recs.filter(isLibraryItem).map((r) => toItem(r, false));
+  const shared = lib.items.filter(isLibraryItem).map((r) => toItem(r, true));
+  const note = lib.isOwner
+    ? "You own the shared library: everything you add here shows for every CFI and student using the app."
+    : shared.length
+      ? "Items marked Library come from the shared library. What you add is only for you and your students."
+      : undefined;
+  return <Library items={dedupe([...own, ...shared])} title="Resources" eyebrow="Videos & links by rating" editable note={note} />;
 }
 
-function Library({ items, title, eyebrow, editable }: { items: Item[]; title: string; eyebrow: string; editable?: boolean }) {
+function Library({ items, title, eyebrow, editable, note }: { items: Item[]; title: string; eyebrow: string; editable?: boolean; note?: string }) {
   const counts = Object.fromEntries(RATINGS.map((r) => [r, items.filter((i) => i.ratings.includes(r)).length]));
   const firstWithItems = RATINGS.find((r) => counts[r] > 0) ?? "Private";
   const [rating, setRating] = useState<string>(() => {
@@ -64,6 +79,7 @@ function Library({ items, title, eyebrow, editable }: { items: Item[]; title: st
         {editable && <button className="btn primary" onClick={() => setEditing("new")}>+ Add video or link</button>}
       </header>
 
+      {note && <div className="small muted">{note}</div>}
       <input className="search" type="search" placeholder="Search all ratings…" value={q} onChange={(e) => setQ(e.target.value)} />
       {!ql && (
         <div className="ratingpick" role="tablist" aria-label="Rating">
@@ -110,7 +126,7 @@ function ItemCard({ i, showRatings, onEdit, onPin }: { i: Item; showRatings: boo
       <span className="vbody">
         <span className="vtitle">{i.title}</span>
         {i.note && <span className="vnote">{i.note}</span>}
-        <span className="vmeta">{yt ? "YouTube" : hostOf(i.url)}{showRatings ? " · " + i.ratings.join(", ") : ""}</span>
+        <span className="vmeta">{i.shared && <span className="libtag">Library</span>}{yt ? "YouTube" : hostOf(i.url)}{showRatings ? " · " + i.ratings.join(", ") : ""}</span>
       </span>
       {(onEdit || onPin) && (
         <span className="vacts">
