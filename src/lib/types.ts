@@ -31,6 +31,7 @@ export interface Student extends BaseRec {
   coInstructors?: string;
   notes?: string;
   strengths?: string;
+  summaryAt?: string; // date strengths / needs work were last filled from the AI summary
   weaknesses?: string;
   availNotes?: string;
   accountId?: string;

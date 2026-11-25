@@ -30,6 +30,17 @@ npm run dev        # http://localhost:5173
 
 Without these keys the app still works fully, saving on the device only.
 
+## AI summaries (strengths & needs work)
+
+The **✨ Summarize from log** button on a student's Overview sends that student's lesson notes to Claude and suggests strengths and needs-work for you to review before saving. It runs as a Supabase Edge Function so the Anthropic API key never ships in the app.
+
+One-time setup:
+1. Get an API key at [console.anthropic.com](https://console.anthropic.com) → API Keys (pay-as-you-go; add a small credit balance).
+2. Supabase → **Edge Functions → Deploy a new function → Via editor**. Name it `student-summary`, paste `supabase/functions/student-summary/index.ts`, deploy.
+3. Supabase → **Edge Functions → Secrets** → add `ANTHROPIC_API_KEY` with your key.
+
+Only signed-in users can call it. The prompt lives at the top of that file if you want to change the style of the summary.
+
 ## Deploy
 
 `.github/workflows/deploy.yml` builds and publishes to GitHub Pages on every push to `main`. Turn it on once in repo **Settings → Pages → Source: GitHub Actions**.

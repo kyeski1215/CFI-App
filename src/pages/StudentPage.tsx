@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Bar, useCopy } from "../components/ui";
 import LessonExtras from "../components/LessonExtras";
+import { summarizeStudent } from "../lib/sync";
 import { BANKS, bankForGoal } from "../lib/banks";
 import {
   AIRCRAFT,
@@ -210,12 +211,7 @@ function Overview({ s, update, onDelete, goTo }: P & { onDelete: () => void; goT
         {last ? <LastLesson e={last} /> : <div className="muted small">Nothing logged yet.</div>}
       </section>
 
-      {(s.strengths || s.weaknesses) && (
-        <section className="sw">
-          {s.strengths && <div className="card"><span className="kv">Strengths</span><p className="clamp3">{s.strengths}</p></div>}
-          {s.weaknesses && <div className="card"><span className="kv">Needs work</span><p className="clamp3">{s.weaknesses}</p></div>}
-        </section>
-      )}
+      <StrengthsCard s={s} update={update} />
 
       <section className="card">
         <div className="row">
@@ -236,6 +232,61 @@ function Overview({ s, update, onDelete, goTo }: P & { onDelete: () => void; goT
         {s.notes && <p className="small clamp3" style={{ margin: 0 }}>{s.notes}</p>}
       </section>
     </>
+  );
+}
+
+function StrengthsCard({ s, update }: P) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [draft, setDraft] = useState<{ strengths: string; needsWork: string; lessons: number } | null>(null);
+  const hasNotes = (s.log ?? []).some((e) => (e.notes ?? "").trim());
+  const run = async () => {
+    setBusy(true);
+    setErr("");
+    try {
+      setDraft(await summarizeStudent(s));
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <section className="card">
+      <div className="row">
+        <h3>Strengths & needs work</h3>
+        <span className="spacer" />
+        <button className="btn sm" disabled={busy || !hasNotes} onClick={run} title={hasNotes ? "" : "Log a lesson with notes first"}>
+          {busy ? "Reading the log…" : "✨ Summarize from log"}
+        </button>
+      </div>
+      {err && <div className="small" style={{ color: "var(--bad)" }}>{err}</div>}
+      {draft ? (
+        <div className="aisum">
+          <div className="small muted">Suggested from {draft.lessons} lesson{draft.lessons === 1 ? "" : "s"}. Check it before saving.</div>
+          <div className="sw">
+            <label className="f">Strengths<textarea value={draft.strengths} onChange={(e) => setDraft({ ...draft, strengths: e.target.value })} /></label>
+            <label className="f">Needs work<textarea value={draft.needsWork} onChange={(e) => setDraft({ ...draft, needsWork: e.target.value })} /></label>
+          </div>
+          <div className="row">
+            <span className="spacer" />
+            <button className="btn" onClick={() => setDraft(null)}>Keep current</button>
+            <button className="btn primary" onClick={() => {
+              update({ strengths: draft.strengths, weaknesses: draft.needsWork, summaryAt: todayStr() });
+              setDraft(null);
+            }}>Use these</button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="sw">
+            <div><span className="kv">Strengths</span><p className="clamp3">{s.strengths || <span className="muted">Not written yet</span>}</p></div>
+            <div><span className="kv">Needs work</span><p className="clamp3">{s.weaknesses || <span className="muted">Not written yet</span>}</p></div>
+          </div>
+          {s.summaryAt && <div className="small muted">From AI summary {fmtDate(s.summaryAt)} · edit any time under Edit profile</div>}
+        </>
+      )}
+    </section>
   );
 }
 

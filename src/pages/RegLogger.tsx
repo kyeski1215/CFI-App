@@ -55,7 +55,7 @@ export default function RegLogger() {
         </div>
       </header>
 
-      <div className="tabs" role="tablist">
+      <div className="ratingpick" role="tablist" aria-label="Rating">
         {Object.entries(REG_TABS).map(([k, v]) => (
           <button key={k} role="tab" aria-selected={k === tab} onClick={() => setTab(k)}>{v.name}</button>
         ))}

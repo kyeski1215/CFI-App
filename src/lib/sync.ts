@@ -163,3 +163,29 @@ export async function signUp(email: string, password: string) {
 export async function signOut() {
   await supabase?.auth.signOut();
 }
+
+/** Asks the student-summary Edge Function for AI strengths / needs-work drawn from the lesson log. */
+export async function summarizeStudent(s: {
+  name: string; goal: string; stage?: string; strengths?: string; weaknesses?: string;
+  log?: { date?: string; kind?: string; lesson?: string; notes?: string; hrs?: string; tail?: string }[];
+}): Promise<{ strengths: string; needsWork: string; lessons: number }> {
+  if (!supabase) throw new Error("AI summaries need cloud sync, which isn't set up in this copy of the app.");
+  if (!state.session) throw new Error("Sign in under Settings to use AI summaries.");
+  const log = (s.log ?? []).map(({ date, kind, lesson, notes, hrs, tail }) => ({ date, kind, lesson, notes, hrs, tail }));
+  const { data, error } = await supabase.functions.invoke("student-summary", {
+    body: { name: s.name, goal: s.goal, stage: s.stage, strengths: s.strengths, weaknesses: s.weaknesses, log },
+  });
+  if (error) {
+    let msg = error.message;
+    const ctx = (error as { context?: Response }).context;
+    try {
+      const b = ctx ? await ctx.json() : null;
+      if (b?.error) msg = b.error;
+    } catch {
+      /* keep generic message */
+    }
+    if (/Failed to send|not found|404/i.test(msg)) msg = "The AI summary function isn't deployed yet. See README → AI summaries.";
+    throw new Error(msg);
+  }
+  return data;
+}
