@@ -206,10 +206,10 @@ export function sameFlight(have: LogEntry, add: LogEntry) {
   if (have.id === add.id) return true;
   if (have.date !== add.date || (have.kind ?? "flight") !== add.kind) return false;
   if (add.kind === "ground") return true;
-  const t1 = (have.tail ?? "").trim().toUpperCase(), t2 = (add.tail ?? "").trim().toUpperCase();
+  const t1 = normTail(have.tail), t2 = normTail(add.tail);
   if (t1 && t2 && t1 !== t2) return false;
   const h1 = parseFloat(have.hrs ?? ""), h2 = parseFloat(add.hrs ?? "");
-  if (isFinite(h1) && isFinite(h2) && Math.abs(h1 - h2) > 0.3) return false;
+  if (isFinite(h1) && isFinite(h2) && Math.abs(h1 - h2) > 0.5) return false;
   return true;
 }
 
@@ -223,4 +223,21 @@ export function newForStudent(log: LogEntry[], flights: FFFlight[]) {
     if (i >= 0) { used.add(i); already++; } else add.push(e);
   }
   return { add, already };
+}
+
+/** "N603BL", "603bl", "n-603bl" all compare equal. */
+export const normTail = (t?: string) => (t ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/^N(?=\d)/, "");
+export const isImported = (e: LogEntry) => e.id?.startsWith("ff-");
+
+/** Imported lessons that duplicate a lesson the instructor logged (same date, same kind, same tail if both have one). */
+export function findImportDuplicates(log: LogEntry[]) {
+  const mine = log.filter((e) => !isImported(e));
+  const used = new Set<LogEntry>();
+  const dups: LogEntry[] = [];
+  for (const e of log.filter(isImported).sort((a, b) => a.date.localeCompare(b.date))) {
+    const m = mine.find((h) => !used.has(h) && h.date === e.date && (h.kind ?? "flight") === e.kind &&
+      (!normTail(h.tail) || !normTail(e.tail) || normTail(h.tail) === normTail(e.tail)));
+    if (m) { used.add(m); dups.push(e); }
+  }
+  return dups;
 }

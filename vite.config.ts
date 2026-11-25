@@ -5,6 +5,7 @@ import { VitePWA } from "vite-plugin-pwa";
 // BASE lets the same build run at a domain root or under /cfi-app/ on GitHub Pages.
 export default defineConfig({
   base: process.env.BASE ?? "./",
+  define: { __BUILD__: JSON.stringify(new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC") },
   plugins: [
     react(),
     VitePWA({

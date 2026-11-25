@@ -7,6 +7,7 @@ import Aircraft from "./pages/Aircraft";
 import MyTraining from "./pages/MyTraining";
 import More from "./pages/More";
 import ImportLogbook from "./pages/ImportLogbook";
+import ImportCleanup from "./pages/ImportCleanup";
 import Roster from "./pages/Roster";
 import StudentPage from "./pages/StudentPage";
 import Mocks from "./pages/Mocks";
@@ -67,6 +68,7 @@ export default function App() {
           <Route path="/students" element={<Roster />} />
           <Route path="/students/:id" element={<StudentPage />} />
           <Route path="/import" element={<ImportLogbook />} />
+          <Route path="/import/fix" element={<ImportCleanup />} />
           <Route path="/mocks" element={<Mocks />} />
           <Route path="/mocks/:id" element={<MockRide />} />
           <Route path="/regs" element={<RegLogger />} />

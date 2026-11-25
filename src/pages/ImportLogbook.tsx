@@ -81,6 +81,7 @@ export default function ImportLogbook() {
           <Link to="/students" className="small">← Roster</Link>
           <h1 style={{ marginTop: 6 }}>Import logbook</h1>
         </div>
+        <Link className="btn" to="/import/fix">Fix an import</Link>
       </header>
 
       <section className="card">

@@ -102,6 +102,7 @@ export default function Settings() {
           It opens full-screen and works offline in the airplane.
         </p>
       </section>
+      <div className="small muted">App version: {__BUILD__}</div>
     </div>
   );
 }
