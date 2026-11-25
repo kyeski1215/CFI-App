@@ -119,7 +119,7 @@ function AircraftCard({ a, open, onToggle }: { a: AircraftRec; open: boolean; on
       </button>
       {!open && links.length > 0 && (
         <div className="aclinks">
-          {links.slice(0, 4).map((l, i) => <a key={i} className="chiplink" href={l.url} target="_blank" rel="noreferrer">{l.title}</a>)}
+          {links.map((l, i) => <a key={i} className="chiplink" href={l.url} target="_blank" rel="noreferrer">{l.title}</a>)}
         </div>
       )}
       {open && <AircraftDetail a={a} update={update} />}
