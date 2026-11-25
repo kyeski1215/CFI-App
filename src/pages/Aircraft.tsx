@@ -19,7 +19,7 @@ const A = "https://claude.ai/artifact/";
 
 // Blitz fleet, from the instructor's Google Drive aircraft folder. Fixed ids and an old timestamp
 // (SEED_V) so these fill in on every device without overwriting anything edited in the app.
-const SEED_V = 2;
+const SEED_V = 3;
 const SEED: AircraftRec[] = [
   {
     id: "ac-p100i", name: "Piper Pilot 100i", tails: "", createdAt: 1, updatedAt: SEED_V, links: [
@@ -27,10 +27,7 @@ const SEED: AircraftRec[] = [
       { title: "GFC 500 autopilot supplement", url: "https://drive.google.com/file/d/19a1bd7iEjVfPa3cAM09NnnZJ9ewHTLIt/view", kind: "POH / AFM" },
       { title: "Type certificate data sheet (TCDS)", url: "https://drive.google.com/file/d/1vGjPLKa6GprdDyowuhaMxyRmcDo5KziP/view", kind: "Other" },
       { title: "ForeFlight checklist (.fmd)", url: "https://drive.google.com/file/d/1s8hN4K3LYXxUZoSBKsGl3ycoO8RZM1PQ/view", kind: "ForeFlight" },
-      { title: "Pilot 100i maneuver guide", url: A + "KxPv8CvJCD1xRYJg2GvrD9", kind: "Guide" },
       { title: "Pilot 100i traffic pattern", url: A + "SGs6v2h9nMvKj8saRKwQJu", kind: "Guide" },
-      { title: "Single-engine emergency flows", url: A + "ARTxX3fncYZqKEWBrwnx6h", kind: "Checklist" },
-      { title: "Drive folder", url: "https://drive.google.com/drive/folders/1mWMlErzv2MgGN6pYft2J6FZxYCVJunM4", kind: "Other" },
     ],
   },
   {
@@ -40,8 +37,6 @@ const SEED: AircraftRec[] = [
       { title: "Weight & balance", url: "https://drive.google.com/file/d/1vMVA3O99QMpF83xhKrCSHEI47gCHAr0O/view", kind: "W&B / performance" },
       { title: "Equipment list", url: "https://drive.google.com/file/d/1QrtRdRZkie5W3rSUT1Qi4I7HSZpw8pzW/view", kind: "Other" },
       { title: "ForeFlight checklist (.fmd)", url: "https://drive.google.com/file/d/1B4SmKbdG1MdFYUHysOTmOKblp98xLQoN/view", kind: "ForeFlight" },
-      { title: "Single-engine emergency flows", url: A + "ARTxX3fncYZqKEWBrwnx6h", kind: "Checklist" },
-      { title: "Drive folder", url: "https://drive.google.com/drive/folders/1PAjE6MN5yWM7X9UmK1dU8_-Y-9sk3Zwm", kind: "Other" },
     ],
   },
   {
@@ -50,8 +45,6 @@ const SEED: AircraftRec[] = [
       { title: "STC supplement (Air Plains, 2,550 lb)", url: "https://drive.google.com/file/d/1ay4qNuxWoxZiasZ8AHzSsZuIXvsvVNxn/view", kind: "POH / AFM" },
       { title: "Weight & balance", url: "https://drive.google.com/file/d/1JZJOrEaSwHIf3NUj5Jkf7oTUcJM1RZMB/view", kind: "W&B / performance" },
       { title: "ForeFlight checklist (.fmd)", url: "https://drive.google.com/file/d/1eqpDcBFeyFqjwodfihhI-dTgArOiRVyw/view", kind: "ForeFlight" },
-      { title: "Single-engine emergency flows", url: A + "ARTxX3fncYZqKEWBrwnx6h", kind: "Checklist" },
-      { title: "Drive folder", url: "https://drive.google.com/drive/folders/1zumn90nhmAUCYKWpch27Fm0UWeUvWKOX", kind: "Other" },
     ],
   },
   {
@@ -59,22 +52,17 @@ const SEED: AircraftRec[] = [
       { title: "POH", url: "https://drive.google.com/file/d/1Jpue1ao7N-yy9C6eH1PRNhUNKzrMfgi3/view", kind: "POH / AFM" },
       { title: "Weight & balance", url: "https://drive.google.com/file/d/1jSmUk0XEUMOAf5CUZYxDVSH5WU7s5V1y/view", kind: "W&B / performance" },
       { title: "ForeFlight checklist (.fmd)", url: "https://drive.google.com/file/d/1nT_jIUd0uIVSxjLhgzwTm0gsBTAVDIoF/view", kind: "ForeFlight" },
-      { title: "Single-engine emergency flows", url: A + "ARTxX3fncYZqKEWBrwnx6h", kind: "Checklist" },
-      { title: "Drive folder", url: "https://drive.google.com/drive/folders/1z2EWUvMUG-5moI4lC_pHErj6ureRuaUr", kind: "Other" },
     ],
   },
   {
     id: "ac-n2569q", name: "N2569Q", tails: "N2569Q", createdAt: 1, updatedAt: SEED_V, links: [
       { title: "POH", url: "https://drive.google.com/file/d/1nL3rDl_Xn5AAIMUS2RkXVzYvrwTLH6bw/view", kind: "POH / AFM" },
       { title: "SureFly electronic ignition supplement", url: "https://drive.google.com/file/d/1ieZtHkbYzFOKqF-B1PIjXKFU_RiMmGQm/view", kind: "POH / AFM" },
-      { title: "Drive folder", url: "https://drive.google.com/drive/folders/12P7v_l5zjPCVv7lknGSQi6Ig02834olJ", kind: "Other" },
     ],
   },
   {
     id: "ac-n8145r", name: "N8145R · Beechcraft Baron B55", tails: "N8145R", createdAt: 1, updatedAt: SEED_V, links: [
       { title: "POH (B55)", url: "https://drive.google.com/file/d/1bhaD2WSSLOxkE-edDeZEwHy2hFTcbBdr/view", kind: "POH / AFM" },
-      { title: "Baron multi-engine checkride prep", url: A + "2YV3qR1ZQ5wpnggmNsAz9R", kind: "Guide" },
-      { title: "Drive folder", url: "https://drive.google.com/drive/folders/1Jo5Kw4Ab9dyzoJoX5FV78j1TfirRF7S_", kind: "Other" },
     ],
   },
   // The generic Cessna 172 card is replaced by one card per Cessna tail.
