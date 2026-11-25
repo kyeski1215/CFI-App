@@ -34,6 +34,10 @@ Without these keys the app still works fully, saving on the device only.
 
 Resources added by the library owner show for every CFI and student using the app (other CFIs see them read-only, marked "Library"). Resources anyone else adds stay private to them and their students. Set it up once: Supabase → SQL Editor → run `supabase/shared-library.sql` with the owner's account email on the last line.
 
+## Blitz fleet
+
+Aircraft on the library owner's account are visible (read-only) only to Blitz Aviation members and the students they share with. Set up once: Supabase → SQL Editor → run `supabase/blitz-fleet.sql` (after `shared-library.sql`) with each Blitz CFI's email in the last insert. Other accounts keep their own private aircraft list.
+
 ## Weather
 
 The Weather tab shows METAR/TAF, flight category, density altitude, runway head/crosswinds and a check of each student's solo limits. aviationweather.gov doesn't allow browser requests from other sites, so the app asks a small Supabase Edge Function (no key, no cost):

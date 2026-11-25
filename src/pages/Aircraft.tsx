@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useCopy } from "../components/ui";
-import { create, fmtDate, getRaw, importAll, newId, put, remove, todayStr, useCollection, type BaseRec } from "../lib/store";
+import { create, fmtDate, newId, put, remove, todayStr, useCollection, type BaseRec } from "../lib/store";
+import { useSharedFleet, type AircraftShared } from "../lib/sync";
 
 export interface AircraftLink { title: string; url: string; kind: string }
 export interface Squawk { id: string; date: string; tail?: string; text: string; resolved?: boolean }
@@ -15,70 +16,16 @@ export interface AircraftRec extends BaseRec {
 
 const KINDS = ["POH / AFM", "Checklist", "ForeFlight", "Guide", "W&B / performance", "Video", "Other"];
 const VSPEEDS = ["Vr", "Vx", "Vy", "Va", "Vfe", "Vno", "Vne", "Vso", "Vs1", "Best glide", "Approach", "Max demo crosswind"];
-const A = "https://claude.ai/artifact/";
-
-// Blitz fleet, from the instructor's Google Drive aircraft folder. Fixed ids and an old timestamp
-// (SEED_V) so these fill in on every device without overwriting anything edited in the app.
-const SEED_V = 3;
-const SEED: AircraftRec[] = [
-  {
-    id: "ac-p100i", name: "Piper Pilot 100i", tails: "", createdAt: 1, updatedAt: SEED_V, links: [
-      { title: "POH", url: "https://drive.google.com/file/d/1AZxbMn3_mrU6jL2jf8VUGw-qWI2Ztc-W/view", kind: "POH / AFM" },
-      { title: "GFC 500 autopilot supplement", url: "https://drive.google.com/file/d/19a1bd7iEjVfPa3cAM09NnnZJ9ewHTLIt/view", kind: "POH / AFM" },
-      { title: "Type certificate data sheet (TCDS)", url: "https://drive.google.com/file/d/1vGjPLKa6GprdDyowuhaMxyRmcDo5KziP/view", kind: "Other" },
-      { title: "ForeFlight checklist (.fmd)", url: "https://drive.google.com/file/d/1s8hN4K3LYXxUZoSBKsGl3ycoO8RZM1PQ/view", kind: "ForeFlight" },
-      { title: "Pilot 100i traffic pattern", url: A + "SGs6v2h9nMvKj8saRKwQJu", kind: "Guide" },
-    ],
-  },
-  {
-    id: "ac-n9547w", name: "N9547W · Cessna 172R (180 hp)", tails: "N9547W", createdAt: 1, updatedAt: SEED_V, links: [
-      { title: "POH", url: "https://drive.google.com/file/d/1-GjgHgMXJi2ySlt3G9b6Qdez4K_8Sk9J/view", kind: "POH / AFM" },
-      { title: "180 hp / 2,550 lb STC supplement (Air Plains)", url: "https://drive.google.com/file/d/147-bDCC2FcgkvPLNotTmVrKqRFX4uRo5/view", kind: "POH / AFM" },
-      { title: "Weight & balance", url: "https://drive.google.com/file/d/1vMVA3O99QMpF83xhKrCSHEI47gCHAr0O/view", kind: "W&B / performance" },
-      { title: "Equipment list", url: "https://drive.google.com/file/d/1QrtRdRZkie5W3rSUT1Qi4I7HSZpw8pzW/view", kind: "Other" },
-      { title: "ForeFlight checklist (.fmd)", url: "https://drive.google.com/file/d/1B4SmKbdG1MdFYUHysOTmOKblp98xLQoN/view", kind: "ForeFlight" },
-    ],
-  },
-  {
-    id: "ac-n99832", name: "N99832 · Cessna 172P (Air Plains STC)", tails: "N99832", createdAt: 1, updatedAt: SEED_V, links: [
-      { title: "POH", url: "https://drive.google.com/file/d/1tHnWYZjYfPJr9U4BjSmeXLBeIcZxrhkq/view", kind: "POH / AFM" },
-      { title: "STC supplement (Air Plains, 2,550 lb)", url: "https://drive.google.com/file/d/1ay4qNuxWoxZiasZ8AHzSsZuIXvsvVNxn/view", kind: "POH / AFM" },
-      { title: "Weight & balance", url: "https://drive.google.com/file/d/1JZJOrEaSwHIf3NUj5Jkf7oTUcJM1RZMB/view", kind: "W&B / performance" },
-      { title: "ForeFlight checklist (.fmd)", url: "https://drive.google.com/file/d/1eqpDcBFeyFqjwodfihhI-dTgArOiRVyw/view", kind: "ForeFlight" },
-    ],
-  },
-  {
-    id: "ac-n122xp", name: "N122XP · Cessna R172K", tails: "N122XP", createdAt: 1, updatedAt: SEED_V, links: [
-      { title: "POH", url: "https://drive.google.com/file/d/1Jpue1ao7N-yy9C6eH1PRNhUNKzrMfgi3/view", kind: "POH / AFM" },
-      { title: "Weight & balance", url: "https://drive.google.com/file/d/1jSmUk0XEUMOAf5CUZYxDVSH5WU7s5V1y/view", kind: "W&B / performance" },
-      { title: "ForeFlight checklist (.fmd)", url: "https://drive.google.com/file/d/1nT_jIUd0uIVSxjLhgzwTm0gsBTAVDIoF/view", kind: "ForeFlight" },
-    ],
-  },
-  {
-    id: "ac-n2569q", name: "N2569Q", tails: "N2569Q", createdAt: 1, updatedAt: SEED_V, links: [
-      { title: "POH", url: "https://drive.google.com/file/d/1nL3rDl_Xn5AAIMUS2RkXVzYvrwTLH6bw/view", kind: "POH / AFM" },
-      { title: "SureFly electronic ignition supplement", url: "https://drive.google.com/file/d/1ieZtHkbYzFOKqF-B1PIjXKFU_RiMmGQm/view", kind: "POH / AFM" },
-    ],
-  },
-  {
-    id: "ac-n8145r", name: "N8145R · Beechcraft Baron B55", tails: "N8145R", createdAt: 1, updatedAt: SEED_V, links: [
-      { title: "POH (B55)", url: "https://drive.google.com/file/d/1bhaD2WSSLOxkE-edDeZEwHy2hFTcbBdr/view", kind: "POH / AFM" },
-    ],
-  },
-  // The generic Cessna 172 card is replaced by one card per Cessna tail.
-  { id: "ac-c172", name: "Cessna 172", createdAt: 1, updatedAt: SEED_V, deleted: true },
-];
 
 export default function Aircraft() {
   const list = useCollection<AircraftRec>("aircraft");
   const [open, setOpen] = useState<string | null>(null);
   const [name, setName] = useState("");
-  useEffect(() => {
-    // Fill in or update a seed only when this device has no newer copy (edits in the app are always newer).
-    const due = SEED.filter((s) => (getRaw("aircraft", s.id)?.updatedAt ?? 0) < s.updatedAt);
-    if (due.length) importAll({ data: { aircraft: due } });
-  }, []);
   const sorted = [...list].sort((a, b) => a.name.localeCompare(b.name));
+  const students = useCollection("students");
+  const fleet = useSharedFleet().items;
+  const fleetSorted = [...fleet].sort((a, b) => a.name.localeCompare(b.name));
+  const studentOnly = students.length === 0 && list.length === 0;
 
   return (
     <div className="page">
@@ -88,7 +35,15 @@ export default function Aircraft() {
           <h1>Aircraft</h1>
         </div>
       </header>
-      <form className="row" onSubmit={(e) => {
+      {fleetSorted.length > 0 && (
+        <section className="list">
+          {!studentOnly && <div className="row"><h2>Blitz fleet</h2><span className="muted small">shared, read-only</span></div>}
+          {fleetSorted.map((a) => <FleetCard key={a.id} a={a} open={open === "f-" + a.id} onToggle={() => setOpen(open === "f-" + a.id ? null : "f-" + a.id)} />)}
+        </section>
+      )}
+      {studentOnly && fleetSorted.length === 0 && <div className="empty">No aircraft shared with you yet.</div>}
+      {!studentOnly && fleetSorted.length > 0 && <div className="row"><h2>My aircraft</h2></div>}
+      {!studentOnly && <form className="row" onSubmit={(e) => {
         e.preventDefault();
         if (!name.trim()) return;
         const r = create<AircraftRec>("aircraft", { name: name.trim(), links: [] });
@@ -97,7 +52,7 @@ export default function Aircraft() {
       }}>
         <input placeholder="Add an aircraft type, e.g. Piper Seminole" value={name} onChange={(e) => setName(e.target.value)} style={{ flex: 1 }} />
         <button className="btn primary">Add</button>
-      </form>
+      </form>}
       {sorted.map((a) => <AircraftCard key={a.id} a={a} open={open === a.id} onToggle={() => setOpen(open === a.id ? null : a.id)} />)}
     </div>
   );
@@ -220,5 +175,46 @@ function AircraftDetail({ a, update }: { a: AircraftRec; update: (p: Partial<Air
         )}
       </div>
     </div>
+  );
+}
+
+function FleetCard({ a, open, onToggle }: { a: AircraftShared; open: boolean; onToggle: () => void }) {
+  const links = a.links ?? [];
+  const vs = Object.entries(a.vspeeds ?? {}).filter(([, v]) => v);
+  const openSq = (a.squawks ?? []).filter((q) => !q.resolved);
+  return (
+    <section className="card">
+      <button className="acsum" onClick={onToggle} aria-expanded={open}>
+        <span>
+          <span className="acname">{a.name}</span>
+          <span className="small muted">{[a.tails, `${links.length} resource${links.length === 1 ? "" : "s"}`].filter(Boolean).join(" · ")}</span>
+        </span>
+        {openSq.length > 0 && <span className="pill p-warn">{openSq.length} squawk{openSq.length === 1 ? "" : "s"}</span>}
+        <span className="chev" aria-hidden="true">›</span>
+      </button>
+      {links.length > 0 && (
+        <div className="aclinks">
+          {links.map((l, i) => <a key={i} className="chiplink" href={l.url} target="_blank" rel="noreferrer">{l.title}</a>)}
+        </div>
+      )}
+      {open && (
+        <div className="acdetail">
+          {vs.length > 0 && (
+            <div>
+              <div className="xhead"><span>V-speeds (KIAS)</span></div>
+              <dl className="facts vfacts">{vs.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+            </div>
+          )}
+          {openSq.length > 0 && (
+            <div>
+              <div className="xhead"><span>Open squawks</span></div>
+              {openSq.map((q) => <div key={q.id} className="small">• {q.text} <span className="muted">({fmtDate(q.date)}{q.tail ? " · " + q.tail : ""})</span></div>)}
+            </div>
+          )}
+          {a.notes && <p className="small" style={{ margin: 0, whiteSpace: "pre-line" }}>{a.notes}</p>}
+          {!vs.length && !openSq.length && !a.notes && <div className="small muted">No V-speeds or notes added yet.</div>}
+        </div>
+      )}
+    </section>
   );
 }

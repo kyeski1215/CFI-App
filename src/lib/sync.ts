@@ -140,6 +140,7 @@ function onSession(session: Session | null) {
   syncNow();
   loadMyCards();
   loadSharedLibrary();
+  loadSharedFleet();
 }
 
 export function initSync() {
@@ -149,7 +150,9 @@ export function initSync() {
   supabase.auth.getSession().then(({ data }) => onSession(data.session));
   supabase.auth.onAuthStateChange((event, session) => {
     if (event === "SIGNED_OUT") {
-      try { localStorage.removeItem(MY_CARDS); } catch { /* ignore */ }
+      try { localStorage.removeItem(MY_CARDS); localStorage.removeItem(FLEET); } catch { /* ignore */ }
+      fleetState = { items: [], loaded: false };
+      fleetSubs.forEach((f) => f());
       setCards({ cards: [], loaded: false });
     }
     if (session?.user.id !== state.session?.user.id) onSession(session);
@@ -161,6 +164,7 @@ export function initSync() {
       syncNow();
       loadMyCards();
       loadSharedLibrary();
+      loadSharedFleet();
     }
   });
   window.setInterval(() => document.visibilityState === "visible" && syncNow(), 60_000);
@@ -299,4 +303,32 @@ export async function loadSharedLibrary() {
   const items = (data ?? []).map((r) => r.data as Resource).filter((r) => r && r.url && !r.builtinId && !r.hidden);
   try { localStorage.setItem(SHARED_LIB, JSON.stringify(items)); } catch { /* ignore */ }
   setLib({ items, isOwner: owner.data === true, loaded: true });
+}
+
+/* ---- Blitz fleet ---- */
+// Aircraft on the library owner's account, readable (via RLS) only by Blitz members and their shared students.
+const FLEET = "cfi.v1.fleet";
+type FleetState = { items: AircraftShared[]; loaded: boolean };
+export type AircraftShared = { id: string; name: string; tails?: string; links?: { title: string; url: string; kind: string }[]; vspeeds?: Record<string, string>; notes?: string; squawks?: { id: string; date: string; tail?: string; text: string; resolved?: boolean }[] };
+let fleetState: FleetState = { items: readFleet(), loaded: false };
+const fleetSubs = new Set<() => void>();
+function readFleet(): AircraftShared[] {
+  try { return JSON.parse(localStorage.getItem(FLEET) ?? "[]"); } catch { return []; }
+}
+export function useSharedFleet() {
+  return useSyncExternalStore((l) => (fleetSubs.add(l), () => fleetSubs.delete(l)), () => fleetState);
+}
+export async function loadSharedFleet() {
+  if (!supabase || !state.session) return;
+  const { data, error } = await supabase
+    .from("records")
+    .select("data")
+    .eq("collection", "aircraft")
+    .eq("deleted", false)
+    .neq("user_id", state.session.user.id);
+  if (error) return;
+  const items = (data ?? []).map((r) => r.data as AircraftShared).filter((a) => a?.name);
+  try { localStorage.setItem(FLEET, JSON.stringify(items)); } catch { /* ignore */ }
+  fleetState = { items, loaded: true };
+  fleetSubs.forEach((f) => f());
 }

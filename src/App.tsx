@@ -1,6 +1,6 @@
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { Icon } from "./components/ui";
-import { useMyCards, useSync } from "./lib/sync";
+import { useMyCards, useSharedFleet, useSync } from "./lib/sync";
 import { useCollection } from "./lib/store";
 import Weather from "./pages/Weather";
 import Aircraft from "./pages/Aircraft";
@@ -39,8 +39,10 @@ export default function App() {
   const { cards } = useMyCards();
   const students = useCollection("students");
   const studentMode = cards.length > 0 && students.length === 0;
-  const side = studentMode ? STUDENT_NAV : [...MAIN, ...(cards.length ? [{ to: "/me", label: "My training", icon: Icon.roster }] : []), ...SIDE_EXTRA];
-  const tabs = studentMode ? STUDENT_NAV : [...MAIN, { to: "/more", label: "More", icon: Icon.more }];
+  const fleet = useSharedFleet().items;
+  const studentNav = fleet.length ? [STUDENT_NAV[0], { to: "/aircraft", label: "Aircraft", icon: Icon.plane }, ...STUDENT_NAV.slice(1)] : STUDENT_NAV;
+  const side = studentMode ? studentNav : [...MAIN, ...(cards.length ? [{ to: "/me", label: "My training", icon: Icon.roster }] : []), ...SIDE_EXTRA];
+  const tabs = studentMode ? studentNav : [...MAIN, { to: "/more", label: "More", icon: Icon.more }];
   const home = studentMode ? "/me" : "/students";
   return (
     <div className="app">
