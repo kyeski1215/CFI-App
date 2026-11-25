@@ -82,7 +82,8 @@ export function has(c: Collection, id: string) {
 }
 
 export function put<T extends BaseRec>(c: Collection, rec: T): T {
-  const next = { ...rec, updatedAt: Date.now() };
+  const now = Date.now();
+  const next = stamp(data.get(c)!.get(rec.id), { ...rec, updatedAt: now } as BaseRec, now) as T;
   data.get(c)!.set(rec.id, next);
   dirty.add(c + "/" + rec.id);
   persist(c);
@@ -118,11 +119,24 @@ export function clearDirty(keys: string[]) {
 export function mergeRemote(c: Collection, rec: BaseRec): boolean {
   const m = data.get(c);
   if (!m) return false;
+  const key = c + "/" + rec.id;
   const local = m.get(rec.id);
-  if (local && local.updatedAt >= rec.updatedAt) return false;
-  m.set(rec.id, rec);
-  dirty.delete(c + "/" + rec.id);
-  return true;
+  if (!local) {
+    m.set(rec.id, rec);
+    return true;
+  }
+  if (rec.updatedAt <= local.updatedAt && !dirty.has(key)) return false; // we already have this or newer
+  const merged = mergeRecords(local, rec);
+  if (sameContent(merged, rec)) {
+    m.set(rec.id, rec);
+    dirty.delete(key);
+  } else {
+    // Local edits the server doesn't have yet: keep them and upload the merged version.
+    merged.updatedAt = Math.max(Date.now(), rec.updatedAt + 1);
+    m.set(rec.id, merged);
+    dirty.add(key);
+  }
+  return !sameContent(local, merged);
 }
 export function commitMerged(changed: Set<Collection>) {
   changed.forEach(persist);
@@ -187,3 +201,103 @@ export const fmtDate = (d?: string) => {
   const [y, m, dd] = d.split("-");
   return `${+m}/${+dd}/${y.slice(2)}`;
 };
+
+/* ---- field-level merge so edits on two devices don't overwrite each other ----
+   Each record carries _ts (last edit time per field). Arrays of objects with an id (lesson log,
+   squawks) are merged item by item using _its (per-item edit time) and _gone (deletion time). */
+type Meta = { _ts?: Record<string, number>; _its?: Record<string, Record<string, number>>; _gone?: Record<string, Record<string, number>> };
+type R = BaseRec & Meta & Record<string, unknown>;
+const META = new Set(["id", "createdAt", "updatedAt", "_ts", "_its", "_gone"]);
+const isItemList = (v: unknown): v is { id: string }[] =>
+  Array.isArray(v) && v.length > 0 && v.every((x) => x && typeof x === "object" && typeof (x as { id?: unknown }).id === "string");
+const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+/** Stamp the fields and list items that changed since prev with `now`. */
+function stamp(prevRaw: BaseRec | undefined, nextRaw: BaseRec, now: number): BaseRec {
+  const prev = prevRaw as R | undefined, next = nextRaw as R;
+  const base = prev?.updatedAt ?? now; // fields never stamped before date from the previous save
+  const ts = { ...(prev?._ts ?? {}) }, its = { ...(prev?._its ?? {}) }, gone = { ...(prev?._gone ?? {}) };
+  const keys = new Set([...Object.keys(prev ?? {}), ...Object.keys(next)]);
+  for (const k of keys) {
+    if (META.has(k)) continue;
+    const pv = prev?.[k], nv = next[k];
+    if (isItemList(pv) || isItemList(nv)) {
+      const pm = new Map((isItemList(pv) ? pv : []).map((x) => [x.id, x]));
+      const nm = new Map((isItemList(nv) ? nv : []).map((x) => [x.id, x]));
+      const t = { ...(its[k] ?? {}) }, g = { ...(gone[k] ?? {}) };
+      for (const [id, item] of nm) {
+        if (!pm.has(id) || !same(pm.get(id), item)) t[id] = now;
+        else t[id] ??= base;
+      }
+      for (const id of pm.keys()) if (!nm.has(id)) { g[id] = now; delete t[id]; }
+      its[k] = t;
+      gone[k] = g;
+      ts[k] ??= base;
+      continue;
+    }
+    if (prev && !same(pv, nv)) ts[k] = now;
+    else ts[k] ??= base;
+  }
+  return { ...next, _ts: ts, _its: its, _gone: gone } as BaseRec;
+}
+
+export function mergeRecords(aRaw: BaseRec, bRaw: BaseRec): BaseRec {
+  const a = aRaw as R, b = bRaw as R;
+  const tA = (k: string) => a._ts?.[k] ?? a.updatedAt, tB = (k: string) => b._ts?.[k] ?? b.updatedAt;
+  const out: R = { id: a.id, createdAt: Math.min(a.createdAt ?? Infinity, b.createdAt ?? Infinity) || a.createdAt, updatedAt: Math.max(a.updatedAt, b.updatedAt) };
+  const ts: Record<string, number> = {}, its: Record<string, Record<string, number>> = {}, gone: Record<string, Record<string, number>> = {};
+  for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) {
+    if (META.has(k)) continue;
+    const av = a[k], bv = b[k];
+    if (isItemList(av) || isItemList(bv)) {
+      const ga = a._gone?.[k] ?? {}, gb = b._gone?.[k] ?? {};
+      const g: Record<string, number> = { ...ga };
+      for (const [id, t] of Object.entries(gb)) g[id] = Math.max(g[id] ?? 0, t);
+      const ia = a._its?.[k] ?? {}, ib = b._its?.[k] ?? {};
+      const items = new Map<string, { item: { id: string }; t: number }>();
+      for (const x of isItemList(av) ? av : []) items.set(x.id, { item: x, t: ia[x.id] ?? a.updatedAt });
+      for (const x of isItemList(bv) ? bv : []) {
+        const t = ib[x.id] ?? b.updatedAt, cur = items.get(x.id);
+        if (!cur || t > cur.t) items.set(x.id, { item: x, t });
+      }
+      const list: { id: string }[] = [], it: Record<string, number> = {};
+      for (const [id, { item, t }] of items) {
+        if ((g[id] ?? 0) >= t) continue; // deleted after its last edit
+        list.push(item);
+        it[id] = t;
+        delete g[id];
+      }
+      out[k] = list;
+      its[k] = it;
+      gone[k] = g;
+      ts[k] = Math.max(tA(k), tB(k));
+      continue;
+    }
+    const useB = tB(k) > tA(k);
+    const v = useB ? bv : av;
+    if (v !== undefined) out[k] = v;
+    ts[k] = Math.max(tA(k), tB(k));
+  }
+  out._ts = ts;
+  out._its = its;
+  out._gone = gone;
+  return out;
+}
+
+const strip = (r: BaseRec) => {
+  const { updatedAt: _u, _ts, _its, _gone, ...rest } = r as R;
+  void _u; void _ts; void _its; void _gone;
+  return rest;
+};
+function sameContent(a: BaseRec, b: BaseRec) {
+  const x = strip(a), y = strip(b);
+  const norm = (o: Record<string, unknown>) => {
+    const out: Record<string, unknown> = {};
+    for (const k of Object.keys(o).sort()) {
+      const v = o[k];
+      out[k] = isItemList(v) ? [...v].sort((p, q) => p.id.localeCompare(q.id)) : v;
+    }
+    return out;
+  };
+  return same(norm(x), norm(y));
+}

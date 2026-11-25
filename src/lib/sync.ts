@@ -113,6 +113,7 @@ export async function syncNow() {
       if (!data || data.length < 1000) break;
     }
     commitMerged(changed);
+    if (takeDirty().length) again = true; // merged local edits go back up on the next pass
     await publishCards(uid);
     localStorage.setItem(CURSOR_KEY, newest);
     set({ status: "idle", lastSync: Date.now() });
