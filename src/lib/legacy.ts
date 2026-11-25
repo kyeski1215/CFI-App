@@ -1,5 +1,5 @@
 // Converts records from the old Student Roster / Mock Checkride Logger artifacts into app records.
-import { all, importAll, newId, type BaseRec } from "./store";
+import { all, importAll, newId, put, type BaseRec } from "./store";
 import type { LogEntry, Ride, Student } from "./types";
 
 type Any = Record<string, any>;
@@ -30,7 +30,8 @@ export function convertStudent(id: string | undefined, d: Any): Student {
     ldgDay: str(e.ldgDay),
     ldgNight: str(e.ldgNight),
     lesson: str(e.lesson),
-    notes: [e.notes, e.text].filter(Boolean).join("\n\n") || undefined,
+    notes: str(e.notes),
+    text: str(e.text),
     regs: str(e.regs),
   }));
   return {
@@ -72,9 +73,28 @@ export function importLegacy(json: Any) {
     return { students: n, rides: 0 };
   }
   const students = docs(json.students).map(([id, d]) => convertStudent(id, d));
+  repairMergedText(students);
   const known = [...all<Student>("students"), ...students];
   const rides = docs(json.rides ?? json.checkrides).map(([id, d]) => convertRide(id, d, known));
   if (!students.length && !rides.length) throw new Error("No students or checkrides found in that JSON");
   importAll({ data: { students: students as BaseRec[], rides: rides as BaseRec[] } });
   return { students: students.length, rides: rides.length };
+}
+
+/** An earlier importer appended each lesson's student text to its notes. Split them back apart. */
+function repairMergedText(incoming: Student[]) {
+  for (const inc of incoming) {
+    const local = all<Student>("students").find((x) => x.id === inc.id);
+    if (!local?.log) continue;
+    let changed = false;
+    const log = local.log.map((le) => {
+      const src = inc.log?.find((ie) => ie.text && ie.date === le.date && (ie.lesson ?? "") === (le.lesson ?? ""));
+      if (!src?.text || le.text) return le;
+      const merged = [src.notes, src.text].filter(Boolean).join("\n\n");
+      if (le.notes !== merged) return le;
+      changed = true;
+      return { ...le, notes: src.notes, text: src.text };
+    });
+    if (changed) put("students", { ...local, log });
+  }
 }

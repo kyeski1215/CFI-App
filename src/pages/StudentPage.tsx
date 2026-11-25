@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { Bar, useCopy } from "../components/ui";
 import LessonExtras from "../components/LessonExtras";
 import { mockSummary, skillSummary, type SkillStat } from "../lib/skills";
+import { claudePrompt, firstName, smsHref, studentText } from "../lib/studentText";
 import { BANKS, bankForGoal } from "../lib/banks";
 import {
   AIRCRAFT,
@@ -232,6 +233,37 @@ function Overview({ s, update, onDelete, goTo }: P & { onDelete: () => void; goT
         {s.notes && <p className="small clamp3" style={{ margin: 0 }}>{s.notes}</p>}
       </section>
     </>
+  );
+}
+
+function StudentTextBox({ s, e, onText }: { s: Student; e: LogEntry; onText: (t: string | undefined) => void }) {
+  const copy = useCopy();
+  const hasNotes = !!(e.notes ?? "").trim() || Object.keys(e.ratings ?? {}).length > 0;
+  return (
+    <div className="full txtbox">
+      <div className="row">
+        <b className="small">Text for {firstName(s.name)}</b>
+        <span className="spacer" />
+        <button type="button" className="btn sm" disabled={!hasNotes} title={hasNotes ? "" : "Write notes or rate skills first"}
+          onClick={() => onText(studentText(s, e))}>{e.text ? "Redo from notes" : "Make student text"}</button>
+      </div>
+      {e.text !== undefined && (
+        <>
+          <textarea value={e.text} onChange={(ev) => onText(ev.target.value)} aria-label={`Text for ${firstName(s.name)}`} />
+          <div className="row">
+            <button type="button" className="btn primary sm" onClick={() => copy(e.text ?? "", "Text copied")}>Copy text</button>
+            {s.contact && <a className="btn sm" href={smsHref(s.contact, e.text ?? "")}>Open in Messages</a>}
+            <span className="spacer" />
+            <button type="button" className="btn ghost sm" onClick={() => onText(undefined)}>Remove text</button>
+          </div>
+        </>
+      )}
+      <div className="small muted">
+        Want it rewritten with chair-fly steps?{" "}
+        <button type="button" className="linkbtn" disabled={!hasNotes} onClick={() => copy(claudePrompt(s, e), "Copied. Paste into the Claude app")}>Copy for Claude</button>
+        , paste into the Claude app, then paste its reply back in here.
+      </div>
+    </div>
   );
 }
 
@@ -477,6 +509,7 @@ function Log({ s, update, prefillRegs }: P & { prefillRegs: string }) {
       {draft ? (
         <EntryForm
           e={draft}
+          student={s}
           skills={topicsFor(s)}
           title="New lesson"
           onChange={(p) => update({ logDraft: { ...draft, ...p } })}
@@ -498,6 +531,7 @@ function Log({ s, update, prefillRegs }: P & { prefillRegs: string }) {
             <EntryForm
               key={e.id}
               e={e}
+              student={s}
               skills={topicsFor(s)}
               title="Edit lesson"
               onChange={(p) => patchEntry(e.id, p)}
@@ -519,6 +553,7 @@ function Log({ s, update, prefillRegs }: P & { prefillRegs: string }) {
               <div className="row">
                 <button className="linkbtn" onClick={() => setEditing(e.id)}>Edit</button>
                 {e.regs && <button className="linkbtn" onClick={() => copy(e.regs!, "Regs copied")}>Copy regs</button>}
+                {e.text && <button className="linkbtn" onClick={() => copy(e.text!, "Student text copied")}>Copy student text</button>}
               </div>
             </div>
           ),
@@ -528,8 +563,9 @@ function Log({ s, update, prefillRegs }: P & { prefillRegs: string }) {
   );
 }
 
-function EntryForm({ e, skills, title, onChange, primary, remove, note }: {
+function EntryForm({ e, student, skills, title, onChange, primary, remove, note }: {
   e: LogEntry;
+  student: Student;
   skills: string[];
   title: string;
   onChange: (p: Partial<LogEntry>) => void;
@@ -569,6 +605,7 @@ function EntryForm({ e, skills, title, onChange, primary, remove, note }: {
         <label className="f full">Lesson<input value={e.lesson ?? ""} placeholder="e.g. F5 — The traffic pattern" onChange={(ev) => set({ lesson: ev.target.value })} /></label>
         <label className="f full">Notes / debrief<textarea style={{ minHeight: 140 }} value={e.notes ?? ""} onChange={(ev) => set({ notes: ev.target.value })} /></label>
         <SkillRater skills={skills} ratings={e.ratings ?? {}} onChange={(ratings) => set({ ratings })} />
+        <StudentTextBox s={student} e={e} onText={(text) => set({ text })} />
         <label className="f full">Regs (from the Reg Logger)<input className="mono" value={e.regs ?? ""} onChange={(ev) => set({ regs: ev.target.value })} /></label>
       </div>
       <div className="small muted">{note}</div>

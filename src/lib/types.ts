@@ -15,6 +15,7 @@ export interface LogEntry {
   notes?: string;
   regs?: string; // reg line copied from the Reg Logger
   ratings?: Record<string, "good" | "work">; // ✓ / ✗ per skill flown this lesson
+  text?: string; // message sent to the student about this lesson
 }
 
 export interface Student extends BaseRec {
