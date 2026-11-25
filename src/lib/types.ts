@@ -11,6 +11,11 @@ export interface LogEntry {
   night?: string;
   ldgDay?: string;
   ldgNight?: string;
+  solo?: string; // student solo hours on this flight (the rest of hrs is dual)
+  xc?: string; // cross-country hours
+  inst?: string; // instrument hours (actual + simulated)
+  approaches?: string; // instrument approaches flown
+  prep?: boolean; // training in preparation for the practical test (61.109(a)(4), 61.65(d)(2)(i), 61.129(a)(3)(v))
   lesson?: string;
   notes?: string;
   regs?: string; // reg line copied from the Reg Logger
@@ -45,6 +50,8 @@ export interface Student extends BaseRec {
   // Yellow / red grades. Green ("checkride ready") is stored as done: guide[key] / covered[].
   guideMarks?: Record<string, { m: "Y" | "R"; d: string }>;
   topicMarks?: Record<string, { m: "Y" | "R"; d: string }>;
+  hoursAdj?: Record<string, string>; // hours toward checkride from other logbooks, per requirement
+  hoursFlags?: Record<string, boolean>; // requirements marked complete by hand (e.g. long cross-country)
   log?: LogEntry[];
   solo?: { maxWind?: string; maxGust?: string; maxXwind?: string; minCeiling?: string; minVis?: string }; // written solo limitations
   shareWithStudent?: boolean; // publish a read-only card the student can see (matched by email)

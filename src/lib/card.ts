@@ -9,6 +9,7 @@ import { daysBetween, todayStr } from "./store";
 import type { Rating } from "./skills";
 import type { Resource, Ride, Student } from "./types";
 import { libraryFor, type LibraryItem } from "./library";
+import { hoursProgress } from "./hours";
 
 export interface StudentCard {
   v: 1;
@@ -26,6 +27,7 @@ export interface StudentCard {
   skills: { strengths: string[]; improving: string[]; needsWork: string[] };
   mock: { date: string; bank: string; weak: string[]; solid: string[]; result?: string } | null;
   briefing: Briefing | null;
+  hours?: { title: string; rows: { label: string; ref: string; have: number; need: number; unit: string; met: boolean }[] } | null;
   resources?: LibraryItem[]; // instructor's recommended videos/links for this student's rating + General
   log: { date: string; kind: string; tail?: string; hrs?: string; lesson?: string; text?: string; notes?: string; ratings?: Record<string, Rating> }[];
 }
@@ -65,6 +67,10 @@ export function buildCard(s: Student, rides: Ride[], instructor?: string, librar
     mock: mk ? { date: mk.ride.date, bank: mk.bankShort, weak: mk.weak.map((w) => w.topic), solid: mk.solid.map((x) => x.topic), result: mk.ride.result } : null,
     briefing: buildBriefing(s),
     resources: libraryFor(s, library),
+    hours: (() => {
+      const hp = hoursProgress(s);
+      return hp ? { title: hp.title, rows: hp.rows.map((r) => ({ label: r.req.label, ref: r.req.ref, have: r.have, need: r.req.need, unit: r.req.unit, met: r.met })) } : null;
+    })(),
     log: [...(s.log ?? [])]
       .filter((e) => e.date)
       .sort((a, b) => b.date.localeCompare(a.date))

@@ -72,6 +72,31 @@ function CardView({ c }: { c: StudentCard }) {
 
       {c.briefing && <BriefingCard b={c.briefing} />}
 
+      {c.hours && (
+        <section className="card">
+          <div className="row">
+            <h3>Hours toward checkride</h3>
+            <span className="spacer" />
+            <span className="pill p-mute">{c.hours.rows.filter((r) => r.met).length}/{c.hours.rows.length} met</span>
+          </div>
+          <div className="small muted">{c.hours.title}. Your instructor confirms these from your logbook.</div>
+          <div className="hreqs">
+            {c.hours.rows.map((r) => (
+              <div key={r.label} className={"hreq" + (r.met ? " met" : "")}>
+                <span className="hmark" aria-hidden="true">{r.met ? "✓" : ""}</span>
+                <span className="hlabel">{r.label}<small className="mono">{r.ref}</small></span>
+                {r.unit === "flag" ? <span className="small muted">{r.met ? "Done" : "Not yet"}</span> : (
+                  <span className="hval">
+                    <span className="mono small">{r.have.toFixed(r.unit === "ldg" ? 0 : 1)} / {r.need}{r.unit === "ldg" ? "" : " hr"}</span>
+                    <span className="bar"><i style={{ width: Math.min(100, (r.have / r.need) * 100) + "%", background: r.met ? "var(--good)" : undefined }} /></span>
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="card">
         <h3>Training progress</h3>
         {c.plan ? (

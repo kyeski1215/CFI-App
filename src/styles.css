@@ -417,3 +417,14 @@ details.fold.sub { margin-top: 10px; background: var(--bg); }
 .cdays { font-size: 13px; text-align: right; }
 .cdays.good { color: var(--good); } .cdays.warn { color: var(--warn); } .cdays.bad { color: var(--bad); font-weight: 600; }
 .cpct { font-size: 12px; color: var(--muted); text-align: right; }
+
+/* hours toward checkride */
+.hreqs { display: flex; flex-direction: column; }
+.hreq { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.hmark { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; font-size: 11px; color: var(--surface); }
+.hreq.met .hmark { background: var(--good); border-color: var(--good); }
+.hlabel { display: flex; flex-direction: column; }
+.hlabel small { font-size: 10.5px; color: var(--muted); }
+.hval { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; min-width: 96px; }
+.hval .bar { width: 96px; }
+.hadj { width: 96px !important; padding: 4px 6px !important; font-size: 13px !important; }

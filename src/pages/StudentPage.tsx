@@ -5,6 +5,7 @@ import LessonExtras from "../components/LessonExtras";
 import { mockSummary, skillSummary, type SkillStat } from "../lib/skills";
 import { claudePrompt, firstName, smsHref, studentText } from "../lib/studentText";
 import BriefingCard from "../components/BriefingCard";
+import { hoursProgress, type ReqRow } from "../lib/hours";
 import { useSync } from "../lib/sync";
 import { buildBriefing, briefingText } from "../lib/briefing";
 import { BANKS, bankForGoal } from "../lib/banks";
@@ -212,6 +213,8 @@ function Overview({ s, update, onDelete, goTo }: P & { onDelete: () => void; goT
         </div>
       </section>
 
+      <HoursCard s={s} update={update} />
+
       {brief && (
         <BriefingCard b={brief} actions={<button className="btn ghost sm" onClick={() => copy(briefingText(brief, firstName(s.name)), "Briefing copied")}>Copy for {firstName(s.name)}</button>} />
       )}
@@ -353,6 +356,51 @@ function RatingChips({ ratings }: { ratings?: Record<string, "good" | "work"> })
     <div className="ratedlist">
       {list.map(([k, r]) => <span key={k} className={"rated " + r}>{r === "good" ? "✓" : "✗"} {k}</span>)}
     </div>
+  );
+}
+
+function HoursCard({ s, update }: P) {
+  const [edit, setEdit] = useState(false);
+  const hp = hoursProgress(s);
+  if (!hp) return null;
+  const fmt = (r: ReqRow) => (r.req.unit === "flag" ? "" : `${r.have.toFixed(r.req.unit === "ldg" ? 0 : 1)} / ${r.req.need}${r.req.unit === "ldg" ? "" : " hr"}`);
+  return (
+    <section className="card">
+      <div className="row">
+        <h3>Hours toward checkride</h3>
+        <span className="spacer" />
+        <span className={"pill " + (hp.met === hp.total ? "p-good" : "p-mute")}>{hp.met}/{hp.total} met</span>
+        <button className="btn ghost sm" onClick={() => setEdit(!edit)}>{edit ? "Done" : "Add other time"}</button>
+      </div>
+      <div className="small muted">{hp.title}. From the lesson log{s.priorHours ? ` plus ${s.priorHours} prior hours` : ""}.{edit ? " Add time from the student's own logbook (solo, PIC, earlier instructors) on each line." : ""}</div>
+      <div className="hreqs">
+        {hp.rows.map((r) => (
+          <div key={r.req.key} className={"hreq" + (r.met ? " met" : "")}>
+            <span className="hmark" aria-hidden="true">{r.met ? "✓" : ""}</span>
+            <span className="hlabel">
+              {r.req.label}
+              <small className="mono">{r.req.ref}{r.req.unit === "flag" && r.auto ? " · from syllabus" : ""}{r.adj ? ` · incl. ${r.adj} added` : ""}</small>
+            </span>
+            {r.req.unit === "flag" ? (
+              edit && !r.auto ? (
+                <input type="checkbox" checked={!!s.hoursFlags?.[r.req.key]} aria-label={r.req.label}
+                  onChange={() => update({ hoursFlags: { ...s.hoursFlags, [r.req.key]: !s.hoursFlags?.[r.req.key] } })} />
+              ) : <span className="small muted">{r.met ? "Done" : "Not yet"}</span>
+            ) : (
+              <span className="hval">
+                <span className="mono small">{fmt(r)}</span>
+                <span className="bar"><i style={{ width: Math.min(100, (r.have / r.req.need) * 100) + "%", background: r.met ? "var(--good)" : undefined }} /></span>
+                {edit && (
+                  <input className="hadj" inputMode="decimal" placeholder="+ other" aria-label={`${r.req.label}: time from other logbooks`}
+                    value={s.hoursAdj?.[r.req.key] ?? ""} onChange={(e) => update({ hoursAdj: { ...s.hoursAdj, [r.req.key]: e.target.value } })} />
+                )}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="small muted">Checkride prep counts lessons marked "Checkride prep" since {fmtDate(hp.prepSince)} (conservative 2-calendar-month window). Always verify against the student's logbook before endorsing.</div>
+    </section>
   );
 }
 
@@ -610,6 +658,14 @@ function EntryForm({ e, student, skills, title, onChange, primary, remove, note 
                 <input inputMode="numeric" aria-label="Day landings" value={e.ldgDay ?? ""} onChange={(ev) => set({ ldgDay: ev.target.value })} />
                 <input inputMode="numeric" aria-label="Night landings" value={e.ldgNight ?? ""} onChange={(ev) => set({ ldgNight: ev.target.value })} />
               </div>
+            </label>
+            <label className="f">Solo hrs (of total)<input inputMode="decimal" value={e.solo ?? ""} onChange={(ev) => set({ solo: ev.target.value })} placeholder="0 = all dual" /></label>
+            <label className="f">Cross-country hrs<input inputMode="decimal" value={e.xc ?? ""} onChange={(ev) => set({ xc: ev.target.value })} /></label>
+            <label className="f">Instrument hrs<input inputMode="decimal" value={e.inst ?? ""} onChange={(ev) => set({ inst: ev.target.value })} placeholder="actual + hood" /></label>
+            <label className="f">Approaches<input inputMode="numeric" value={e.approaches ?? ""} onChange={(ev) => set({ approaches: ev.target.value })} /></label>
+            <label className="check full" style={{ borderBottom: 0 }}>
+              <input type="checkbox" checked={!!e.prep} onChange={() => set({ prep: !e.prep })} />
+              <span className="ct"><span>Checkride prep</span><small>Counts toward the 3 hr of practical test prep within 2 calendar months</small></span>
             </label>
           </>
         )}
