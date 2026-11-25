@@ -5,7 +5,7 @@ export default function BriefingCard({ b, actions }: { b: Briefing; actions?: Re
   return (
     <section className="card briefing">
       <div className="row">
-        <span className="eyebrow">Next lesson briefing</span>
+        <span className="blabel">Next lesson</span>
         <span className="spacer" />
         {actions}
       </div>

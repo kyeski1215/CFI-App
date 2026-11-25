@@ -21,7 +21,6 @@ export default function Mocks() {
     <div className="page">
       <header className="page-head">
         <div>
-          <div className="eyebrow">Gouges by examiner</div>
           <h1>Mock Checkrides</h1>
         </div>
         <button className="btn primary" onClick={() => setCreating(true)}>+ New mock</button>
@@ -39,6 +38,7 @@ export default function Mocks() {
 
       <section className="list">
         {list.length === 0 && <div className="empty">No mock checkrides yet.</div>}
+        <div className="rows">
         {list.map((r) => {
           const c = { S: 0, W: 0, U: 0 };
           Object.values(r.grades ?? {}).forEach((g) => c[g]++);
@@ -57,6 +57,7 @@ export default function Mocks() {
             </Link>
           );
         })}
+        </div>
       </section>
 
       <section className="card">

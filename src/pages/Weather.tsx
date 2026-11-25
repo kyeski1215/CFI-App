@@ -55,7 +55,6 @@ export default function Weather() {
     <div className="page">
       <header className="page-head">
         <div>
-          <div className="eyebrow">aviationweather.gov</div>
           <h1>Weather</h1>
         </div>
         <div className="row">

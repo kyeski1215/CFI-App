@@ -49,7 +49,6 @@ export default function RegLogger() {
     <div className="page" style={{ paddingBottom: 200 }}>
       <header className="page-head">
         <div>
-          <div className="eyebrow">14 CFR Part 61</div>
           <h1>Logbook Reg Logger</h1>
           <p className="muted small" style={{ margin: "4px 0 0" }}>Tap what you covered. Copy the reg line into the logbook, or save it to the student's lesson log.</p>
         </div>

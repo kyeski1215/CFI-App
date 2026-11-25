@@ -31,7 +31,6 @@ export default function Aircraft() {
     <div className="page">
       <header className="page-head">
         <div>
-          <div className="eyebrow">Blitz fleet</div>
           <h1>Aircraft</h1>
         </div>
       </header>

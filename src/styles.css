@@ -429,3 +429,85 @@ details.fold.sub { margin-top: 10px; background: var(--bg); }
 .hval .bar { width: 96px; }
 .hadj { width: 96px !important; padding: 4px 6px !important; font-size: 13px !important; }
 .toast { display: flex; align-items: center; gap: 14px; } .toastbtn { background: none; border: 0; color: var(--chrome-active); font-weight: 700; padding: 0; }
+
+/* ===== Working-tool look: one typeface, ruled lists, fewer boxes =====
+   Logbook / FAA-form feel. Public Sans everywhere, tabular figures for numbers, monospace only for
+   raw METAR/TAF text. Later rules override the earlier component styles on purpose. */
+:root {
+  --f-display: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "Public Sans", system-ui, sans-serif;
+  --r: 6px;
+}
+body { font-size: 15px; font-variant-numeric: tabular-nums; letter-spacing: 0; }
+h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.015em; line-height: 1.15; }
+h2 { font-size: 17px; font-weight: 700; letter-spacing: -0.005em; }
+h3 { font-size: 15.5px; font-weight: 700; }
+.subtitle { color: var(--muted); font-size: 14px; margin-top: 2px; }
+.page { gap: 20px; }
+
+/* surfaces: flat, squarer, no stacked borders */
+.card { border-radius: var(--r); box-shadow: none; gap: 10px; }
+.empty { border-radius: var(--r); }
+details.fold, .lesson, .task { border-radius: var(--r); }
+.btn { border-radius: 5px; font-weight: 600; min-height: 38px; }
+.btn.sm { min-height: 30px; }
+input:not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea { border-radius: 5px; }
+.search { border-radius: 5px !important; padding-left: 10px !important; }
+
+/* status tags: small square labels, not pills */
+.pill { border-radius: 3px; padding: 1px 6px; font-size: 11.5px; letter-spacing: 0; }
+.p-mute { border: 0; background: var(--bg); }
+
+/* filter chips become a plain segmented row */
+.chips { gap: 0; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; display: inline-flex; flex-wrap: wrap; background: var(--surface); }
+.chip { border: 0; border-right: 1px solid var(--line); border-radius: 0; padding: 6px 11px; color: var(--ink); background: transparent; }
+.chip:last-child { border-right: 0; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.modal .chips, .ratechips { border: 0; overflow: visible; gap: 6px; background: none; }
+.modal .chip { border: 1px solid var(--line); border-radius: 4px; }
+
+/* totals as one ruled strip, like a logbook totals line */
+.stats { gap: 0; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); overflow: hidden; }
+.stat { border: 0; border-radius: 0; box-shadow: inset -1px 0 var(--line), inset 0 -1px var(--line); padding: 10px 12px; background: transparent; }
+.stat b { font-size: 22px; font-weight: 800; font-family: var(--f-body); letter-spacing: -0.01em; }
+.stat span { font-size: 12px; }
+
+/* ruled list: rows share one panel */
+.rows { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.rows > .lrow, .rows > .crow { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; }
+.rows > :last-child { border-bottom: 0; }
+.rows > .lrow:hover, .rows > .crow:hover { background: var(--bg); border-color: var(--line); }
+.lrow .name { font-family: var(--f-body); font-size: 16.5px; font-weight: 700; letter-spacing: -0.005em; }
+.lrow { padding: 12px 14px; }
+
+/* tabs: underline, no heavy pills */
+.tabs button { font-weight: 600; padding: 9px 10px; }
+.ratingpick button { font: 600 14px var(--f-body); border-radius: 5px; border-width: 1px; }
+
+/* section labels in plain type, not spaced capitals */
+.xhead, .ghead, .reshead { font-family: var(--f-body); letter-spacing: 0; text-transform: none; font-weight: 700; font-size: 13px; color: var(--ink); }
+.ghead { color: var(--muted); }
+.kv { font-size: 12.5px; }
+.lcode, .hwk, .tag, .rwy { font-family: var(--f-body); letter-spacing: 0; font-weight: 600; border-radius: 3px; }
+.mdate, .when, .cdays, .cpct { font-family: var(--f-body); }
+.raw { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.blabel { font-size: 13px; font-weight: 700; color: var(--accent); }
+.briefing { border-color: var(--line); border-left: 3px solid var(--accent); }
+.btitle h3 { font-size: 19px; font-weight: 800; }
+
+/* grading rows: color lives in the ball only */
+.mrow.mG, .mrow.mY, .mrow.mR { background: none; }
+
+/* aircraft and resources */
+.acname { font: 700 17px var(--f-body); }
+.chiplink { border-radius: 4px; }
+.vcard { border-radius: var(--r); }
+.res { border-radius: 5px; }
+.regchip { border-radius: 5px; border-width: 1px; }
+.regchip b { font: 700 14px var(--f-body); }
+
+/* sidebar brand */
+.sidenav .brand { font-family: var(--f-body); font-weight: 800; font-size: 19px; letter-spacing: -0.01em; }
+.row > .chip { border: 1px solid var(--line); border-radius: 5px; }
+.cv, .rated, .mdot:not(:empty), .libtag, .gp { border-radius: 4px; }

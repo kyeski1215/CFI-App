@@ -43,8 +43,8 @@ export default function MyTraining() {
     <div className="page">
       <header className="page-head">
         <div>
-          <div className="eyebrow">{c.goal}{c.instructor ? ` · with ${c.instructor}` : ""}</div>
           <h1>{c.name}</h1>
+          <div className="subtitle">{c.goal}{c.instructor ? ` · with ${c.instructor}` : ""}</div>
         </div>
         {cards.length > 1 && (
           <select value={pick} onChange={(e) => setPick(+e.target.value)} style={{ width: "auto" }} aria-label="Training record">

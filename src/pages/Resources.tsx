@@ -26,7 +26,7 @@ export default function Resources() {
     const mine = new Set(["General", ...cards.map((c) => goalToRating(c.goal))]);
     const shared = lib.items.filter(isLibraryItem).filter((r) => ratingsOf(r).some((x) => mine.has(x))).map((r) => toItem(r, true));
     const items = dedupe([...cards.flatMap((c) => c.resources ?? []).map((r) => ({ ...r, shared: false })), ...shared]);
-    return <Library items={items} title="Videos & links" eyebrow="Recommended for your training" />;
+    return <Library items={items} title="Videos & links" />;
   }
   const own = recs.filter(isLibraryItem).map((r) => toItem(r, false));
   const shared = lib.items.filter(isLibraryItem).map((r) => toItem(r, true));
@@ -35,10 +35,10 @@ export default function Resources() {
     : shared.length
       ? "Items marked Library come from the shared library. What you add is only for you and your students."
       : undefined;
-  return <Library items={dedupe([...own, ...shared])} title="Resources" eyebrow="Videos & links by rating" editable note={note} />;
+  return <Library items={dedupe([...own, ...shared])} title="Resources" editable note={note} />;
 }
 
-function Library({ items, title, eyebrow, editable, note }: { items: Item[]; title: string; eyebrow: string; editable?: boolean; note?: string }) {
+function Library({ items, title, editable, note }: { items: Item[]; title: string; editable?: boolean; note?: string }) {
   const counts = Object.fromEntries(RATINGS.map((r) => [r, items.filter((i) => i.ratings.includes(r)).length]));
   const firstWithItems = RATINGS.find((r) => counts[r] > 0) ?? "Private";
   const [rating, setRating] = useState<string>(() => {
@@ -73,7 +73,6 @@ function Library({ items, title, eyebrow, editable, note }: { items: Item[]; tit
     <div className="page">
       <header className="page-head">
         <div>
-          <div className="eyebrow">{eyebrow}</div>
           <h1>{title}</h1>
         </div>
         {editable && <button className="btn primary" onClick={() => setEditing("new")}>+ Add video or link</button>}

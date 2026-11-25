@@ -71,7 +71,6 @@ export default function Roster() {
     <div className="page">
       <header className="page-head">
         <div>
-          <div className="eyebrow">KOGD · Blitz Aviation</div>
           <h1>Student Roster</h1>
         </div>
         <div className="row">
@@ -108,6 +107,7 @@ export default function Roster() {
             {students.length ? "No students match." : <>No students yet. Add your first one, or <Link to="/import">import your ForeFlight logbook</Link>.</>}
           </div>
         )}
+        <div className={compact ? "rows compact" : "rows"}>
         {shown.map((s) => {
           const d = recency(s);
           const plan = guideFor(s) ? guideProgress(s) : null;
@@ -155,6 +155,7 @@ export default function Roster() {
             </Link>
           );
         })}
+        </div>
       </section>
 
       {adding && <AddStudent onClose={() => setAdding(false)} />}
