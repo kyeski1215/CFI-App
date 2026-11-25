@@ -11,10 +11,8 @@ import { BANKS, bankForGoal } from "../lib/banks";
 import {
   AIRCRAFT,
   D87,
-  DAYS,
   GOALS,
   OVERDUE_DAYS,
-  SLOTS,
   STATUSES,
   TAILS,
   groundFor,
@@ -233,7 +231,6 @@ function Overview({ s, update, onDelete, goTo }: P & { onDelete: () => void; goT
           <div><dt>Aircraft</dt><dd>{s.aircraft || "—"}</dd></div>
           <div><dt>Stage</dt><dd>{s.stage || "—"}</dd></div>
           <div><dt>Course</dt><dd>{s.course || "—"}</dd></div>
-          <div><dt>Usually free</dt><dd>{availSummary(s)}</dd></div>
           <div><dt>Phone</dt><dd>{s.contact ? <a href={"tel:" + s.contact}>{s.contact}</a> : "—"}</dd></div>
           <div><dt>Email</dt><dd className="wrap">{s.email || "—"}</dd></div>
           {s.coInstructors && <div><dt>Other instructors</dt><dd>{s.coInstructors}</dd></div>}
@@ -424,21 +421,8 @@ function LastLesson({ e }: { e: LogEntry }) {
   );
 }
 
-function availSummary(s: Student) {
-  const a = new Set(s.avail ?? []);
-  const note = s.availNotes ? " · " + s.availNotes : "";
-  if (!a.size) return (s.availNotes || "Not set");
-  if (a.size === DAYS.length * SLOTS.length) return "Anytime" + note;
-  const days = DAYS.map((d) => {
-    const sl = SLOTS.filter(([k]) => a.has(d + "-" + k)).map(([k]) => k);
-    return sl.length ? (sl.length === SLOTS.length ? d : `${d} ${sl.join("/")}`) : "";
-  }).filter(Boolean);
-  return days.join(", ") + note;
-}
-
 function ProfileEditor({ s, update, onDelete, onDone }: P & { onDelete: () => void; onDone: () => void }) {
   const [confirm, setConfirm] = useState(false);
-  const avail = new Set(s.avail ?? []);
   return (
     <>
       <div className="row">
@@ -472,37 +456,6 @@ function ProfileEditor({ s, update, onDelete, onDone }: P & { onDelete: () => vo
             <textarea value={s.notes ?? ""} onChange={(e) => update({ notes: e.target.value })} />
           </label>
         </div>
-      </section>
-      <section className="card">
-        <h3>Usual availability</h3>
-        <div className="avail">
-          <span />
-          {DAYS.map((d) => <span key={d} className="h">{d}</span>)}
-          {SLOTS.map(([k, label]) => (
-            <div key={k} style={{ display: "contents" }}>
-              <span className="l">{k}</span>
-              {DAYS.map((d) => {
-                const key = d + "-" + k;
-                return (
-                  <button
-                    key={key}
-                    className="slot"
-                    aria-label={`${d} ${label}`}
-                    aria-pressed={avail.has(key)}
-                    onClick={() => {
-                      const n = new Set(avail);
-                      n.has(key) ? n.delete(key) : n.add(key);
-                      update({ avail: [...n] });
-                    }}
-                  />
-                );
-              })}
-            </div>
-          ))}
-        </div>
-        <label className="f">Availability notes
-          <input value={s.availNotes ?? ""} onChange={(e) => update({ availNotes: e.target.value })} placeholder="e.g. works nights, free after 3 on Fridays" />
-        </label>
       </section>
       <section className="card">
         <h3>Solo limitations</h3>
