@@ -6,6 +6,7 @@ import Weather from "./pages/Weather";
 import Aircraft from "./pages/Aircraft";
 import MyTraining from "./pages/MyTraining";
 import More from "./pages/More";
+import ImportLogbook from "./pages/ImportLogbook";
 import Roster from "./pages/Roster";
 import StudentPage from "./pages/StudentPage";
 import Mocks from "./pages/Mocks";
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="/" element={<Navigate to={home} replace />} />
           <Route path="/students" element={<Roster />} />
           <Route path="/students/:id" element={<StudentPage />} />
+          <Route path="/import" element={<ImportLogbook />} />
           <Route path="/mocks" element={<Mocks />} />
           <Route path="/mocks/:id" element={<MockRide />} />
           <Route path="/regs" element={<RegLogger />} />

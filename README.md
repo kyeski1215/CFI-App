@@ -10,6 +10,7 @@ An installable web app for flight instructors: student roster, mock checkride gr
 | **Mocks** | 794 questions across PPL, IFR, Commercial, CFI, CFII and AMEL, tagged by examiner gouge. Grade S/W/U, add notes, filter to one examiner's gouge, copy a debrief. |
 | **Regs** | Tap what you covered, get a compact reg line (e.g. `61.107(b)(1)(i, ii, iv)`) to copy into the logbook, or add it straight to a student's lesson log. |
 | **Resources** | Your recommended YouTube videos and links, by rating (Private → CFII, plus General) and topic. Students see the ones for their rating. |
+| **Import logbook** | On the Roster: upload a ForeFlight logbook CSV. Instruction flights (dual or ground given) are grouped by the student named on each flight and become lesson log entries, after a preview where you rename, pick the rating, skip, or merge into existing students. Re-importing doesn't duplicate. |
 | **Settings** | Sign in for sync, backup/restore, import from the old artifacts. |
 
 Content came from the earlier Claude artifacts and lives in `src/data/*.json` and `src/lib/{regs,resources,curriculum}.ts`.

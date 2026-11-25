@@ -52,7 +52,10 @@ export default function Roster() {
           <div className="eyebrow">KOGD · Blitz Aviation</div>
           <h1>Student Roster</h1>
         </div>
-        <button className="btn primary" onClick={() => setAdding(true)}>+ Add student</button>
+        <div className="row">
+          <Link className="btn" to="/import">Import logbook</Link>
+          <button className="btn primary" onClick={() => setAdding(true)}>+ Add student</button>
+        </div>
       </header>
 
       <section className="stats" aria-label="Summary">
@@ -73,7 +76,7 @@ export default function Roster() {
         </div>
         {shown.length === 0 && (
           <div className="empty">
-            {students.length ? "No students match." : "No students yet. Add your first one, or import from Settings."}
+            {students.length ? "No students match." : <>No students yet. Add your first one, or <Link to="/import">import your ForeFlight logbook</Link>.</>}
           </div>
         )}
         {shown.map((s) => {
