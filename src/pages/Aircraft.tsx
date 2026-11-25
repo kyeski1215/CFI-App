@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useCopy } from "../components/ui";
-import { create, fmtDate, has, importAll, newId, put, remove, todayStr, useCollection, type BaseRec } from "../lib/store";
+import { create, fmtDate, getRaw, importAll, newId, put, remove, todayStr, useCollection, type BaseRec } from "../lib/store";
 
 export interface AircraftLink { title: string; url: string; kind: string }
 export interface Squawk { id: string; date: string; tail?: string; text: string; resolved?: boolean }
@@ -17,20 +17,68 @@ const KINDS = ["POH / AFM", "Checklist", "ForeFlight", "Guide", "W&B / performan
 const VSPEEDS = ["Vr", "Vx", "Vy", "Va", "Vfe", "Vno", "Vne", "Vso", "Vs1", "Best glide", "Approach", "Max demo crosswind"];
 const A = "https://claude.ai/artifact/";
 
-// Starter types with the guides already built for the Blitz fleet. Fixed ids so every device seeds the same records.
+// Blitz fleet, from the instructor's Google Drive aircraft folder. Fixed ids and an old timestamp
+// (SEED_V) so these fill in on every device without overwriting anything edited in the app.
+const SEED_V = 2;
 const SEED: AircraftRec[] = [
   {
-    id: "ac-p100i", name: "Piper Pilot 100i", createdAt: 0, updatedAt: 0, links: [
+    id: "ac-p100i", name: "Piper Pilot 100i", tails: "", createdAt: 1, updatedAt: SEED_V, links: [
+      { title: "POH", url: "https://drive.google.com/file/d/1AZxbMn3_mrU6jL2jf8VUGw-qWI2Ztc-W/view", kind: "POH / AFM" },
+      { title: "GFC 500 autopilot supplement", url: "https://drive.google.com/file/d/19a1bd7iEjVfPa3cAM09NnnZJ9ewHTLIt/view", kind: "POH / AFM" },
+      { title: "Type certificate data sheet (TCDS)", url: "https://drive.google.com/file/d/1vGjPLKa6GprdDyowuhaMxyRmcDo5KziP/view", kind: "Other" },
+      { title: "ForeFlight checklist (.fmd)", url: "https://drive.google.com/file/d/1s8hN4K3LYXxUZoSBKsGl3ycoO8RZM1PQ/view", kind: "ForeFlight" },
       { title: "Pilot 100i maneuver guide", url: A + "KxPv8CvJCD1xRYJg2GvrD9", kind: "Guide" },
       { title: "Pilot 100i traffic pattern", url: A + "SGs6v2h9nMvKj8saRKwQJu", kind: "Guide" },
       { title: "Single-engine emergency flows", url: A + "ARTxX3fncYZqKEWBrwnx6h", kind: "Checklist" },
+      { title: "Drive folder", url: "https://drive.google.com/drive/folders/1mWMlErzv2MgGN6pYft2J6FZxYCVJunM4", kind: "Other" },
     ],
   },
   {
-    id: "ac-c172", name: "Cessna 172", createdAt: 0, updatedAt: 0, links: [
+    id: "ac-n9547w", name: "N9547W · Cessna 172R (180 hp)", tails: "N9547W", createdAt: 1, updatedAt: SEED_V, links: [
+      { title: "POH", url: "https://drive.google.com/file/d/1-GjgHgMXJi2ySlt3G9b6Qdez4K_8Sk9J/view", kind: "POH / AFM" },
+      { title: "180 hp / 2,550 lb STC supplement (Air Plains)", url: "https://drive.google.com/file/d/147-bDCC2FcgkvPLNotTmVrKqRFX4uRo5/view", kind: "POH / AFM" },
+      { title: "Weight & balance", url: "https://drive.google.com/file/d/1vMVA3O99QMpF83xhKrCSHEI47gCHAr0O/view", kind: "W&B / performance" },
+      { title: "Equipment list", url: "https://drive.google.com/file/d/1QrtRdRZkie5W3rSUT1Qi4I7HSZpw8pzW/view", kind: "Other" },
+      { title: "ForeFlight checklist (.fmd)", url: "https://drive.google.com/file/d/1B4SmKbdG1MdFYUHysOTmOKblp98xLQoN/view", kind: "ForeFlight" },
       { title: "Single-engine emergency flows", url: A + "ARTxX3fncYZqKEWBrwnx6h", kind: "Checklist" },
+      { title: "Drive folder", url: "https://drive.google.com/drive/folders/1PAjE6MN5yWM7X9UmK1dU8_-Y-9sk3Zwm", kind: "Other" },
     ],
   },
+  {
+    id: "ac-n99832", name: "N99832 · Cessna 172P (Air Plains STC)", tails: "N99832", createdAt: 1, updatedAt: SEED_V, links: [
+      { title: "POH", url: "https://drive.google.com/file/d/1tHnWYZjYfPJr9U4BjSmeXLBeIcZxrhkq/view", kind: "POH / AFM" },
+      { title: "STC supplement (Air Plains, 2,550 lb)", url: "https://drive.google.com/file/d/1ay4qNuxWoxZiasZ8AHzSsZuIXvsvVNxn/view", kind: "POH / AFM" },
+      { title: "Weight & balance", url: "https://drive.google.com/file/d/1JZJOrEaSwHIf3NUj5Jkf7oTUcJM1RZMB/view", kind: "W&B / performance" },
+      { title: "ForeFlight checklist (.fmd)", url: "https://drive.google.com/file/d/1eqpDcBFeyFqjwodfihhI-dTgArOiRVyw/view", kind: "ForeFlight" },
+      { title: "Single-engine emergency flows", url: A + "ARTxX3fncYZqKEWBrwnx6h", kind: "Checklist" },
+      { title: "Drive folder", url: "https://drive.google.com/drive/folders/1zumn90nhmAUCYKWpch27Fm0UWeUvWKOX", kind: "Other" },
+    ],
+  },
+  {
+    id: "ac-n122xp", name: "N122XP · Cessna R172K", tails: "N122XP", createdAt: 1, updatedAt: SEED_V, links: [
+      { title: "POH", url: "https://drive.google.com/file/d/1Jpue1ao7N-yy9C6eH1PRNhUNKzrMfgi3/view", kind: "POH / AFM" },
+      { title: "Weight & balance", url: "https://drive.google.com/file/d/1jSmUk0XEUMOAf5CUZYxDVSH5WU7s5V1y/view", kind: "W&B / performance" },
+      { title: "ForeFlight checklist (.fmd)", url: "https://drive.google.com/file/d/1nT_jIUd0uIVSxjLhgzwTm0gsBTAVDIoF/view", kind: "ForeFlight" },
+      { title: "Single-engine emergency flows", url: A + "ARTxX3fncYZqKEWBrwnx6h", kind: "Checklist" },
+      { title: "Drive folder", url: "https://drive.google.com/drive/folders/1z2EWUvMUG-5moI4lC_pHErj6ureRuaUr", kind: "Other" },
+    ],
+  },
+  {
+    id: "ac-n2569q", name: "N2569Q", tails: "N2569Q", createdAt: 1, updatedAt: SEED_V, links: [
+      { title: "POH", url: "https://drive.google.com/file/d/1nL3rDl_Xn5AAIMUS2RkXVzYvrwTLH6bw/view", kind: "POH / AFM" },
+      { title: "SureFly electronic ignition supplement", url: "https://drive.google.com/file/d/1ieZtHkbYzFOKqF-B1PIjXKFU_RiMmGQm/view", kind: "POH / AFM" },
+      { title: "Drive folder", url: "https://drive.google.com/drive/folders/12P7v_l5zjPCVv7lknGSQi6Ig02834olJ", kind: "Other" },
+    ],
+  },
+  {
+    id: "ac-n8145r", name: "N8145R · Beechcraft Baron B55", tails: "N8145R", createdAt: 1, updatedAt: SEED_V, links: [
+      { title: "POH (B55)", url: "https://drive.google.com/file/d/1bhaD2WSSLOxkE-edDeZEwHy2hFTcbBdr/view", kind: "POH / AFM" },
+      { title: "Baron multi-engine checkride prep", url: A + "2YV3qR1ZQ5wpnggmNsAz9R", kind: "Guide" },
+      { title: "Drive folder", url: "https://drive.google.com/drive/folders/1Jo5Kw4Ab9dyzoJoX5FV78j1TfirRF7S_", kind: "Other" },
+    ],
+  },
+  // The generic Cessna 172 card is replaced by one card per Cessna tail.
+  { id: "ac-c172", name: "Cessna 172", createdAt: 1, updatedAt: SEED_V, deleted: true },
 ];
 
 export default function Aircraft() {
@@ -38,9 +86,9 @@ export default function Aircraft() {
   const [open, setOpen] = useState<string | null>(null);
   const [name, setName] = useState("");
   useEffect(() => {
-    // Seeded as "oldest possible" so an edited copy synced from another device always wins.
-    const missing = SEED.filter((s) => !has("aircraft", s.id)).map((s) => ({ ...s, createdAt: 1, updatedAt: 1 }));
-    if (missing.length) importAll({ data: { aircraft: missing } });
+    // Fill in or update a seed only when this device has no newer copy (edits in the app are always newer).
+    const due = SEED.filter((s) => (getRaw("aircraft", s.id)?.updatedAt ?? 0) < s.updatedAt);
+    if (due.length) importAll({ data: { aircraft: due } });
   }, []);
   const sorted = [...list].sort((a, b) => a.name.localeCompare(b.name));
 

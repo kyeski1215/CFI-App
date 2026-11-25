@@ -71,6 +71,11 @@ export function get<T extends BaseRec>(c: Collection, id: string): T | undefined
   return r && !r.deleted ? (r as T) : undefined;
 }
 
+/** The stored record including a deleted one (tombstone), for seeding decisions. */
+export function getRaw(c: Collection, id: string): BaseRec | undefined {
+  return data.get(c)!.get(id);
+}
+
 /** True if a record with this id was ever stored, including deleted ones. */
 export function has(c: Collection, id: string) {
   return data.get(c)!.has(id);
