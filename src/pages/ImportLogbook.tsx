@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "../components/ui";
 import { GOALS, STATUSES } from "../lib/curriculum";
-import { groupByStudent, parseForeFlight, toLogEntry, type Candidate, type FFFlight } from "../lib/foreflight";
+import { groupByStudent, newForStudent, parseForeFlight, type Candidate, type FFFlight } from "../lib/foreflight";
 import { create, fmtDate, put, useCollection } from "../lib/store";
-import type { LogEntry, Student } from "../lib/types";
+import type { Student } from "../lib/types";
 
 interface Choice { include: boolean; name: string; goal: string; target: string /* "" = new student, else student id */; email?: string }
 
@@ -41,8 +41,7 @@ export default function ImportLogbook() {
   };
 
   const merge = (s: Student, flights: FFFlight[]) => {
-    const have = new Set((s.log ?? []).map((e) => e.id));
-    const add: LogEntry[] = flights.map(toLogEntry).filter((e) => !have.has(e.id));
+    const { add } = newForStudent(s.log ?? [], flights);
     if (add.length) put("students", { ...s, log: [...(s.log ?? []), ...add] });
     return add.length;
   };
@@ -113,6 +112,8 @@ export default function ImportLogbook() {
             {result.candidates.map((c) => {
               const ch = choices[c.key];
               if (!ch) return null;
+              const tgt = ch.target ? students.find((x) => x.id === ch.target) : undefined;
+              const split = tgt ? newForStudent(tgt.log ?? [], c.flights) : null;
               return (
                 <div key={c.key} className={"impstu" + (ch.include ? "" : " off")}>
                   <label className="check" style={{ borderBottom: 0, padding: 0 }}>
@@ -130,6 +131,11 @@ export default function ImportLogbook() {
                           {sorted.map((s) => <option key={s.id} value={s.id}>{s.name} (on roster)</option>)}
                         </select>
                       </label>
+                      {split && (
+                        <div className="small full">
+                          <b>{split.add.length} new</b> to add{split.already ? ` · ${split.already} already in ${tgt!.name.split(" ")[0]}'s log (skipped)` : ""}
+                        </div>
+                      )}
                       {!ch.target && (
                         <>
                           <label className="f">Name<input value={ch.name} onChange={(e) => set(c.key, { name: e.target.value })} /></label>
@@ -163,7 +169,10 @@ export default function ImportLogbook() {
           <section className="card">
             <h3>3. Import</h3>
             <div className="small">
-              {included.length} student{included.length === 1 ? "" : "s"} · {included.reduce((a, c) => a + c.flights.length, 0) + (unassignedTo !== "skip" ? result.unassigned.length : 0)} lessons.
+              {included.length} student{included.length === 1 ? "" : "s"} · {included.reduce((a, c) => {
+                const t = choices[c.key].target ? students.find((x) => x.id === choices[c.key].target) : undefined;
+                return a + (t ? newForStudent(t.log ?? [], c.flights).add.length : c.flights.length);
+              }, 0) + (unassignedTo !== "skip" ? result.unassigned.length : 0)} new lessons.
               Each flight becomes a lesson log entry with date, tail, route, dual hours, night, landings and your comments.
             </div>
             <div className="row">

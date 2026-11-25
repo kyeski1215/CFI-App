@@ -200,3 +200,27 @@ export function toLogEntry(f: FFFlight): LogEntry {
     notes: [f.comments, extras && `ForeFlight: ${extras}`].filter(Boolean).join("\n\n") || undefined,
   };
 }
+
+/** Is this ForeFlight entry the same flight as one already in the log (typed in by hand or imported before)? */
+export function sameFlight(have: LogEntry, add: LogEntry) {
+  if (have.id === add.id) return true;
+  if (have.date !== add.date || (have.kind ?? "flight") !== add.kind) return false;
+  if (add.kind === "ground") return true;
+  const t1 = (have.tail ?? "").trim().toUpperCase(), t2 = (add.tail ?? "").trim().toUpperCase();
+  if (t1 && t2 && t1 !== t2) return false;
+  const h1 = parseFloat(have.hrs ?? ""), h2 = parseFloat(add.hrs ?? "");
+  if (isFinite(h1) && isFinite(h2) && Math.abs(h1 - h2) > 0.3) return false;
+  return true;
+}
+
+/** Split a student's ForeFlight flights into ones to add and ones already in their log. Each logged lesson matches at most one flight. */
+export function newForStudent(log: LogEntry[], flights: FFFlight[]) {
+  const used = new Set<number>();
+  const add: LogEntry[] = [];
+  let already = 0;
+  for (const e of flights.map(toLogEntry)) {
+    const i = log.findIndex((h, j) => !used.has(j) && sameFlight(h, e));
+    if (i >= 0) { used.add(i); already++; } else add.push(e);
+  }
+  return { add, already };
+}
