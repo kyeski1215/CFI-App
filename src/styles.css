@@ -259,3 +259,23 @@ details.fold.sub { margin-top: 10px; background: var(--bg); }
 .when { font-size: 11px; color: var(--accent); font-family: var(--f-mono); flex: none; }
 .savednote { color: var(--good); font-weight: 600; }
 .confirmbar { background: var(--bad-soft); border-radius: 8px; padding: 8px 10px; }
+
+/* student overview */
+.draftbar { display: flex; flex-direction: column; gap: 2px; text-align: left; width: 100%; border: 1px solid var(--warn); background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 10px 14px; }
+.draftbar .small { color: var(--ink); }
+.stagebars { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr)); gap: 10px 16px; margin-top: 4px; }
+.stagebar { display: flex; flex-direction: column; gap: 4px; }
+.clamp1 { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.clamp3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; margin: 0; }
+.nextup { display: flex; flex-direction: column; gap: 2px; border-top: 1px solid var(--line); padding-top: 10px; }
+.lastlesson { display: flex; flex-direction: column; gap: 4px; border-left: 3px solid var(--accent); padding-left: 10px; }
+.lastlesson p { margin: 0; font-size: 14px; color: var(--ink); white-space: pre-line; }
+.sw { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sw .card { gap: 4px; }
+.sw p { font-size: 14px; }
+@media (max-width: 560px) { .sw { grid-template-columns: 1fr; } }
+.facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 10px 16px; margin: 0; }
+.facts div { display: flex; flex-direction: column; gap: 1px; }
+.facts dt { font-size: 12px; color: var(--muted); }
+.facts dd { margin: 0; font-size: 14px; overflow-wrap: anywhere; }
+.lastlesson .linkbtn { align-self: flex-start; }

@@ -8,6 +8,7 @@ import {
   D87,
   DAYS,
   GOALS,
+  OVERDUE_DAYS,
   SLOTS,
   STATUSES,
   TAILS,
@@ -18,14 +19,13 @@ import {
   guideFor,
   guideKey,
   guideProgress,
-  lastFlight,
   type GuideSection,
   type PresoloLesson,
   statusClass,
   topicsFor,
   totalHours,
 } from "../lib/curriculum";
-import { create, fmtDate, newId, put, remove, todayStr, useCollection, useRecord } from "../lib/store";
+import { create, daysBetween, fmtDate, newId, put, remove, todayStr, useCollection, useRecord } from "../lib/store";
 import type { LogEntry, Ride, Student } from "../lib/types";
 
 const TABS = ["Overview", "Log", "Syllabus", "Ground", "Mocks"] as const;
@@ -57,14 +57,16 @@ export default function StudentPage() {
           <div className="tags">
             <span className={"pill " + statusClass(s.status)}>{s.status}</span>
             <span className="pill p-blue">{s.goal}</span>
-            <span className="pill p-mute">{totalHours(s).toFixed(1)} hrs</span>
-            {lastFlight(s) && <span className="pill p-mute">Last flight {fmtDate(lastFlight(s)!)}</span>}
           </div>
         </div>
         <div className="row">
+          <button className="btn primary" onClick={() => {
+            if (!s.logDraft) update({ logDraft: blankEntry() });
+            setTab("Log");
+          }}>{s.logDraft ? "Finish lesson draft" : "+ Log a lesson"}</button>
           <Link className="btn" to={`/regs?student=${s.id}`}>Log regs</Link>
           <button
-            className="btn primary"
+            className="btn"
             onClick={() => {
               const bank = bankForGoal(s.goal);
               const r = create<Ride>("rides", {
@@ -94,7 +96,7 @@ export default function StudentPage() {
         ))}
       </div>
 
-      {tab === "Overview" && <Overview s={s} update={update} onDelete={() => { remove("students", s.id); nav("/students"); }} />}
+      {tab === "Overview" && <Overview s={s} update={update} goTo={setTab} onDelete={() => { remove("students", s.id); nav("/students"); }} />}
       {tab === "Log" && <Log s={s} update={update} prefillRegs={params.get("regs") ?? ""} />}
       {tab === "Syllabus" && <Syllabus s={s} update={update} />}
       {tab === "Ground" && <Ground s={s} update={update} />}
@@ -127,11 +129,155 @@ function Select({ s, update, k, label, opts }: P & { k: keyof Student; label: st
   );
 }
 
-function Overview({ s, update, onDelete }: P & { onDelete: () => void }) {
+function Overview({ s, update, onDelete, goTo }: P & { onDelete: () => void; goTo: (t: Tab) => void }) {
+  const [editing, setEditing] = useState(false);
+  const rides = useCollection<Ride>("rides");
+  if (editing) return <ProfileEditor s={s} update={update} onDelete={onDelete} onDone={() => setEditing(false)} />;
+
+  const today = todayStr();
+  const flights = (s.log ?? []).filter((e) => e.kind !== "ground" && e.date).sort((a, b) => b.date.localeCompare(a.date));
+  const last = [...(s.log ?? [])].filter((e) => e.date).sort((a, b) => b.date.localeCompare(a.date))[0];
+  const since = flights[0] ? daysBetween(flights[0].date, today) : null;
+  const in30 = flights.filter((e) => daysBetween(e.date, today) <= 30).length;
+  const num = (v?: string) => parseFloat(v ?? "") || 0;
+  const night = flights.reduce((a, e) => a + num(e.night), 0);
+  const ldg = flights.reduce((a, e) => a + num(e.ldgDay) + num(e.ldgNight), 0);
+  const plan = guideFor(s);
+  const prog = guideProgress(s);
+  const topics = topicsFor(s);
+  const covered = (s.covered ?? []).filter((t) => topics.includes(t)).length;
+  const lastMock = rides.filter((r) => r.studentId === s.id).sort((a, b) => b.date.localeCompare(a.date))[0];
+  const target = num(s.targetPerWeek);
+
+  return (
+    <>
+      {s.logDraft && (
+        <button className="draftbar" onClick={() => goTo("Log")}>
+          <b>Unsaved lesson draft</b>
+          <span className="small">{[fmtDate(s.logDraft.date), s.logDraft.lesson, s.logDraft.notes?.slice(0, 60)].filter(Boolean).join(" · ") || "Started"} · Tap to finish</span>
+        </button>
+      )}
+
+      <section className="stats" aria-label="Summary">
+        <div className="stat"><b>{totalHours(s).toFixed(1)}</b><span>Total hours{night ? ` · ${night.toFixed(1)} night` : ""}</span></div>
+        <div className={"stat" + (since != null && since >= OVERDUE_DAYS ? " alert" : "")}>
+          <b>{since == null ? "—" : since === 0 ? "Today" : since + "d"}</b><span>Since last flight</span>
+        </div>
+        <div className="stat"><b>{in30}</b><span>Flights · last 30 days{target ? ` (goal ${target}/wk)` : ""}</span></div>
+        <div className="stat"><b>{ldg || "—"}</b><span>Landings logged</span></div>
+      </section>
+
+      <section className="card">
+        <div className="row">
+          <h3>Training progress</h3>
+          <span className="spacer" />
+          <button className="btn ghost sm" onClick={() => goTo("Syllabus")}>Open syllabus →</button>
+        </div>
+        {plan ? (
+          <>
+            <div className="row small"><span>{prog.done} of {prog.total} plan items</span><span className="spacer" /><span className="mono">{prog.total ? Math.round((prog.done / prog.total) * 100) : 0}%</span></div>
+            <Bar value={prog.done} total={prog.total} />
+            <div className="stagebars">
+              {plan.map((sec) => {
+                const n = sec.items.filter((it) => s.guide?.[guideKey(sec.id, it[0])]).length;
+                return (
+                  <div key={sec.id} className="stagebar">
+                    <div className="row small"><span className="clamp1">{sec.n}</span><span className="spacer" /><span className="mono muted">{n}/{sec.items.length}</span></div>
+                    <Bar value={n} total={sec.items.length} color={n === sec.items.length ? "var(--good)" : undefined} />
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="row small"><span>{covered} of {topics.length} maneuvers & topics</span></div>
+            <Bar value={covered} total={topics.length} />
+          </>
+        )}
+        <div className="nextup">
+          <span className="kv">Next lesson</span>
+          <b>{s.nextLesson || prog.next || "Not set"}</b>
+        </div>
+      </section>
+
+      <section className="card">
+        <div className="row">
+          <h3>Last lesson</h3>
+          <span className="spacer" />
+          <button className="btn ghost sm" onClick={() => goTo("Log")}>Full log →</button>
+        </div>
+        {last ? <LastLesson e={last} /> : <div className="muted small">Nothing logged yet.</div>}
+      </section>
+
+      {(s.strengths || s.weaknesses) && (
+        <section className="sw">
+          {s.strengths && <div className="card"><span className="kv">Strengths</span><p className="clamp3">{s.strengths}</p></div>}
+          {s.weaknesses && <div className="card"><span className="kv">Needs work</span><p className="clamp3">{s.weaknesses}</p></div>}
+        </section>
+      )}
+
+      <section className="card">
+        <div className="row">
+          <h3>Profile</h3>
+          <span className="spacer" />
+          <button className="btn sm" onClick={() => setEditing(true)}>Edit profile</button>
+        </div>
+        <dl className="facts">
+          <div><dt>Aircraft</dt><dd>{s.aircraft || "—"}</dd></div>
+          <div><dt>Stage</dt><dd>{s.stage || "—"}</dd></div>
+          <div><dt>Course</dt><dd>{s.course || "—"}</dd></div>
+          <div><dt>Usually free</dt><dd>{availSummary(s)}</dd></div>
+          <div><dt>Phone</dt><dd>{s.contact ? <a href={"tel:" + s.contact}>{s.contact}</a> : "—"}</dd></div>
+          <div><dt>Email</dt><dd className="wrap">{s.email || "—"}</dd></div>
+          {s.coInstructors && <div><dt>Other instructors</dt><dd>{s.coInstructors}</dd></div>}
+          {lastMock && <div><dt>Last mock</dt><dd><Link to={"/mocks/" + lastMock.id}>{fmtDate(lastMock.date)} · {BANKS[lastMock.bank]?.short ?? lastMock.bank}{lastMock.result ? " · " + lastMock.result : ""}</Link></dd></div>}
+        </dl>
+        {s.notes && <p className="small clamp3" style={{ margin: 0 }}>{s.notes}</p>}
+      </section>
+    </>
+  );
+}
+
+function LastLesson({ e }: { e: LogEntry }) {
+  const [more, setMore] = useState(false);
+  const facts = [fmtDate(e.date), e.kind === "ground" ? "Ground" : e.tail, e.hrs && e.hrs + " hr", e.night && e.night + " night",
+    (e.ldgDay || e.ldgNight) && `${e.ldgDay || 0}/${e.ldgNight || 0} ldg`].filter(Boolean);
+  const long = (e.notes ?? "").length > 220;
+  return (
+    <div className="lastlesson">
+      <div className="mono small muted">{facts.join(" · ")}</div>
+      {e.lesson && <b>{e.lesson}</b>}
+      {e.notes && <p className={more ? "" : "clamp3"}>{e.notes}</p>}
+      {long && <button className="linkbtn" onClick={() => setMore(!more)}>{more ? "Show less" : "Show more"}</button>}
+      {e.regs && <div className="regs">{e.regs}</div>}
+    </div>
+  );
+}
+
+function availSummary(s: Student) {
+  const a = new Set(s.avail ?? []);
+  const note = s.availNotes ? " · " + s.availNotes : "";
+  if (!a.size) return (s.availNotes || "Not set");
+  if (a.size === DAYS.length * SLOTS.length) return "Anytime" + note;
+  const days = DAYS.map((d) => {
+    const sl = SLOTS.filter(([k]) => a.has(d + "-" + k)).map(([k]) => k);
+    return sl.length ? (sl.length === SLOTS.length ? d : `${d} ${sl.join("/")}`) : "";
+  }).filter(Boolean);
+  return days.join(", ") + note;
+}
+
+function ProfileEditor({ s, update, onDelete, onDone }: P & { onDelete: () => void; onDone: () => void }) {
   const [confirm, setConfirm] = useState(false);
   const avail = new Set(s.avail ?? []);
   return (
     <>
+      <div className="row">
+        <h2>Edit profile</h2>
+        <span className="spacer" />
+        <span className="small savednote">✓ Saves as you type</span>
+        <button className="btn primary" onClick={onDone}>Done</button>
+      </div>
       <section className="card">
         <h3>Profile</h3>
         <div className="fields">
