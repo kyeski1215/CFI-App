@@ -1,11 +1,12 @@
 import { ExtrasView } from "./LessonExtras";
+import { IconChip } from "./ui";
 import type { Briefing } from "../lib/briefing";
 
 export default function BriefingCard({ b, actions }: { b: Briefing; actions?: React.ReactNode }) {
   return (
     <section className="card briefing">
       <div className="row">
-        <span className="blabel">Next lesson</span>
+        <h3 style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><IconChip icon="next" />Next lesson</h3>
         <span className="spacer" />
         {actions}
       </div>

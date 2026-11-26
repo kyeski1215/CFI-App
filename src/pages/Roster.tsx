@@ -11,7 +11,6 @@ import {
   lastFlight,
   statusClass,
   topicsFor,
-  totalHours,
 } from "../lib/curriculum";
 import { create, daysBetween, fmtDate, todayStr, useCollection } from "../lib/store";
 import type { Ride, Student } from "../lib/types";
@@ -21,6 +20,11 @@ type SortKey = "name" | "recent" | "overdue" | "progress";
 const GOAL_SHORT: Record<string, string> = { "Private Pilot": "PPL", Instrument: "IR", Commercial: "CPL", "Multi-Engine": "AMEL", CFI: "CFI", CFII: "CFII", Other: "Other" };
 const readPref = (k: string) => { try { return localStorage.getItem("cfi.v1.roster." + k) ?? ""; } catch { return ""; } };
 const writePref = (k: string, v: string) => { try { localStorage.setItem("cfi.v1.roster." + k, v); } catch { /* private mode */ } };
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+}
 
 function recency(s: Student) {
   const lf = lastFlight(s);
@@ -71,14 +75,17 @@ export default function Roster() {
 
   return (
     <div className="page">
-      <div className="navactions">
-        <Link className="navbtn" to="/import">Import</Link>
-        <button className="navbtn" aria-label="Add student" onClick={() => setAdding(true)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+      <div className="hello">
+        <span className="appmark" aria-hidden="true"><img src="icon.svg" alt="" /></span>
+        <div className="greet"><small>{greeting()}</small><h1>Your students</h1></div>
+        <Link className="roundbtn" to="/import" aria-label="Import logbook" title="Import logbook">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg>
+        </Link>
+        <button className="roundbtn" aria-label="Add student" onClick={() => setAdding(true)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
         </button>
       </div>
-      <h1>Roster</h1>
-      <input className="search" type="search" placeholder="Search" aria-label="Search students" value={q} onChange={(e) => setQ(e.target.value)} />
+      <input className="search" type="search" placeholder="Search students" aria-label="Search students" value={q} onChange={(e) => setQ(e.target.value)} />
 
       {stories.length > 0 && !q && (
         <div className="stories" aria-label="Recent students">
@@ -86,7 +93,7 @@ export default function Roster() {
             const d = recency(s);
             return (
               <Link key={s.id} to={"/students/" + s.id} className="story" title={s.name}>
-                <span className={"ring" + (d != null && d >= OVERDUE_DAYS ? " bad" : "")}><Avatar name={s.name} size={52} /></span>
+                <span className={"ring" + (d != null && d >= OVERDUE_DAYS ? " bad" : "")}><Avatar name={s.name} size={54} /></span>
                 <span>{(s.name || "Unnamed").split(/\s+/)[0]}</span>
               </Link>
             );
@@ -142,14 +149,14 @@ export default function Roster() {
               </Link>
             );
           }
-          const sub = [GOAL_SHORT[s.goal] ?? s.goal, s.stage || (isActive(s) ? null : s.status), totalHours(s).toFixed(1) + " hr", prog.total ? pct + "%" : null].filter(Boolean).join(" · ");
+          const when = d == null ? "no flights yet" : d === 0 ? "flew today" : d >= OVERDUE_DAYS ? `${d} days, overdue` : `flew ${d}d ago`;
           return (
             <Link key={s.id} to={"/students/" + s.id} className="irow">
-              <Avatar name={s.name} />
+              <Avatar name={s.name} size={44} />
               <span className="ibody">
                 <span className="itext">
                   <span className="t1">{s.name || "Unnamed"}</span>
-                  <span className="t2">{sub}</span>
+                  <span className="t2">{GOAL_SHORT[s.goal] ?? s.goal}{s.stage ? " · " + s.stage : ""} · <span className={d != null && d >= OVERDUE_DAYS ? "bad" : d != null && d >= 6 ? "warn" : ""}>{when}</span></span>
                   {(["Stage check", "Checkride ready"].includes(s.status) || lastMock?.result) && (
                     <span className="tags" style={{ marginTop: 4 }}>
                       {["Stage check", "Checkride ready"].includes(s.status) && <span className={"pill " + statusClass(s.status)}>{s.status}</span>}
@@ -157,8 +164,7 @@ export default function Roster() {
                     </span>
                   )}
                 </span>
-                <span className={dcls}>{days}</span>
-                <Chevron />
+                {prog.total > 0 && <span className={"pctpill" + (pct >= 90 ? " done" : "")}>{pct}%</span>}
               </span>
             </Link>
           );

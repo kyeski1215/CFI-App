@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Avatar, BackLink, Bar, useCopy, useToast } from "../components/ui";
+import { Avatar, BackLink, Bar, IconChip, useCopy, useToast } from "../components/ui";
 import LessonExtras from "../components/LessonExtras";
 import { mockSummary, skillSummary, type SkillStat } from "../lib/skills";
 import { claudePrompt, firstName, smsHref, studentText } from "../lib/studentText";
@@ -119,24 +119,22 @@ function ProfileHeader({ s }: { s: Student }) {
   const topics = topicsFor(s);
   const done = plan ? plan.done : (s.covered ?? []).filter((t) => topics.includes(t)).length;
   const total = plan ? plan.total : topics.length;
-  const sinceTxt = since == null ? "no flights logged yet" : since === 0 ? "flew today" : since === 1 ? "flew yesterday" : `flew ${since} days ago`;
+  const pct = total ? Math.round((done / total) * 100) : null;
   return (
     <>
-      <div className="profile">
-        <Avatar name={s.name} size={80} />
-        <div className="pstats">
-          <div><b>{totalHours(s).toFixed(1)}</b><span>hours</span></div>
-          <div><b>{flights.length}</b><span>flights</span></div>
-          <div><b>{total ? Math.round((done / total) * 100) + "%" : "—"}</b><span>syllabus</span></div>
+      <div className="phead">
+        <Avatar name={s.name} size={60} />
+        <div className="who">
+          <h1>{s.name || "Unnamed"}</h1>
+          <div className="subtitle">{[s.goal, s.stage, s.aircraft].filter(Boolean).join(" · ")}</div>
+          <div className="tags" style={{ marginTop: 5 }}><span className={"pill " + statusClass(s.status)}>{s.status}</span></div>
         </div>
       </div>
-      <div className="pname">
-        <h1>{s.name || "Unnamed"}</h1>
-        <div className="subtitle">
-          {[s.goal, s.stage, s.aircraft].filter(Boolean).join(" · ")}
-          {" · "}<span style={since != null && since >= OVERDUE_DAYS ? { color: "var(--bad)", fontWeight: 600 } : undefined}>{sinceTxt}</span>
-        </div>
-        <div className="tags"><span className={"pill " + statusClass(s.status)}>{s.status}</span></div>
+      <div className="pstrip">
+        <div><b>{totalHours(s).toFixed(1)}</b><span>hours</span></div>
+        <div><b>{flights.length}</b><span>flights</span></div>
+        <div className={since != null && since >= OVERDUE_DAYS ? "bad" : ""}><b>{since == null ? "—" : since === 0 ? "Today" : since + "d"}</b><span>since flying</span></div>
+        <div className="acc"><b>{pct == null ? "—" : pct + "%"}</b><span>syllabus</span></div>
       </div>
     </>
   );
@@ -190,7 +188,7 @@ function Overview({ s, update, onDelete, goTo }: P & { onDelete: () => void; goT
 
       <section className="card">
         <div className="row">
-          <h3>Training progress</h3>
+          <h3><IconChip icon="chart" tone="green" />Training progress</h3>
           <span className="spacer" />
           <button className="btn ghost sm" onClick={() => goTo("Syllabus")}>Open syllabus →</button>
         </div>
@@ -230,7 +228,7 @@ function Overview({ s, update, onDelete, goTo }: P & { onDelete: () => void; goT
 
       <section className="card">
         <div className="row">
-          <h3>Last lesson</h3>
+          <h3><IconChip icon="log" tone="purple" />Last lesson</h3>
           <span className="spacer" />
           <button className="btn ghost sm" onClick={() => goTo("Log")}>Full log →</button>
         </div>
@@ -376,7 +374,7 @@ function HoursCard({ s, update }: P) {
   return (
     <section className="card">
       <div className="row">
-        <h3>Hours toward checkride</h3>
+        <h3><IconChip icon="clock" tone="green" />Hours toward checkride</h3>
         <span className="spacer" />
         <span className={"pill " + (hp.met === hp.total ? "p-good" : "p-mute")}>{hp.met}/{hp.total} met</span>
         <button className="btn ghost sm" onClick={() => setEdit(!edit)}>{edit ? "Done" : "Add other time"}</button>
@@ -422,7 +420,7 @@ function StrengthsCard({ s, goTo }: { s: Student; goTo: (t: Tab) => void }) {
   return (
     <section className="card">
       <div className="row">
-        <h3>Strengths & needs work</h3>
+        <h3><IconChip icon="star" tone="orange" />Strengths & needs work</h3>
         <span className="spacer" />
         <span className="small muted">{sk.ratedLessons ? `From ${sk.ratedLessons} rated lesson${sk.ratedLessons === 1 ? "" : "s"}` : ""}</span>
       </div>
@@ -592,7 +590,7 @@ function Log({ s, update, prefillRegs }: P & { prefillRegs: string }) {
         </div>
       )}
       <section className="card">
-        <h3>Lesson log</h3>
+        <h3><IconChip icon="log" tone="purple" />Lesson log</h3>
         {log.length === 0 && <div className="muted small">No lessons logged yet.</div>}
         {log.map((e) =>
           editing === e.id ? (
@@ -721,7 +719,7 @@ function Syllabus({ s, update }: P) {
         <>
           <div className="card">
             <div className="row">
-              <h3>Training plan</h3>
+              <h3><IconChip icon="chart" tone="green" />Training plan</h3>
               <span className="spacer" />
               <span className="mono small">{prog.done}/{prog.total}</span>
             </div>

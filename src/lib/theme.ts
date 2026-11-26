@@ -2,8 +2,8 @@
 import { useSyncExternalStore } from "react";
 
 export const ACCENTS = [
-  { id: "blue", name: "Blue", light: "#0066d6", dark: "#0a84ff" },
-  { id: "teal", name: "Teal", light: "#00838a", dark: "#00adb5" },
+  { id: "teal", name: "Teal", light: "#0b7c82", dark: "#3cc4cb" },
+  { id: "blue", name: "Blue", light: "#2f62d9", dark: "#5b9dff" },
   { id: "green", name: "Green", light: "#1f7a36", dark: "#30d158" },
   { id: "orange", name: "Orange", light: "#b34700", dark: "#ff9f0a" },
   { id: "red", name: "Red", light: "#c1121f", dark: "#ff453a" },
@@ -12,7 +12,7 @@ export const ACCENTS = [
 ];
 const KEY = "cfi.v1.accent";
 const subs = new Set<() => void>();
-const read = () => { try { return localStorage.getItem(KEY) || "blue"; } catch { return "blue"; } };
+const read = () => { try { return localStorage.getItem(KEY) || "teal"; } catch { return "teal"; } };
 
 export function applyAccent(id = read()) {
   const a = ACCENTS.find((x) => x.id === id) ?? ACCENTS[0];

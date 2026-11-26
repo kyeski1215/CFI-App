@@ -1,31 +1,34 @@
-/* Native iOS look: system font, grouped lists, one accent color (the school's, set in Settings).
+/* Warm, soft native look: off-white ground, white rounded panels, one accent (the school's, set in Settings).
    --brand / --brand-dark are set at startup from Settings; these are the defaults. */
 :root {
-  --bg: #f2f2f7; --surface: #ffffff; --ink: #000000; --muted: #6c6c70; --line: #c6c6c8; --fill: #e3e3e8; --seg-on: #ffffff; --avatar: #aeaeb2; --chev: #c4c4c7;
-  --accent: var(--brand, #0066d6); --accent-soft: color-mix(in srgb, var(--accent) 13%, var(--surface)); --on-accent: #ffffff;
+  --bg: #f7f5f2; --surface: #ffffff; --ink: #1d1b19; --muted: #6f6962; --line: #ece8e2; --fill: #ede9e3; --seg-on: #ffffff; --avatar: #c9c3bb; --chev: #c9c3bb;
+  --accent: var(--brand, #0b7c82); --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--surface)); --on-accent: #ffffff;
   --blue: var(--accent); --blue-soft: var(--accent-soft);
-  --chrome: rgba(249, 249, 249, .94); --chrome-ink: #000000; --chrome-muted: #8e8e93; --chrome-active: var(--accent); --chrome-active-bg: var(--accent);
-  --good: #248a3d; --good-soft: #e3f3e7; --warn: #b25000; --warn-soft: #fdeedc; --bad: #d70015; --bad-soft: #fde4e6;
-  --f-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --chrome: rgba(255, 255, 255, .96); --chrome-ink: #1d1b19; --chrome-muted: #8f8880; --chrome-active: var(--accent); --chrome-active-bg: var(--accent);
+  --good: #1b7a3f; --good-soft: #ddf0e2; --warn: #9a4a06; --warn-soft: #fde8d0; --bad: #c0262d; --bad-soft: #fce1e1;
+  --shadow: 0 2px 12px rgba(60, 40, 20, .06); --shadow-btn: 0 2px 8px rgba(60, 40, 20, .08); --shadow-float: 0 6px 20px rgba(60, 40, 20, .12);
+  --f-display: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   --f-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   --f-mono: var(--f-body);
-  --nav-h: 56px;
+  --nav-h: 60px;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #000000; --surface: #1c1c1e; --ink: #ffffff; --muted: #98989f; --line: #38383a; --fill: #2c2c2e; --seg-on: #636366; --avatar: #48484a; --chev: #5a5a5e;
-    --accent: var(--brand-dark, #0a84ff); --on-accent: #ffffff;
-    --chrome: rgba(22, 22, 22, .94); --chrome-ink: #ffffff; --chrome-muted: #98989f;
-    --good: #30d158; --good-soft: #12301b; --warn: #ff9f0a; --warn-soft: #3a2a0f; --bad: #ff453a; --bad-soft: #3d1513;
+    --bg: #11100f; --surface: #1e1c1a; --ink: #f5f2ee; --muted: #a39c94; --line: #34302c; --fill: #2a2724; --seg-on: #4a4540; --avatar: #4a4540; --chev: #5a544e;
+    --accent: var(--brand-dark, #3cc4cb); --on-accent: #0b1414;
+    --chrome: rgba(36, 34, 31, .96); --chrome-ink: #f5f2ee; --chrome-muted: #9a938b;
+    --good: #4ade80; --good-soft: #15301f; --warn: #ffb44d; --warn-soft: #3a2a12; --bad: #ff6b6b; --bad-soft: #3d1717;
+    --shadow: none; --shadow-btn: none; --shadow-float: 0 6px 24px rgba(0, 0, 0, .5);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #000000; --surface: #1c1c1e; --ink: #ffffff; --muted: #98989f; --line: #38383a; --fill: #2c2c2e; --seg-on: #636366; --avatar: #48484a; --chev: #5a5a5e;
-  --accent: var(--brand-dark, #0a84ff); --on-accent: #ffffff;
-  --chrome: rgba(22, 22, 22, .94); --chrome-ink: #ffffff; --chrome-muted: #98989f;
-  --good: #30d158; --good-soft: #12301b; --warn: #ff9f0a; --warn-soft: #3a2a0f; --bad: #ff453a; --bad-soft: #3d1513;
+  --bg: #11100f; --surface: #1e1c1a; --ink: #f5f2ee; --muted: #a39c94; --line: #34302c; --fill: #2a2724; --seg-on: #4a4540; --avatar: #4a4540; --chev: #5a544e;
+  --accent: var(--brand-dark, #3cc4cb); --on-accent: #0b1414;
+  --chrome: rgba(36, 34, 31, .96); --chrome-ink: #f5f2ee; --chrome-muted: #9a938b;
+  --good: #4ade80; --good-soft: #15301f; --warn: #ffb44d; --warn-soft: #3a2a12; --bad: #ff6b6b; --bad-soft: #3d1717;
+  --shadow: none; --shadow-btn: none; --shadow-float: 0 6px 24px rgba(0, 0, 0, .5);
   color-scheme: dark;
 }
 * { box-sizing: border-box; min-width: 0; }
@@ -573,3 +576,70 @@ details.fold { border: 0; border-radius: 12px; background: var(--surface); }
 .swatch { width: 36px; height: 36px; border-radius: 50%; border: 0; padding: 0; background: var(--c); box-shadow: 0 0 0 2px var(--surface), 0 0 0 2px transparent; }
 .swatch[aria-checked="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--c); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .swatch { background: var(--cd); } :root:not([data-theme="light"]) .swatch[aria-checked="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--cd); } }
+
+/* ===== Warm & soft (F3 feel) =====
+   Rounded numerals and titles, rounded-square avatars tinted per student, soft shadows, floating tab bar. */
+h1, h2, .stat b, .pstats b { font-family: var(--f-display); }
+h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.01em; }
+h2 { font-weight: 700; }
+h3 { font-family: var(--f-display); font-size: 18px; font-weight: 700; letter-spacing: 0; }
+.card, .empty, details.fold, .rows, .stats, .lrow { border-radius: 22px; box-shadow: var(--shadow); }
+.card details.fold, details.fold.sub, .lesson { box-shadow: none; border-radius: 14px; }
+.btn { border-radius: 14px; }
+.btn.sm { border-radius: 10px; }
+.btn:not(.primary):not(.ghost):not(.danger) { background: var(--surface); color: var(--accent); box-shadow: var(--shadow-btn); }
+.modal .btn:not(.primary):not(.ghost):not(.danger), .card .btn:not(.primary):not(.ghost):not(.danger) { background: var(--fill); box-shadow: none; }
+.search { border-radius: 22px !important; min-height: 44px; }
+.chips, .tabs { border-radius: 12px; }
+.chip, .tabs button { border-radius: 10px; }
+
+/* floating tab bar */
+.tabbar { left: 16px; right: 16px; bottom: calc(10px + env(safe-area-inset-bottom)); padding-bottom: 0; border: 0; border-radius: 32px; box-shadow: var(--shadow-float); padding-inline: 6px; }
+.tabbar a { height: 64px; font-size: 10px; }
+.tabbar a.active { font-weight: 700; }
+.main { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+.toast { bottom: calc(100px + env(safe-area-inset-bottom)); }
+@media (min-width: 900px) { .main { padding-bottom: 40px; } }
+
+/* avatars: rounded squares, a soft tint per student */
+.av { border-radius: 32%; font-family: var(--f-display); font-weight: 700; }
+.av.t0 { background: #d7eef0; color: #0b6a6f; } .av.t1 { background: #fce1e7; color: #a61e46; } .av.t2 { background: #ddf0e2; color: #1b6b39; }
+.av.t3 { background: #fde8d0; color: #9a4a06; } .av.t4 { background: #e9e1fb; color: #5b2ebd; } .av.t5 { background: #e3ecfb; color: #1e4fb8; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .av.t0 { background: #0e3b40; color: #86dde5; } :root:not([data-theme="light"]) .av.t1 { background: #4a1a28; color: #ffa3b8; } :root:not([data-theme="light"]) .av.t2 { background: #163d25; color: #8ee3a8; } :root:not([data-theme="light"]) .av.t3 { background: #4a2e0e; color: #ffc488; } :root:not([data-theme="light"]) .av.t4 { background: #33245e; color: #c9b3ff; } :root:not([data-theme="light"]) .av.t5 { background: #1f3a66; color: #a9c8ff; } }
+.ring { border-radius: 36%; }
+.story .ring .av { border: 2px solid var(--bg); }
+
+/* roster header */
+.hello { display: flex; align-items: center; gap: 12px; }
+.hello .greet { flex: 1; min-width: 0; }
+.hello .greet small { display: block; font-size: 14px; color: var(--muted); }
+.hello h1 { font-size: 27px; line-height: 1.1; }
+.appmark { width: 42px; height: 42px; border-radius: 14px; flex: none; background: var(--accent); display: grid; place-items: center; }
+.appmark img { width: 26px; height: 26px; }
+.roundbtn { width: 44px; height: 44px; flex: none; border-radius: 22px; border: 0; background: var(--surface); box-shadow: var(--shadow-btn); color: var(--accent); display: grid; place-items: center; text-decoration: none; }
+.roundbtn svg { width: 20px; height: 20px; }
+.pctpill { font: 700 14px var(--f-display); padding: 5px 10px; border-radius: 12px; background: var(--fill); color: var(--ink); white-space: nowrap; }
+.pctpill.done { background: var(--good-soft); color: var(--good); }
+.rows > .irow .ibody { border-bottom-color: transparent; }
+.irow .ibody { padding-block: 9px; }
+
+/* student page (F4 information layout) */
+.phead { display: flex; align-items: center; gap: 14px; }
+.phead .who { flex: 1; min-width: 0; }
+.phead h1 { font-size: 24px; line-height: 1.15; }
+.pstrip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); }
+.pstrip > div { padding: 10px 12px; }
+.pstrip > div + div { border-left: .5px solid var(--line); }
+.pstrip b { display: block; font: 700 20px var(--f-display); white-space: nowrap; }
+.pstrip span { font-size: 12px; color: var(--muted); }
+.pstrip .bad b { color: var(--bad); } .pstrip .acc b { color: var(--accent); }
+.pbtns { grid-template-columns: 2fr 1fr 1fr; }
+.pbtns .btn { min-height: 44px; }
+.ichip { width: 24px; height: 24px; flex: none; border-radius: 7px; background: var(--accent); color: var(--on-accent); display: inline-grid; place-items: center; }
+.ichip svg { width: 14px; height: 14px; }
+.ichip.green { background: var(--good); color: #fff; } .ichip.orange { background: #e8730a; color: #fff; } .ichip.purple { background: #7c4ddb; color: #fff; }
+h3:has(> .ichip), .row:has(> h3 > .ichip) h3 { display: inline-flex; align-items: center; gap: 8px; }
+.irow .t2 .bad { color: var(--bad); font-weight: 600; } .irow .t2 .warn { color: var(--warn); }
+.card > .row:first-child { flex-wrap: nowrap; }
+.card > .row:first-child h3 { flex: 0 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card > .row:first-child .btn { flex: none; }

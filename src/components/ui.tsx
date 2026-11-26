@@ -112,8 +112,14 @@ export const initials = (name: string) => {
   const w = String(name || "").trim().split(/\s+/).filter(Boolean);
   return ((w[0]?.[0] ?? "?") + (w.length > 1 ? w[w.length - 1][0] : "")).toUpperCase();
 };
+const tintOf = (name: string) => { let h = 0; for (const c of String(name || "")) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h % 6; };
 export function Avatar({ name, size = 40 }: { name: string; size?: number }) {
-  return <span className="av" style={{ ["--s" as string]: size + "px" }} aria-hidden="true">{initials(name)}</span>;
+  return <span className={"av t" + tintOf(name)} style={{ ["--s" as string]: size + "px" }} aria-hidden="true">{initials(name)}</span>;
+}
+/** Small colored square with an icon, for section headers. */
+export function IconChip({ icon, tone }: { icon: "next" | "clock" | "chart" | "star" | "log"; tone?: "green" | "orange" | "purple" }) {
+  const d = { next: "M5 12h14M13 6l6 6-6 6", clock: "M12 8v4l3 2M20 12a8 8 0 1 1-16 0 8 8 0 0 1 16 0", chart: "M5 19V11M12 19V5M19 19v-6", star: "M12 4l2.4 5 5.6.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.6-.8z", log: "M4 20h4L19 9l-4-4L4 16z" }[icon];
+  return <span className={"ichip" + (tone ? " " + tone : "")} aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg></span>;
 }
 export function Chevron() {
   return <svg className="chev" viewBox="0 0 8 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M1 1l6 6-6 6" /></svg>;
