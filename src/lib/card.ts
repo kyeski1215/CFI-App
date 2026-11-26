@@ -30,7 +30,15 @@ export interface StudentCard {
   hours?: { title: string; rows: { label: string; ref: string; have: number; need: number; unit: string; met: boolean }[] } | null;
   resources?: LibraryItem[]; // instructor's recommended videos/links for this student's rating + General
   log: { date: string; kind: string; tail?: string; hrs?: string; lesson?: string; text?: string; notes?: string; ratings?: Record<string, Rating> }[];
+  /** Your replies to the student's in-app questions, by question id. */
+  replies?: Record<string, { text: string; at: string; inPerson?: boolean }>;
+  /** Set on the student's device from the shared row: who shared it, and the card id. Not published. */
+  _owner?: string;
+  _id?: string;
 }
+
+/** A stable id for a lesson-log entry, the same on the instructor's and the student's device. */
+export const logKey = (e: { date: string; kind: string; lesson?: string }) => `${e.date}|${e.kind}|${(e.lesson ?? "").slice(0, 40)}`;
 
 export function buildCard(s: Student, rides: Ride[], instructor?: string, library: Resource[] = []): StudentCard | null {
   const email = (s.email ?? "").trim().toLowerCase();
@@ -76,6 +84,7 @@ export function buildCard(s: Student, rides: Ride[], instructor?: string, librar
       .sort((a, b) => b.date.localeCompare(a.date))
       .slice(0, 40)
       .map((e) => ({ date: e.date, kind: e.kind, tail: e.tail, hrs: e.hrs, lesson: e.lesson, text: e.text, ratings: e.ratings, notes: s.shareNotes ? e.notes : undefined })),
+    replies: s.qReplies && Object.keys(s.qReplies).length ? s.qReplies : undefined,
   };
 }
 

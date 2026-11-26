@@ -5,6 +5,7 @@ import LessonExtras from "../components/LessonExtras";
 import { mockSummary, skillSummary, type SkillStat } from "../lib/skills";
 import { claudePrompt, firstName, smsHref, studentText } from "../lib/studentText";
 import BriefingCard from "../components/BriefingCard";
+import StudentActivityCard from "../components/StudentActivityCard";
 import { hoursProgress, type ReqRow } from "../lib/hours";
 import { useSync } from "../lib/sync";
 import { buildBriefing, briefingText } from "../lib/briefing";
@@ -223,6 +224,8 @@ function Overview({ s, update, onDelete, goTo }: P & { onDelete: () => void; goT
       </section>
 
       <HoursCard s={s} update={update} />
+
+      <StudentActivityCard s={s} />
 
       {brief && (
         <BriefingCard b={brief} actions={<button className="btn ghost sm" onClick={() => copy(briefingText(brief, firstName(s.name)), "Briefing copied")}>Copy for {firstName(s.name)}</button>} />

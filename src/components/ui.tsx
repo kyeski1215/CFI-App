@@ -22,6 +22,18 @@ export const Icon = {
   weather: () => (
     <svg viewBox="0 0 24 24" {...P}><path d="M7 18h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.1 10.5 3.75 3.75 0 0 0 7 18z" /><path d="M9 21l1-2M13 21l1-2" /></svg>
   ),
+  next: () => (
+    <svg viewBox="0 0 24 24" {...P}><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+  ),
+  chat: () => (
+    <svg viewBox="0 0 24 24" {...P}><path d="M4 5h16v11H9l-5 4z" /></svg>
+  ),
+  cards: () => (
+    <svg viewBox="0 0 24 24" {...P}><rect x="3" y="6" width="14" height="14" rx="3" /><path d="M7 3h11a3 3 0 0 1 3 3v11" /></svg>
+  ),
+  chart: () => (
+    <svg viewBox="0 0 24 24" {...P}><path d="M5 19V11M12 19V5M19 19v-6" /></svg>
+  ),
   more: () => (
     <svg viewBox="0 0 24 24" {...P}><circle cx="5" cy="12" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="19" cy="12" r="1.5" /></svg>
   ),

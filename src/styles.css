@@ -697,3 +697,73 @@ h3:has(> .ichip), .row:has(> h3 > .ichip) h3 { display: inline-flex; align-items
 .seg { border: 0; border-radius: 10px; background: var(--fill); padding: 2px; gap: 0; }
 .seg button { background: none; border-radius: 8px; min-height: 32px; font-size: 13px; color: var(--ink); }
 .seg button[aria-pressed="true"] { background: var(--seg-on); color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+
+/* ===== Student side ===== */
+.cardpick { width: auto !important; align-self: flex-start; font-size: 14px !important; padding: 6px 10px !important; }
+.nexthero { background: var(--accent); color: var(--on-accent); border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 30%, transparent); }
+.nh-k { font-size: 13px; font-weight: 600; opacity: .85; }
+.nh-t { font: 800 23px/1.15 var(--f-display); }
+.nh-s { font-size: 14px; opacity: .92; }
+.nh-p { display: flex; align-items: center; gap: 10px; margin-top: 6px; font-size: 13px; }
+.nh-bar { flex: 1; height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .3); overflow: hidden; display: flex; }
+.nh-bar i { background: currentColor; border-radius: 4px; }
+.prepcard { gap: 2px; }
+.preprow { display: flex; align-items: center; gap: 12px; padding: 7px 0; }
+.tick { width: 28px; height: 28px; flex: none; border-radius: 50%; border: 2px solid var(--chev); background: none; padding: 0; display: grid; place-items: center; color: transparent; }
+.tick svg { width: 14px; height: 14px; }
+.preprow.on .tick { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.pt { flex: 1; min-width: 0; display: flex; flex-direction: column; text-decoration: none; color: var(--ink); text-align: left; background: none; border: 0; padding: 0; font: inherit; }
+.pt span { font-size: 15px; }
+.pt small { font-size: 13px; color: var(--muted); }
+.preprow.on .pt span { color: var(--muted); text-decoration: line-through; }
+.kindtag { flex: none; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 8px; }
+.k-Read { background: #e3ecfb; color: #1e4fb8; } .k-Watch { background: #fce1e7; color: #a61e46; } .k-Do { background: #ddf0e2; color: #1b6b39; }
+.k-Study { background: #e2d6fb; color: #5b2ebd; } .k-Quiz { background: #fde8d0; color: #9a4a06; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .kindtag { filter: brightness(.85) saturate(1.1); } }
+.softchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.softchips span { font-size: 13px; font-weight: 600; padding: 5px 10px; border-radius: 11px; background: var(--warn-soft); color: var(--warn); }
+.softchips span.g { background: var(--good-soft); color: var(--good); }
+.workrow { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: .5px solid var(--line); }
+.workrow > span:nth-child(2) { flex: 1; display: flex; flex-direction: column; }
+.workrow small { color: var(--muted); font-size: 12.5px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.dot.y { background: var(--m-prac); } .dot.i { background: var(--m-intro); }
+.debrief.read { opacity: .8; }
+.okline { color: var(--good) !important; font-weight: 600; }
+.qcard { gap: 8px; }
+.bubble { padding: 10px 12px; font-size: 15px; line-height: 1.45; max-width: 92%; }
+.bubble.me { align-self: flex-end; background: var(--accent); color: var(--on-accent); border-radius: 16px 16px 4px 16px; }
+.bubble.them { align-self: flex-start; background: var(--fill); border-radius: 16px 16px 16px 4px; display: flex; flex-direction: column; gap: 2px; }
+.bubble.them small { color: var(--muted); font-size: 12px; font-weight: 600; }
+.nextdeck h3 { font-size: 18px; }
+.tiles2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tile { background: var(--surface); border-radius: 18px; padding: 12px 14px; box-shadow: var(--shadow); text-decoration: none; color: var(--ink); display: flex; flex-direction: column; }
+.tile b { font: 800 24px var(--f-display); } .tile b.acc { color: var(--accent); }
+.tile span { font-size: 13px; color: var(--muted); }
+.decklist { gap: 4px; }
+.deckrow { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; text-decoration: none; color: var(--ink); border-top: .5px solid var(--line); }
+.deckrow .row { flex-wrap: nowrap; }
+.deckrow .dt { font-weight: 600; font-size: 15px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sessionhead { display: flex; align-items: center; gap: 12px; }
+.sh-mid { flex: 1; min-width: 0; }
+.sh-mid .row { flex-wrap: nowrap; } .sh-mid .bar { flex: 1; }
+.flash { padding: 22px 20px; gap: 12px; border-radius: 26px; }
+.ftag { align-self: flex-start; font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: 9px; }
+.ftag.q { background: #fde8d0; color: #9a4a06; } .ftag.a { background: var(--good-soft); color: var(--good); }
+.fq { font: 800 21px/1.28 var(--f-display); }
+.fsep { height: 1px; background: var(--line); }
+.fa { margin: 0; font-size: 15.5px; line-height: 1.5; white-space: pre-wrap; }
+.showans { align-self: stretch; min-height: 48px; }
+.gradebar { position: sticky; bottom: calc(96px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.gradebar .btn { min-height: 54px; font-size: 16px; border-radius: 18px; }
+.gradebar .again { color: var(--bad); }
+.donecard { text-align: center; align-items: center; }
+.miniprep { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.miniprep > span:nth-child(2) { flex: 1; }
+.mp { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--chev); flex: none; }
+.mp.on { background: var(--accent); border-color: var(--accent); }
+.kvlist { display: flex; flex-direction: column; gap: 6px; border-top: .5px solid var(--line); padding-top: 8px; font-size: 14px; }
+.kvlist > div { display: flex; gap: 10px; } .kvlist > div > span { flex: 1; }
+.kvlist .good { color: var(--good); } .kvlist .warn { color: var(--warn); }
+.dhead { display: flex; flex-direction: column; gap: 1px; }
+.gradebar { margin: 0 -16px; padding: 18px 16px 6px; background: linear-gradient(to bottom, transparent, var(--bg) 22px); }

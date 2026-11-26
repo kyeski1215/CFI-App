@@ -11,6 +11,10 @@ import StudentPage from "./pages/StudentPage";
 const Weather = lazy(() => import("./pages/Weather"));
 const Aircraft = lazy(() => import("./pages/Aircraft"));
 const MyTraining = lazy(() => import("./pages/MyTraining"));
+const StudentNext = lazy(() => import("./pages/student/Next"));
+const StudentReview = lazy(() => import("./pages/student/Review"));
+const StudentStudy = lazy(() => import("./pages/student/Study"));
+const StudentProgress = lazy(() => import("./pages/student/Progress"));
 const More = lazy(() => import("./pages/More"));
 const ImportLogbook = lazy(() => import("./pages/ImportLogbook"));
 const ImportCleanup = lazy(() => import("./pages/ImportCleanup"));
@@ -34,7 +38,12 @@ const SIDE_EXTRA = [
 ];
 // What a student who signs in (and has no roster of their own) sees.
 const STUDENT_NAV = [
-  { to: "/me", label: "My training", icon: Icon.roster },
+  { to: "/me", label: "Next", icon: Icon.next },
+  { to: "/me/review", label: "Review", icon: Icon.chat },
+  { to: "/me/study", label: "Study", icon: Icon.cards },
+  { to: "/me/progress", label: "Progress", icon: Icon.chart },
+];
+const STUDENT_MORE = [
   { to: "/weather", label: "Weather", icon: Icon.weather },
   { to: "/resources", label: "Resources", icon: Icon.resources },
   { to: "/settings", label: "Settings", icon: Icon.settings },
@@ -47,9 +56,9 @@ export default function App() {
   const students = useCollection("students");
   const studentMode = cards.length > 0 && students.length === 0;
   const fleet = useSharedFleet().items;
-  const studentNav = fleet.length ? [STUDENT_NAV[0], { to: "/aircraft", label: "Aircraft", icon: Icon.plane }, ...STUDENT_NAV.slice(1)] : STUDENT_NAV;
-  const side = studentMode ? studentNav : [...MAIN, ...(cards.length ? [{ to: "/me", label: "My training", icon: Icon.roster }] : []), ...SIDE_EXTRA];
-  const tabs = studentMode ? studentNav : [...MAIN, { to: "/more", label: "More", icon: Icon.more }];
+  const studentMore = fleet.length ? [{ to: "/aircraft", label: "Aircraft", icon: Icon.plane }, ...STUDENT_MORE] : STUDENT_MORE;
+  const side = studentMode ? [...STUDENT_NAV, ...studentMore] : [...MAIN, ...(cards.length ? [{ to: "/me", label: "My training", icon: Icon.roster }] : []), ...SIDE_EXTRA];
+  const tabs = studentMode ? [...STUDENT_NAV, { to: "/more", label: "More", icon: Icon.more }] : [...MAIN, { to: "/more", label: "More", icon: Icon.more }];
   const home = studentMode ? "/me" : "/students";
   return (
     <div className="app">
@@ -58,7 +67,7 @@ export default function App() {
           <img src="icon.svg" alt="" /> CFI Cockpit
         </div>
         {side.map((n) => (
-          <NavLink key={n.to} to={n.to}>
+          <NavLink key={n.to} to={n.to} end={n.to === "/me"}>
             <n.icon /> {n.label}
           </NavLink>
         ))}
@@ -87,8 +96,12 @@ export default function App() {
           <Route path="/weather" element={<Weather />} />
           <Route path="/aircraft" element={<Aircraft />} />
           <Route path="/resources" element={<Resources />} />
-          <Route path="/me" element={<MyTraining />} />
-          <Route path="/more" element={<More />} />
+          <Route path="/me" element={studentMode ? <StudentNext /> : <MyTraining />} />
+          <Route path="/me/review" element={<StudentReview />} />
+          <Route path="/me/study" element={<StudentStudy />} />
+          <Route path="/me/study/:deck" element={<StudentStudy />} />
+          <Route path="/me/progress" element={<StudentProgress />} />
+          <Route path="/more" element={<More student={studentMode} fleet={fleet.length > 0} />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to={home} replace />} />
         </Routes>
@@ -96,7 +109,7 @@ export default function App() {
       </main>
       <nav className="tabbar" aria-label="Main" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)` }}>
         {tabs.map((n) => (
-          <NavLink key={n.to} to={n.to} className={({ isActive }) => (isActive || (n.to === "/more" && /^#\/(aircraft|resources|settings|me)/.test(location.hash)) ? "active" : "")}>
+          <NavLink key={n.to} to={n.to} end={n.to === "/me"} className={({ isActive }) => (isActive || (n.to === "/more" && (studentMode ? /^#\/(aircraft|resources|settings|weather)/ : /^#\/(aircraft|resources|settings|me)/).test(location.hash)) ? "active" : "")}>
             <n.icon />
             {n.label}
           </NavLink>

@@ -51,6 +51,8 @@ Students sign in to the same app and see a read-only **My training** page: progr
 
 One-time setup: Supabase → **SQL Editor** → run `supabase/student-access.sql`. Keep **Authentication → Providers → Email → Confirm email** turned on (it is by default): that's what proves a student owns the email their card is shared with.
 
+Student study side (lesson prep checklist, debrief "reviewed" marks, flashcards, questions to you): run `supabase/student-study.sql` once as well. Students save their activity to their own row; you can read the rows for cards you shared.
+
 Per student: Edit profile → make sure their email is filled in → Student access → **Share with …** → **Copy invite text** and send it.
 
 ## Strengths & needs work

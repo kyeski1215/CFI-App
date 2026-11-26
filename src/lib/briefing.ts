@@ -7,6 +7,7 @@ import { skillSummary } from "./skills";
 import type { Student } from "./types";
 
 export interface Briefing {
+  key?: string; // plan key of the lesson, e.g. "p1.s1-emergencies"
   code?: string; // "G4"
   title: string;
   stage?: string;
@@ -42,6 +43,7 @@ export function buildBriefing(s: Student): Briefing | null {
         if (m === "Y" || m === "R") warmup.push(`${pd!.name} (${m === "Y" ? "Practiced" : "Introduced"})`);
       }
       return {
+        key,
         title: d.name,
         stage: sec.n,
         scenario: d.objective,

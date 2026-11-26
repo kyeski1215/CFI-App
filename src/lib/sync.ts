@@ -41,6 +41,13 @@ function set(p: Partial<SyncState>) {
   state = { ...state, ...p };
   subs.forEach((s) => s());
 }
+export const getSession = () => state.session;
+const syncedHooks = new Set<() => void>();
+/** Run after each successful sync (and on sign-in). */
+export function onSynced(fn: () => void) {
+  syncedHooks.add(fn);
+  return () => syncedHooks.delete(fn);
+}
 export function useSync() {
   return useSyncExternalStore(
     (l) => (subs.add(l), () => subs.delete(l)),
@@ -117,6 +124,7 @@ export async function syncNow() {
     await publishCards(uid);
     localStorage.setItem(CURSOR_KEY, newest);
     set({ status: "idle", lastSync: Date.now() });
+    syncedHooks.forEach((f) => { try { f(); } catch { /* ignore */ } });
   } catch (e) {
     set({ status: "error", error: e instanceof Error ? e.message : String(e) });
   } finally {
@@ -265,12 +273,12 @@ export async function loadMyCards() {
   if (!supabase || !state.session) return;
   const { data, error } = await supabase
     .from("records")
-    .select("data")
+    .select("user_id,id,data")
     .eq("collection", "cards")
     .eq("deleted", false)
     .neq("user_id", state.session.user.id);
   if (error) return setCards({ loaded: true, error: error.message });
-  const cards = (data ?? []).map((r) => r.data as StudentCard).filter((c) => c?.v === 1);
+  const cards = (data ?? []).map((r) => ({ ...(r.data as StudentCard), _owner: r.user_id as string, _id: r.id as string })).filter((c) => c?.v === 1);
   try { localStorage.setItem(MY_CARDS, JSON.stringify(cards)); } catch { /* ignore */ }
   setCards({ cards, loaded: true, error: undefined });
 }

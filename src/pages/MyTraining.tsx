@@ -58,7 +58,7 @@ export default function MyTraining() {
   );
 }
 
-function CardView({ c }: { c: StudentCard }) {
+export function CardView({ c, progressOnly }: { c: StudentCard; progressOnly?: boolean }) {
   const prog = planProgress(c);
   const topicsDone = c.topics.filter((t) => t.done).length;
   return (
@@ -70,7 +70,7 @@ function CardView({ c }: { c: StudentCard }) {
         <div className="stat"><b>{c.stats.landings || "—"}</b><span>Landings logged</span></div>
       </section>
 
-      {c.briefing && <BriefingCard b={c.briefing} />}
+      {!progressOnly && c.briefing && <BriefingCard b={c.briefing} />}
 
       {c.hours && (
         <section className="card">
@@ -162,11 +162,13 @@ function CardView({ c }: { c: StudentCard }) {
         </section>
       )}
 
-      <section className="card">
-        <h3>Lessons</h3>
-        {c.log.length === 0 && <div className="small muted">No lessons yet.</div>}
-        {c.log.map((e, i) => <LessonRow key={i} e={e} />)}
-      </section>
+      {!progressOnly && (
+        <section className="card">
+          <h3>Lessons</h3>
+          {c.log.length === 0 && <div className="small muted">No lessons yet.</div>}
+          {c.log.map((e, i) => <LessonRow key={i} e={e} />)}
+        </section>
+        )}
     </>
   );
 }

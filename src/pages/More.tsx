@@ -8,12 +8,19 @@ export const MORE_LINKS = [
   { to: "/settings", label: "Settings", desc: "Sign-in, sync, backup and import", icon: Icon.settings },
 ];
 
-export default function More() {
+const STUDENT_LINKS = [
+  { to: "/weather", label: "Weather", desc: "METARs and TAFs for your airports", icon: Icon.weather },
+  { to: "/resources", label: "Resources", desc: "Videos and links your instructor recommends", icon: Icon.resources },
+  { to: "/settings", label: "Settings", desc: "Sign-in and app color", icon: Icon.settings },
+];
+
+export default function More({ student, fleet }: { student?: boolean; fleet?: boolean }) {
+  const links = student ? [...(fleet ? [{ to: "/aircraft", label: "Aircraft", desc: "POHs, checklists and V-speeds", icon: Icon.plane }] : []), ...STUDENT_LINKS] : MORE_LINKS;
   return (
     <div className="page">
       <h1>More</h1>
       <section className="rows">
-        {MORE_LINKS.map((l) => (
+        {links.map((l) => (
           <Link key={l.to} to={l.to} className="irow">
             <span className="moreic"><l.icon /></span>
             <span className="ibody">
