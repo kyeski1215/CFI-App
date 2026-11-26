@@ -70,7 +70,11 @@ export default function StudentPage() {
 
   return (
     <div className="page">
-      <BackLink to="/students" label="Roster" />
+      <div className="row" style={{ flexWrap: "nowrap" }}>
+        <BackLink to="/students" label="Roster" />
+        <span className="spacer" />
+        <Link className="btn sm" to={`/preview/${s.id}`}>Preview as student</Link>
+      </div>
       <ProfileHeader s={s} />
       <div className="pbtns">
         <button className="btn primary" onClick={() => {

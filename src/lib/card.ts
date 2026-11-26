@@ -54,9 +54,9 @@ function groundEdits() {
   return Object.keys(out).length ? out : undefined;
 }
 
-export function buildCard(s: Student, rides: Ride[], instructor?: string, library: Resource[] = []): StudentCard | null {
+export function buildCard(s: Student, rides: Ride[], instructor?: string, library: Resource[] = [], preview = false): StudentCard | null {
   const email = (s.email ?? "").trim().toLowerCase();
-  if (!s.shareWithStudent || !email || !isActive(s) && s.status !== "Done") return null;
+  if (!preview && (!s.shareWithStudent || !email || !isActive(s) && s.status !== "Done")) return null;
   const today = todayStr();
   const flights = (s.log ?? []).filter((e) => e.kind !== "ground" && e.date);
   const num = (v?: string) => parseFloat(v ?? "") || 0;

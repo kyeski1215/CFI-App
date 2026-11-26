@@ -7,26 +7,27 @@ import { togglePrep, useActivity } from "../../lib/activity";
 import type { StudentCard } from "../../lib/card";
 
 import { nextLessonModules, syllabusDecks } from "../../lib/study";
+import { useStudentBase } from "../../lib/preview";
 import { AskSheet, StudentGate, firstOf, instructorName } from "./shared";
 
 type Prep = { key: string; title: string; sub?: string; kind: "Read" | "Study" | "Watch" | "Do" | "Quiz"; href?: string; to?: string };
 
 /** The "Get ready" checklist for the next lesson, built from the briefing your instructor shares. */
-export function prepItems(c: StudentCard): Prep[] {
+export function prepItems(c: StudentCard, me = "/me"): Prep[] {
   const b = c.briefing;
   if (!b) return [];
   const base = b.key ?? b.title;
   const out: Prep[] = [{ key: `${base}|plan`, title: "Read the lesson plan", sub: "Objective, brief and the Done when standard", kind: "Read" }];
-  (b.groundFirst ?? []).filter((g) => !g.done).forEach((g) => out.push({ key: `${base}|g:${g.code}`, title: `${g.code} · ${g.name}`, sub: "Ground module to finish first", kind: "Study", to: "/me/study/syl-" + (g.code === "Regs" ? "SOLO-REGS" : g.code) }));
+  (b.groundFirst ?? []).filter((g) => !g.done).forEach((g) => out.push({ key: `${base}|g:${g.code}`, title: `${g.code} · ${g.name}`, sub: "Ground module to finish first", kind: "Study", to: me + "/study/syl-" + (g.code === "Regs" ? "SOLO-REGS" : g.code) }));
   b.extras.hw.forEach(([t, txt], i) => {
     const m = t === "Study" ? txt.match(/\b(G\d+)\b/) ?? (/solo regs/i.test(txt) ? [, "SOLO-REGS"] : null) : null;
-    out.push({ key: `${base}|hw:${i}`, title: txt, sub: t !== "Do" && t !== "Study" && t !== "Read" ? t : m ? "Ground module · tap for its flashcards" : undefined, kind: t === "Do" ? "Do" : t === "Study" ? "Study" : "Read", to: m ? "/me/study/syl-" + m[1] : undefined });
+    out.push({ key: `${base}|hw:${i}`, title: txt, sub: t !== "Do" && t !== "Study" && t !== "Read" ? t : m ? "Ground module · tap for its flashcards" : undefined, kind: t === "Do" ? "Do" : t === "Study" ? "Study" : "Read", to: m ? me + "/study/syl-" + m[1] : undefined });
   });
   b.extras.items.forEach((v, i) => out.push({ key: `${base}|v:${i}`, title: v.title, sub: /youtu/.test(v.url) ? "Video" : "Link", kind: "Watch", href: v.url }));
   const mods = nextLessonModules(c);
   const decks = syllabusDecks(c.goal, c.oralEdits).filter((d) => mods.includes(d.id.slice(4)));
   const qs = decks.reduce((n, d) => n + d.cards.length, 0);
-  if (qs) out.push({ key: `${base}|quiz`, title: "Oral check questions", sub: `${qs} questions · ${decks.map((d) => d.code).join(", ")}`, kind: "Quiz", to: "/me/study/next" });
+  if (qs) out.push({ key: `${base}|quiz`, title: "Oral check questions", sub: `${qs} questions · ${decks.map((d) => d.code).join(", ")}`, kind: "Quiz", to: me + "/study/next" });
   return out;
 }
 
@@ -35,10 +36,11 @@ export default function Next() {
 }
 
 function NextBody({ c }: { c: StudentCard }) {
+  const me = useStudentBase();
   const { act, update } = useActivity(c);
   const [plan, setPlan] = useState(false);
   const [asking, setAsking] = useState(false);
-  const items = prepItems(c);
+  const items = prepItems(c, me);
   const done = items.filter((p) => act.prep?.[p.key]).length;
   const b = c.briefing;
   const lastWork = c.log.find((e) => e.ratings && Object.values(e.ratings).includes("work"));
@@ -113,7 +115,7 @@ function NextBody({ c }: { c: StudentCard }) {
 
       {workOn.length > 0 && (
         <section className="card">
-          <div className="row"><h3>From last time</h3><span className="spacer" /><Link to="/me/review" className="small">Review</Link></div>
+          <div className="row"><h3>From last time</h3><span className="spacer" /><Link to={me + "/review"} className="small">Review</Link></div>
           <div className="softchips">{workOn.map((w) => <span key={w}>{w}</span>)}</div>
         </section>
       )}

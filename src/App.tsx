@@ -13,6 +13,7 @@ const StudentNext = lazy(() => import("./pages/student/Next"));
 const StudentReview = lazy(() => import("./pages/student/Review"));
 const StudentStudy = lazy(() => import("./pages/student/Study"));
 const StudentProgress = lazy(() => import("./pages/student/Progress"));
+const StudentPreview = lazy(() => import("./pages/student/Preview"));
 const More = lazy(() => import("./pages/More"));
 const ImportLogbook = lazy(() => import("./pages/ImportLogbook"));
 const ImportCleanup = lazy(() => import("./pages/ImportCleanup"));
@@ -96,6 +97,9 @@ export default function App() {
           <Route path="/me/study" element={<StudentStudy />} />
           <Route path="/me/study/:deck" element={<StudentStudy />} />
           <Route path="/me/progress" element={<StudentProgress />} />
+          <Route path="/preview/:id" element={<StudentPreview />} />
+          <Route path="/preview/:id/:tab" element={<StudentPreview />} />
+          <Route path="/preview/:id/:tab/:deck" element={<StudentPreview />} />
           <Route path="/more" element={<More student={studentMode} />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to={home} replace />} />

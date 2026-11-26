@@ -7,6 +7,7 @@ import { bankForGoal, useFullBank } from "../../lib/banks";
 import type { StudentCard } from "../../lib/card";
 import { bankDecks, deckStats, isDue, isMastered, nextLessonModules, recordReview, sessionOrder, syllabusDecks, type Deck, type Flash } from "../../lib/study";
 import { AskSheet, StudentGate } from "./shared";
+import { useStudentBase } from "../../lib/preview";
 
 function useDecks(c: StudentCard) {
   const bankId = bankForGoal(c.goal);
@@ -29,6 +30,7 @@ export default function Study() {
 }
 
 function StudyHome({ c }: { c: StudentCard }) {
+  const me = useStudentBase();
   const { act } = useActivity(c);
   const { syl, oral, next, all, bankName, loadingBank } = useDecks(c);
   const cards = all.flatMap((d) => d.cards);
@@ -45,12 +47,12 @@ function StudyHome({ c }: { c: StudentCard }) {
         <section className="card nextdeck">
           <div className="small muted">For your next lesson</div>
           <h3>{next.title}</h3>
-          <div className="row"><span className="small muted">{next.cards.length} questions · about {Math.max(2, Math.round(next.cards.length * 0.7))} min</span><span className="spacer" /><Link className="btn primary" to="/me/study/next">Start</Link></div>
+          <div className="row"><span className="small muted">{next.cards.length} questions · about {Math.max(2, Math.round(next.cards.length * 0.7))} min</span><span className="spacer" /><Link className="btn primary" to={me + "/study/next"}>Start</Link></div>
         </section>
       )}
 
       <div className="tiles2">
-        <Link className="tile" to={due ? "/me/study/due" : "/me/study"}><b>{due}</b><span>cards to refresh today</span></Link>
+        <Link className="tile" to={due ? me + "/study/due" : me + "/study"}><b>{due}</b><span>cards to refresh today</span></Link>
         <div className="tile"><b className="acc">{cold}%</b><span>down cold</span></div>
       </div>
 
@@ -61,13 +63,14 @@ function StudyHome({ c }: { c: StudentCard }) {
 }
 
 function DeckList({ title, decks, act }: { title: string; decks: Deck[]; act: ReturnType<typeof useActivity>["act"] }) {
+  const me = useStudentBase();
   return (
     <section className="card decklist">
       <h3>{title}</h3>
       {decks.map((d) => {
         const s = deckStats(d, act);
         return (
-          <Link key={d.id} to={"/me/study/" + d.id} className="deckrow">
+          <Link key={d.id} to={me + "/study/" + d.id} className="deckrow">
             <span className="row">
               {d.code && <span className="lcode">{d.code}</span>}
               <span className="dt">{d.title}</span>
@@ -83,6 +86,7 @@ function DeckList({ title, decks, act }: { title: string; decks: Deck[]; act: Re
 }
 
 function Session({ c, deckId }: { c: StudentCard; deckId: string }) {
+  const me = useStudentBase();
   const nav = useNavigate();
   const { act, update } = useActivity(c);
   const { all, next, loadingBank } = useDecks(c);
@@ -97,11 +101,11 @@ function Session({ c, deckId }: { c: StudentCard; deckId: string }) {
   const [got, setGot] = useState(0);
   const [asking, setAsking] = useState(false);
 
-  if (!deck) return loadingBank ? <div className="small muted">Loading…</div> : <div className="empty">Nothing to study here right now. <Link to="/me/study">Back to Study</Link></div>;
+  if (!deck) return loadingBank ? <div className="small muted">Loading…</div> : <div className="empty">Nothing to study here right now. <Link to={me + "/study"}>Back to Study</Link></div>;
   const cards = order ?? sessionOrder(deck.cards, act);
   if (!order && cards.length) setOrder(cards);
   const f = cards[i];
-  const close = () => nav("/me/study");
+  const close = () => nav(me + "/study");
 
   if (!f) {
     return (

@@ -1,7 +1,8 @@
 // What a student does on their side of the app: lesson prep ticked off, debriefs read, flashcard
 // progress, and questions for their instructor. Saved on the student's device first, then to the
 // student_activity table (supabase/student-study.sql), where the instructor who shared the card can read it.
-import { useEffect, useSyncExternalStore } from "react";
+import { useContext, useEffect, useSyncExternalStore } from "react";
+import { PreviewCtx } from "./preview";
 import type { StudentCard } from "./card";
 import { todayStr } from "./store";
 import { getSession, onSynced, supabase } from "./sync";
@@ -86,7 +87,8 @@ async function saveRemote(c: StudentCard) {
 
 /** The signed-in student's activity for one card, and a function to change it (saved locally at once, online shortly after). */
 export function useActivity(c: StudentCard | undefined) {
-  useEffect(() => { if (c) loadRemote(c); }, [c?._owner, c?._id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const pv = useContext(PreviewCtx);
+  useEffect(() => { if (c && !pv) loadRemote(c); }, [c?._owner, c?._id]); // eslint-disable-line react-hooks/exhaustive-deps
   const snap = useSyncExternalStore((l) => (subs.add(l), () => subs.delete(l)), () => (c ? slotFor(c) : undefined));
   const update = (fn: (a: Activity) => Activity) => {
     if (!c) return;
@@ -99,6 +101,7 @@ export function useActivity(c: StudentCard | undefined) {
     clearTimeout(timers.get(k));
     timers.set(k, setTimeout(() => saveRemote(c), 1200));
   };
+  if (pv && c === pv.card) return { act: pv.act, error: undefined, update: (_fn: (a: Activity) => Activity) => pv.blocked() };
   return { act: snap?.act ?? {}, error: snap?.error, update };
 }
 

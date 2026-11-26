@@ -109,7 +109,7 @@ function Debrief({ e, reviewed, onReviewed, onAsk, who }: { e: Entry; reviewed?:
       </div>
       {body && (
         <>
-          <div className="small muted">{who}'s debrief</div>
+          <div className="small muted">{who.charAt(0).toUpperCase() + who.slice(1)}'s debrief</div>
           <p className={open ? "" : "clamp3"} style={{ margin: 0, whiteSpace: "pre-wrap" }}>{body}</p>
           {body.length > 180 && <button className="linkbtn" onClick={() => setOpen(!open)}>{open ? "Show less" : "Read all"}</button>}
         </>

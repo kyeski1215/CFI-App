@@ -3,6 +3,7 @@ import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Modal, useToast } from "../../components/ui";
 import PullToRefresh from "../../components/PullToRefresh";
+import { usePreview } from "../../lib/preview";
 import { askQuestion, useActivity } from "../../lib/activity";
 import type { StudentCard } from "../../lib/card";
 import { loadMyCards, syncConfigured, useMyCards, useSync } from "../../lib/sync";
@@ -19,8 +20,10 @@ export function useStudentCard() {
 
 /** Shows sign-in / nothing-shared messages until there's a card, then renders the screen. */
 export function StudentGate({ title, children }: { title: string; children: (c: StudentCard) => ReactNode }) {
+  const pv = usePreview();
   const sync = useSync();
   const { cards, card, pick, setPick, loaded, error } = useStudentCard();
+  if (pv) return <>{children(pv.card)}</>;
   if (!card) {
     return (
       <div className="page">
