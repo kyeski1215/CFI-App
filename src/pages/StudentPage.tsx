@@ -760,12 +760,29 @@ function Syllabus({ s, update }: P) {
   // Flight / Ground switch inside each stage of the named syllabus; remembered on this device.
   const [kindTab, setKindTab] = useState<"Flight" | "Ground">(() => { try { return localStorage.getItem("cfi.v1.sylkind") === "Ground" ? "Ground" : "Flight"; } catch { return "Flight"; } });
   const pickKind = (t: "Flight" | "Ground") => { setKindTab(t); try { localStorage.setItem("cfi.v1.sylkind", t); } catch { /* private mode */ } };
+  // Lessons (anything graded) vs. checklists (paperwork, endorsements, maneuver list) on separate pages.
+  const [view, setView] = useState<"Lessons" | "Checklists">(() => { try { return localStorage.getItem("cfi.v1.sylview") === "Checklists" ? "Checklists" : "Lessons"; } catch { return "Lessons"; } });
+  const pickView = (v: "Lessons" | "Checklists") => { setView(v); try { localStorage.setItem("cfi.v1.sylview", v); } catch { /* private mode */ } };
+  const isLessonSec = (sec: { items: [string, string, string?][] }) => sec.items.some((it) => isGradedItem(it[0]));
+  const lessonSecs = (plan ?? []).filter(isLessonSec);
+  const checkSecs = (plan ?? []).filter((sec) => !isLessonSec(sec));
+  const checkTotal = checkSecs.reduce((a, sec) => a + sec.items.length, 0);
+  const checkDone = checkSecs.reduce((a, sec) => a + sec.items.filter((it) => g[guideKey(sec.id, it[0])]).length, 0);
+  const shownSecs = view === "Lessons" ? lessonSecs : checkSecs;
   return (
     <section className="list">
-      <MarkLegend />
+      <div className="chips kindtabs" role="tablist" aria-label="Syllabus view">
+        {(["Lessons", "Checklists"] as const).map((v) => (
+          <button key={v} role="tab" className="chip" aria-pressed={view === v} aria-selected={view === v} onClick={() => pickView(v)}>
+            {v}{v === "Checklists" && checkTotal ? <span className="muted"> {checkDone}/{checkTotal}</span> : null}
+          </button>
+        ))}
+      </div>
+      {view === "Lessons" && <MarkLegend />}
+      {view === "Checklists" && <div className="small muted">Paperwork, endorsements and the maneuver list. Check each one off when it's done.</div>}
       {plan ? (
         <>
-          <div className="card">
+          {view === "Lessons" && <div className="card">
             <div className="row">
               <h3><IconChip icon="chart" tone="green" />Training plan</h3>
               <span className="spacer" />
@@ -783,8 +800,8 @@ function Syllabus({ s, update }: P) {
                 </div>
               </details>
             )}
-          </div>
-          {plan.map((sec) => {
+          </div>}
+          {shownSecs.map((sec) => {
             const n = sec.items.filter((it) => g[guideKey(sec.id, it[0])]).length;
             const full = n === sec.items.length;
             return (
@@ -816,19 +833,21 @@ function Syllabus({ s, update }: P) {
                       return <CheckRow key={key} label={it[1]} when={it[2]} date={g[key]} onToggle={() => toggle(key)} />;
                     })}
                   </div>
-                  <details className="fold sub">
-                    <summary><span className="ft small">Stage videos & resources</span></summary>
-                    <div className="fb"><LessonExtras k={"guide-" + sec.id} /></div>
-                  </details>
+                  {view === "Lessons" && (
+                    <details className="fold sub">
+                      <summary><span className="ft small">Stage videos & resources</span></summary>
+                      <div className="fb"><LessonExtras k={"guide-" + sec.id} /></div>
+                    </details>
+                  )}
                 </div>
               </details>
             );
           })}
         </>
       ) : (
-        <div className="empty">There's no stage plan for {s.goal} yet. Use the maneuver checklist below.</div>
+        view === "Lessons" && <div className="empty">There's no stage plan for {s.goal} yet. Use the maneuver checklist under Checklists.</div>
       )}
-      <Topics s={s} update={update} open={false} />
+      {view === "Checklists" && <Topics s={s} update={update} open={false} />}
     </section>
   );
 }
