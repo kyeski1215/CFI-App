@@ -78,7 +78,6 @@ export default function Roster() {
   const ratingsHere = Object.entries(
     active.reduce<Record<string, number>>((m, s) => ((m[s.goal || "Other"] = (m[s.goal || "Other"] ?? 0) + 1), m), {}),
   ).sort((a, b) => toneOrder(a[0]) - toneOrder(b[0]));
-  const stories = [...active].sort((x, y) => (recency(x) ?? 9999) - (recency(y) ?? 9999));
   const label = filter === "Done / hold" ? "Done or on hold" : filter;
 
   return (
@@ -95,19 +94,6 @@ export default function Roster() {
       </div>
       <input className="search" type="search" placeholder="Search students" aria-label="Search students" value={q} onChange={(e) => setQ(e.target.value)} />
 
-      {stories.length > 0 && !q && (
-        <div className="stories" aria-label="Recent students">
-          {stories.map((s) => {
-            const d = recency(s);
-            return (
-              <Link key={s.id} to={"/students/" + s.id} className="story" title={s.name}>
-                <span className={"ring" + (d != null && d >= OVERDUE_DAYS ? " bad" : "")}><Avatar name={s.name} goal={s.goal} size={54} /></span>
-                <span>{(s.name || "Unnamed").split(/\s+/)[0]}</span>
-              </Link>
-            );
-          })}
-        </div>
-      )}
 
       <div className="chips" role="group" aria-label="Filter">
         {FILTERS.map((f) => (
