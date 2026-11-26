@@ -830,3 +830,5 @@ h3:has(> .ichip), .row:has(> h3 > .ichip) h3 { display: inline-flex; align-items
 @keyframes ptrspin { to { transform: rotate(360deg); } }
 .iconpick { display: flex; flex-direction: column; gap: 8px; border-top: .5px solid var(--line); padding-top: 10px; }
 .iconprev { width: 60px; height: 60px; border-radius: 14px; box-shadow: 0 0 0 .5px var(--line), var(--shadow-btn); }
+.appmark:not(.logo) { background: none; }
+.appmark:not(.logo) img { width: 42px; height: 42px; box-shadow: var(--shadow-btn); border-radius: 12px; }
