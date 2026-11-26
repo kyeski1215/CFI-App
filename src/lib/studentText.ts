@@ -23,7 +23,6 @@ export function studentText(s: Student, e: LogEntry) {
   if (good.length) parts.push("WENT WELL\n" + good.join("\n"));
   if (work.length) parts.push("WORK ON\n" + work.join("\n"));
   if (notes.length) parts.push((good.length || work.length ? "NOTES\n" : "") + notes.join("\n"));
-  if (s.nextLesson) parts.push(`Next time: ${s.nextLesson}`);
   parts.push("Let me know if you have any questions!");
   return parts.join("\n\n");
 }
