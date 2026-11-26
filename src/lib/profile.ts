@@ -5,6 +5,9 @@ export interface Profile extends BaseRec {
   displayName?: string;
   schoolName?: string;
   logo?: string; // small image as a data URL
+  iconFromLogo?: boolean; // use the logo as the home-screen / browser icon
+  iconBg?: "white" | "accent" | "dark";
+  appName?: string; // name under the home-screen icon
 }
 const ID = "me";
 export const useProfile = () => useRecord<Profile>("profile", ID);
@@ -21,7 +24,7 @@ export function logoFromFile(file: File): Promise<string> {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
-      const max = 160;
+      const max = 320;
       const k = Math.min(1, max / Math.max(img.width, img.height));
       const c = document.createElement("canvas");
       c.width = Math.round(img.width * k);

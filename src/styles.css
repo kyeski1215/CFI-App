@@ -828,3 +828,5 @@ h3:has(> .ichip), .row:has(> h3 > .ichip) h3 { display: inline-flex; align-items
 .ptr svg { width: 18px; height: 18px; }
 .ptr.spin svg { animation: ptrspin .8s linear infinite; }
 @keyframes ptrspin { to { transform: rotate(360deg); } }
+.iconpick { display: flex; flex-direction: column; gap: 8px; border-top: .5px solid var(--line); padding-top: 10px; }
+.iconprev { width: 60px; height: 60px; border-radius: 14px; box-shadow: 0 0 0 .5px var(--line), var(--shadow-btn); }

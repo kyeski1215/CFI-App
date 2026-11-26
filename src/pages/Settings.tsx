@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useToast } from "../components/ui";
 import { importLegacy } from "../lib/legacy";
 import { exportAll, restoreSnapshot, snapshot, useCollection, useSnapshots } from "../lib/store";
@@ -7,6 +7,7 @@ import BlitzAccess from "../components/BlitzAccess";
 import { ACCENTS, setAccent, setTheme, useAccent, useTheme, type ThemeMode } from "../lib/theme";
 import { checkForUpdate, forceRefresh } from "../lib/updates";
 import { logoFromFile, saveProfile, useProfile } from "../lib/profile";
+import { renderIcon } from "../lib/appicon";
 
 export default function Settings() {
   const sync = useSync();
@@ -52,6 +53,7 @@ export default function Settings() {
             try { saveProfile({ logo: await logoFromFile(f) }); toast("Logo saved"); } catch (err) { toast(err instanceof Error ? err.message : "Couldn't read that image"); }
           }} />
         </div>
+        <AppIconPicker />
       </section>
 
       <section className="card">
@@ -231,5 +233,45 @@ function SafetyCopies() {
         </div>
       ))}
     </section>
+  );
+}
+
+/** Use the school logo as the app icon, with a background choice and a live preview. */
+function AppIconPicker() {
+  const profile = useProfile();
+  const [preview, setPreview] = useState("");
+  const on = !!profile?.iconFromLogo;
+  const bg = profile?.iconBg ?? "white";
+  useEffect(() => {
+    let live = true;
+    if (profile?.logo) renderIcon(profile.logo, bg, 180).then((u) => live && setPreview(u)).catch(() => {});
+    return () => { live = false; };
+  }, [profile?.logo, bg]);
+  return (
+    <div className="iconpick">
+      <div className="kv">App icon</div>
+      {!profile?.logo ? (
+        <div className="small muted">Add your school logo above to use it as the app's icon.</div>
+      ) : (
+        <>
+          <label className="check" style={{ borderBottom: 0 }}>
+            <input type="checkbox" checked={on} onChange={(e) => saveProfile({ iconFromLogo: e.target.checked })} />
+            <span className="ct"><span>Use my logo as the app icon</span><small>For the browser tab and the home-screen icon.</small></span>
+          </label>
+          {on && (
+            <div className="row">
+              {preview && <img src={preview} alt="Icon preview" className="iconprev" />}
+              <div className="chips" role="radiogroup" aria-label="Icon background">
+                {([["white", "White"], ["accent", "App color"], ["dark", "Dark"]] as const).map(([k, label]) => (
+                  <button key={k} type="button" role="radio" className="chip" aria-checked={bg === k} aria-pressed={bg === k} onClick={() => saveProfile({ iconBg: k })}>{label}</button>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+      <label className="f">Name under the icon<input value={profile?.appName ?? ""} placeholder="CFI Cockpit" maxLength={24} onChange={(e) => saveProfile({ appName: e.target.value })} /></label>
+      <div className="small muted">On iPhone the home-screen icon and name are set when the app is added. After changing them: make sure you're signed in (so nothing is lost), delete the app from your home screen, open the site in Safari, then Share → Add to Home Screen.</div>
+    </div>
   );
 }
