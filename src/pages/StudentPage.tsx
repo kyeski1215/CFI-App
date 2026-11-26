@@ -9,7 +9,7 @@ import StudentActivityCard from "../components/StudentActivityCard";
 import CheckrideModal from "../components/CheckrideModal";
 import PlanEditor from "../components/PlanEditor";
 import { hoursProgress, type ReqRow } from "../lib/hours";
-import { useSync } from "../lib/sync";
+import { useSharedFleet, useSync } from "../lib/sync";
 import { buildBriefing, briefingText } from "../lib/briefing";
 import { BANKS, bankForGoal } from "../lib/banks";
 import {
@@ -42,7 +42,7 @@ import {
   totalHours,
 } from "../lib/curriculum";
 import { PPL_PRINCIPLES, PPL_RUNNING, pplDetail, pplEdits, type PlanDetail } from "../lib/ppl";
-import { create, daysBetween, fmtDate, newId, put, remove, restoreSnapshot, snapshot, todayStr, useCollection, useRecord } from "../lib/store";
+import { type BaseRec, create, daysBetween, fmtDate, newId, put, remove, restoreSnapshot, snapshot, todayStr, useCollection, useRecord } from "../lib/store";
 import type { Checkride, LogEntry, Ride, Student } from "../lib/types";
 
 const TABS = ["Overview", "Log", "Syllabus", "ACS", "Mocks"] as const;
@@ -691,6 +691,53 @@ function Log({ s, update, prefillRegs }: P & { prefillRegs: string }) {
   );
 }
 
+/** Every tail number we know: your aircraft, the shared Blitz fleet, and tails this student has flown. */
+function useTailGroups(student: Student) {
+  const own = useCollection<{ id: string; name: string; tails?: string } & BaseRec>("aircraft");
+  const fleet = useSharedFleet().items;
+  const split = (t?: string) => (t ?? "").toUpperCase().split(/[\s,;/]+/).filter((x) => /^[A-Z0-9-]{3,7}$/.test(x));
+  const groups: { name: string; tails: string[] }[] = [];
+  const seen = new Set<string>();
+  for (const a of [...fleet, ...own].sort((x, y) => x.name.localeCompare(y.name))) {
+    const tails = split(a.tails).filter((t) => !seen.has(t));
+    tails.forEach((t) => seen.add(t));
+    if (tails.length) groups.push({ name: a.name, tails });
+  }
+  const flown = [...new Set((student.log ?? []).map((x) => (x.tail ?? "").toUpperCase()).filter((t) => t && !seen.has(t)))];
+  flown.forEach((t) => seen.add(t));
+  if (flown.length) groups.push({ name: "Flown before", tails: flown });
+  if (!groups.length) groups.push({ name: "Tails", tails: TAILS });
+  return { groups, all: seen.size ? seen : new Set(TAILS) };
+}
+
+function TailPicker({ student, value, onChange }: { student: Student; value: string; onChange: (t: string) => void }) {
+  const { groups, all } = useTailGroups(student);
+  const [typing, setTyping] = useState(() => !!value && !all.has(value));
+  if (typing) {
+    return (
+      <label className="f">Tail
+        <div className="row" style={{ flexWrap: "nowrap" }}>
+          <input autoFocus value={value} placeholder="N12345" onChange={(ev) => onChange(ev.target.value.toUpperCase())} />
+          <button type="button" className="btn sm" onClick={() => setTyping(false)}>List</button>
+        </div>
+      </label>
+    );
+  }
+  return (
+    <label className="f">Tail
+      <select value={all.has(value) ? value : ""} onChange={(ev) => (ev.target.value === "__other" ? setTyping(true) : onChange(ev.target.value))}>
+        <option value="">Choose…</option>
+        {groups.map((g) => (
+          <optgroup key={g.name} label={g.name}>
+            {g.tails.map((t) => <option key={t} value={t}>{t}</option>)}
+          </optgroup>
+        ))}
+        <option value="__other">Other (type it)…</option>
+      </select>
+    </label>
+  );
+}
+
 /** Pick the syllabus lesson this entry covers and grade it right here, so logging and grading happen together. */
 type Grade = (key: string, m: Mark | null, entryPatch?: Partial<LogEntry>) => void;
 function SyllabusGrader({ s, e, set, onGrade }: { s: Student; e: LogEntry; set: (p: Partial<LogEntry>) => void; onGrade: Grade }) {
@@ -762,10 +809,7 @@ function EntryForm({ e, student, skills, title, onChange, primary, remove, note,
         <label className="f">Date<input type="date" value={e.date} onChange={(ev) => set({ date: ev.target.value })} /></label>
         {e.kind === "flight" && (
           <>
-            <label className="f">Tail
-              <input list="tails" value={e.tail ?? ""} onChange={(ev) => set({ tail: ev.target.value.toUpperCase() })} />
-              <datalist id="tails">{TAILS.map((t) => <option key={t} value={t} />)}</datalist>
-            </label>
+            <TailPicker student={student} value={e.tail ?? ""} onChange={(tail) => set({ tail })} />
             <label className="f">Hours<input inputMode="decimal" value={e.hrs ?? ""} onChange={(ev) => set({ hrs: ev.target.value })} /></label>
             <label className="f">Landings day / night
               <div className="row" style={{ flexWrap: "nowrap" }}>
