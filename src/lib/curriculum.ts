@@ -52,9 +52,6 @@ export const PPL_SKILL_GROUPS: { h: string; items: string[] }[] = [
   { h: "Airwork", items: ["Checklist usage · Airwork", "Straight & level", "Climbs & descents", "Turns", "Trim", "Collision avoidance", "Slow flight", "Power-off stalls", "Power-on stalls", "Steep turns", "Ground reference"] },
   { h: "Emergencies", items: ["Checklist usage · Emergencies", "Emergency procedures", "Engine-out / forced landing", "Power-off 180"] },
   { h: "Pattern & landings", items: ["Untowered radio calls · Pattern", "Towered radio calls · Pattern", "Traffic pattern", "Pre-landing checklist", "Stabilized approach", "Normal landing", "Crosswind landing", "Short field landing", "Soft field landing", "Forward slip", "Go-around"] },
-  { h: "Navigation & ATC", items: ["Checklist usage · Navigation", "Pilotage & DR", "VOR / GPS navigation", "Diversion", "Flight following", "Airspace awareness"] },
-  { h: "Hood & night", items: ["Checklist usage · Hood & night", "Hood work", "Unusual attitudes", "Night operations"] },
-  { h: "Judgment", items: ["Checklist usage · Judgment", "Situational awareness", "Decision making", "Workload management"] },
 ];
 C.CURR["Private Pilot"] = PPL_SKILL_GROUPS.flatMap((g) => g.items);
 export const CURR = C.CURR;
