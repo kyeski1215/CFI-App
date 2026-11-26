@@ -525,7 +525,7 @@ function ProfileEditor({ s, update, onDelete, onDone }: P & { onDelete: () => vo
       </section>
       <section className="card">
         <h3>Solo limitations</h3>
-        <p className="small muted" style={{ margin: 0 }}>The written limits on their solo endorsement. The Weather page checks these against the current METAR. Leave blank for no limit.</p>
+        <p className="small muted" style={{ margin: 0 }}>The written limits on their solo endorsement. Leave blank for no limit.</p>
         <div className="fields">
           {([["maxWind", "Max wind (kt)"], ["maxGust", "Max gust (kt)"], ["maxXwind", "Max crosswind (kt)"], ["minCeiling", "Min ceiling (ft AGL)"], ["minVis", "Min visibility (SM)"]] as const).map(([k, label]) => (
             <label key={k} className="f">{label}

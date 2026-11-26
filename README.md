@@ -39,12 +39,6 @@ Resources added by the library owner show for every CFI and student using the ap
 
 Aircraft on the library owner's account are visible (read-only) only to Blitz Aviation members and the students they share with. Set up by `supabase/sharing-all-in-one.sql`. The owner then manages who's in Blitz from Settings → Blitz Aviation access (add by email, even before they sign up; remove). Other accounts keep their own private aircraft list.
 
-## Weather
-
-The Weather tab shows METAR/TAF, flight category, density altitude, runway head/crosswinds and a check of each student's solo limits. aviationweather.gov doesn't allow browser requests from other sites, so the app asks a small Supabase Edge Function (no key, no cost):
-
-Supabase → **Edge Functions → Deploy a new function → Via editor** → name it `wx` → paste `supabase/functions/wx/index.ts` → Deploy.
-
 ## Student view
 
 Students sign in to the same app and see a read-only **My training** page: progress, the next lesson briefing, homework and videos, ✓/✗ ratings and the texts you made. Your private notes, their phone and availability stay out unless you turn on "Also show my raw lesson notes".

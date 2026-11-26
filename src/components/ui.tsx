@@ -19,9 +19,6 @@ export const Icon = {
   plane: () => (
     <svg viewBox="0 0 24 24" {...P}><path d="M12 3c.9 0 1.5.8 1.5 2v4.5l7 4v2l-7-2v4l2 1.5V21L12 20l-3.5 1v-2l2-1.5v-4l-7 2v-2l7-4V5c0-1.2.6-2 1.5-2z" /></svg>
   ),
-  weather: () => (
-    <svg viewBox="0 0 24 24" {...P}><path d="M7 18h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.1 10.5 3.75 3.75 0 0 0 7 18z" /><path d="M9 21l1-2M13 21l1-2" /></svg>
-  ),
   next: () => (
     <svg viewBox="0 0 24 24" {...P}><path d="M5 12h14M13 6l6 6-6 6" /></svg>
   ),

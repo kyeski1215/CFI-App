@@ -8,7 +8,6 @@ import Roster from "./pages/Roster";
 import StudentPage from "./pages/StudentPage";
 
 // Less-used pages load on first visit so the app starts faster.
-const Weather = lazy(() => import("./pages/Weather"));
 const Aircraft = lazy(() => import("./pages/Aircraft"));
 const MyTraining = lazy(() => import("./pages/MyTraining"));
 const StudentNext = lazy(() => import("./pages/student/Next"));
@@ -31,7 +30,6 @@ const MAIN = [
   { to: "/regs", label: "Regs", icon: Icon.regs },
 ];
 const SIDE_EXTRA = [
-  { to: "/weather", label: "Weather", icon: Icon.weather },
   { to: "/aircraft", label: "Aircraft", icon: Icon.plane },
   { to: "/resources", label: "Resources", icon: Icon.resources },
   { to: "/settings", label: "Settings", icon: Icon.settings },
@@ -44,7 +42,6 @@ const STUDENT_NAV = [
   { to: "/me/progress", label: "Progress", icon: Icon.chart },
 ];
 const STUDENT_MORE = [
-  { to: "/weather", label: "Weather", icon: Icon.weather },
   { to: "/resources", label: "Resources", icon: Icon.resources },
   { to: "/settings", label: "Settings", icon: Icon.settings },
 ];
@@ -93,7 +90,6 @@ export default function App() {
           <Route path="/mocks" element={<Mocks />} />
           <Route path="/mocks/:id" element={<MockRide />} />
           <Route path="/regs" element={<RegLogger />} />
-          <Route path="/weather" element={<Weather />} />
           <Route path="/aircraft" element={<Aircraft />} />
           <Route path="/resources" element={<Resources />} />
           <Route path="/me" element={studentMode ? <StudentNext /> : <MyTraining />} />
@@ -109,7 +105,7 @@ export default function App() {
       </main>
       <nav className="tabbar" aria-label="Main" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)` }}>
         {tabs.map((n) => (
-          <NavLink key={n.to} to={n.to} end={n.to === "/me"} className={({ isActive }) => (isActive || (n.to === "/more" && (studentMode ? /^#\/(aircraft|resources|settings|weather)/ : /^#\/(aircraft|resources|settings|me|weather)/).test(location.hash)) ? "active" : "")}>
+          <NavLink key={n.to} to={n.to} end={n.to === "/me"} className={({ isActive }) => (isActive || (n.to === "/more" && (studentMode ? /^#\/(aircraft|resources|settings)/ : /^#\/(aircraft|resources|settings|me)/).test(location.hash)) ? "active" : "")}>
             <n.icon />
             {n.label}
           </NavLink>
