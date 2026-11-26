@@ -29,9 +29,9 @@ const MAIN = [
   { to: "/students", label: "Roster", icon: Icon.roster },
   { to: "/mocks", label: "Mocks", icon: Icon.mock },
   { to: "/regs", label: "Regs", icon: Icon.regs },
-  { to: "/weather", label: "Weather", icon: Icon.weather },
 ];
 const SIDE_EXTRA = [
+  { to: "/weather", label: "Weather", icon: Icon.weather },
   { to: "/aircraft", label: "Aircraft", icon: Icon.plane },
   { to: "/resources", label: "Resources", icon: Icon.resources },
   { to: "/settings", label: "Settings", icon: Icon.settings },
@@ -109,7 +109,7 @@ export default function App() {
       </main>
       <nav className="tabbar" aria-label="Main" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)` }}>
         {tabs.map((n) => (
-          <NavLink key={n.to} to={n.to} end={n.to === "/me"} className={({ isActive }) => (isActive || (n.to === "/more" && (studentMode ? /^#\/(aircraft|resources|settings|weather)/ : /^#\/(aircraft|resources|settings|me)/).test(location.hash)) ? "active" : "")}>
+          <NavLink key={n.to} to={n.to} end={n.to === "/me"} className={({ isActive }) => (isActive || (n.to === "/more" && (studentMode ? /^#\/(aircraft|resources|settings|weather)/ : /^#\/(aircraft|resources|settings|me|weather)/).test(location.hash)) ? "active" : "")}>
             <n.icon />
             {n.label}
           </NavLink>
