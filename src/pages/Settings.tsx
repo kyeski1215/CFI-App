@@ -4,7 +4,7 @@ import { importLegacy } from "../lib/legacy";
 import { exportAll, restoreSnapshot, snapshot, useCollection, useSnapshots } from "../lib/store";
 import { signIn, signOut, signUp, syncConfigured, syncNow, useSharedLibrary, useSync } from "../lib/sync";
 import BlitzAccess from "../components/BlitzAccess";
-import { ACCENTS, setAccent, useAccent } from "../lib/theme";
+import { ACCENTS, setAccent, setTheme, useAccent, useTheme, type ThemeMode } from "../lib/theme";
 import { checkForUpdate, forceRefresh } from "../lib/updates";
 
 export default function Settings() {
@@ -16,6 +16,7 @@ export default function Settings() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [legacy, setLegacy] = useState("");
   const accent = useAccent();
+  const theme = useTheme();
 
   const download = () => {
     const blob = new Blob([JSON.stringify(exportAll(), null, 1)], { type: "application/json" });
@@ -29,6 +30,16 @@ export default function Settings() {
   return (
     <div className="page">
       <header className="page-head"><h1>Settings</h1></header>
+
+      <section className="card">
+        <h3>Appearance</h3>
+        <div className="chips kindtabs" role="radiogroup" aria-label="Light or dark mode">
+          {([["auto", "Automatic"], ["light", "Light"], ["dark", "Dark"]] as [ThemeMode, string][]).map(([m, label]) => (
+            <button key={m} type="button" role="radio" className="chip" aria-checked={theme === m} aria-pressed={theme === m} onClick={() => setTheme(m)}>{label}</button>
+          ))}
+        </div>
+        <div className="small muted">Automatic follows your phone's light or dark setting.</div>
+      </section>
 
       <section className="card">
         <h3>App color</h3>

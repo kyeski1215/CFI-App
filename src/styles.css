@@ -781,3 +781,9 @@ h3:has(> .ichip), .row:has(> h3 > .ichip) h3 { display: inline-flex; align-items
 .lrow.crlist { display: flex; align-items: center; gap: 12px; }
 .crbtn { width: 100%; background: none; border: 0; border-top: .5px solid var(--line); text-align: left; font: inherit; color: var(--ink); cursor: pointer; }
 .crlink { text-decoration: none; color: var(--ink); }
+
+/* the same dark-mode tweaks when dark is chosen in Settings */
+:root[data-theme="dark"] .swatch { background: var(--cd); } :root[data-theme="dark"] .swatch[aria-checked="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--cd); }
+:root[data-theme="dark"] .av.t0 { background: #0e3b40; color: #86dde5; } :root[data-theme="dark"] .av.t1 { background: #4a1a28; color: #ffa3b8; } :root[data-theme="dark"] .av.t2 { background: #163d25; color: #8ee3a8; } :root[data-theme="dark"] .av.t3 { background: #4a2e0e; color: #ffc488; } :root[data-theme="dark"] .av.t4 { background: #33245e; color: #c9b3ff; } :root[data-theme="dark"] .av.t5 { background: #1f3a66; color: #a9c8ff; }
+:root[data-theme="dark"] .av.t6 { background: #34302c; color: #c9c3bb; }
+:root[data-theme="dark"] .kindtag { filter: brightness(.85) saturate(1.1); }

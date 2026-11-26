@@ -26,3 +26,26 @@ export function setAccent(id: string) {
   subs.forEach((f) => f());
 }
 export const useAccent = () => useSyncExternalStore((f) => (subs.add(f), () => subs.delete(f)), read);
+
+/* ---- light / dark: follow the phone, or force one ---- */
+export type ThemeMode = "auto" | "light" | "dark";
+const THEME_KEY = "cfi.v1.theme";
+const themeSubs = new Set<() => void>();
+const readTheme = (): ThemeMode => { try { const v = localStorage.getItem(THEME_KEY); return v === "light" || v === "dark" ? v : "auto"; } catch { return "auto"; } };
+
+export function applyTheme(mode: ThemeMode = readTheme()) {
+  const root = document.documentElement;
+  if (mode === "auto") root.removeAttribute("data-theme");
+  else root.setAttribute("data-theme", mode);
+  // The phone's status bar color follows the same choice.
+  document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((m) => {
+    const isDarkMeta = (m.getAttribute("media") ?? "").includes("dark");
+    m.content = mode === "auto" ? (isDarkMeta ? "#11100f" : "#f7f5f2") : mode === "dark" ? "#11100f" : "#f7f5f2";
+  });
+}
+export function setTheme(mode: ThemeMode) {
+  try { localStorage.setItem(THEME_KEY, mode); } catch { /* private mode */ }
+  applyTheme(mode);
+  themeSubs.forEach((f) => f());
+}
+export const useTheme = () => useSyncExternalStore((f) => (themeSubs.add(f), () => themeSubs.delete(f)), readTheme);
