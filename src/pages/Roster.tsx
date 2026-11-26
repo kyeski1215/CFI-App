@@ -86,7 +86,7 @@ export default function Roster() {
     <div className="page">
       <div className="hello">
         {profile?.logo ? <span className="appmark logo" aria-hidden="true"><img src={profile.logo} alt="" /></span> : <span className="appmark" aria-hidden="true"><img src="icon.svg" alt="" /></span>}
-        <div className="greet"><small>{greeting()}{profile?.displayName ? ", " + profile.displayName.split(" ")[0] : ""}{profile?.schoolName ? " · " + profile.schoolName : ""}</small><h1>Your students</h1></div>
+        <div className="greet"><small>{greeting()}{profile?.displayName ? ", " + profile.displayName.split(" ")[0] : ""}</small><h1>Your students</h1></div>
         <Link className="roundbtn" to="/import" aria-label="Import logbook" title="Import logbook">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg>
         </Link>

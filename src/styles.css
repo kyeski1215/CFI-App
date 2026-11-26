@@ -832,3 +832,6 @@ h3:has(> .ichip), .row:has(> h3 > .ichip) h3 { display: inline-flex; align-items
 .iconprev { width: 60px; height: 60px; border-radius: 14px; box-shadow: 0 0 0 .5px var(--line), var(--shadow-btn); }
 .appmark:not(.logo) { background: none; }
 .appmark:not(.logo) img { width: 42px; height: 42px; box-shadow: var(--shadow-btn); border-radius: 12px; }
+.hello .greet small, .hello h1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hello .greet small { font-size: 13.5px; }
+@media (max-width: 380px) { .hello h1 { font-size: 24px; } }
