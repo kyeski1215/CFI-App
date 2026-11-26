@@ -680,3 +680,6 @@ h3:has(> .ichip), .row:has(> h3 > .ichip) h3 { display: inline-flex; align-items
 .pchips span { font-size: 12.5px; background: var(--surface); border-radius: 8px; padding: 3px 8px; }
 @media (max-width: 480px) { .plesson > summary .mdate { display: none; } }
 .plesson .ln.ldone { text-decoration: none; color: var(--good); }
+.kindtabs { display: flex; width: 100%; margin-bottom: 10px; }
+.kindtabs .chip { flex: 1; font-size: 14px; padding: 8px 12px; }
+.kindtabs .chip .muted { font-weight: 500; margin-left: 4px; }

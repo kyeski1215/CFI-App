@@ -714,6 +714,9 @@ function Syllabus({ s, update }: P) {
   };
   const prog = guideProgress(s);
   const mark = (key: string, m: Mark | null) => update(setGuideMark(s, key, m));
+  // Flight / Ground switch inside each stage of the named syllabus; remembered on this device.
+  const [kindTab, setKindTab] = useState<"Flight" | "Ground">(() => { try { return localStorage.getItem("cfi.v1.sylkind") === "Ground" ? "Ground" : "Flight"; } catch { return "Flight"; } });
+  const pickKind = (t: "Flight" | "Ground") => { setKindTab(t); try { localStorage.setItem("cfi.v1.sylkind", t); } catch { /* private mode */ } };
   return (
     <section className="list">
       <MarkLegend />
@@ -750,8 +753,17 @@ function Syllabus({ s, update }: P) {
                 <div className="fb">
                   {sec.note && <p className="secnote">{sec.note}</p>}
                   {sec.id === "s1" && <Coverage guide={g} />}
+                  {hasBoth(sec) && (
+                    <div className="chips kindtabs" role="tablist" aria-label="Lesson type">
+                      {(["Flight", "Ground"] as const).map((t) => {
+                        const items = sec.items.filter((it) => kindOf(it[0]) === t);
+                        const d = items.filter((it) => g[guideKey(sec.id, it[0])]).length;
+                        return <button key={t} role="tab" className="chip" aria-pressed={kindTab === t} aria-selected={kindTab === t} onClick={() => pickKind(t)}>{t} <span className="muted">{d}/{items.length}</span></button>;
+                      })}
+                    </div>
+                  )}
                   <div className="checks">
-                    {sec.items.map((it) => {
+                    {sec.items.filter((it) => !hasBoth(sec) || kindOf(it[0]) === kindTab).map((it) => {
                       const key = guideKey(sec.id, it[0]);
                       const d = pplDetail(it[0]);
                       if (d && (d.kind === "flight" || d.kind === "ground")) return <PlanLesson key={key} k={key} d={d} value={guideMark(s, key)} onSet={(m) => mark(key, m)} />;
@@ -887,6 +899,15 @@ function PlanLesson({ k, d, value, onSet }: { k: string; d: PlanDetail; value?: 
     </details>
   );
 }
+
+/** Flight lessons vs. ground work (modules, written gates, knowledge test) in the named syllabus. */
+const kindOf = (k: string): "Flight" | "Ground" | null => {
+  const d = pplDetail(k);
+  if (!d) return null;
+  return d.kind === "flight" ? "Flight" : "Ground";
+};
+const hasBoth = (sec: { items: [string, string, string?][] }) =>
+  sec.items.some((it) => kindOf(it[0]) === "Flight") && sec.items.some((it) => kindOf(it[0]) === "Ground");
 
 const NEXT_MARK: Record<string, Mark | null> = { "": "R", R: "Y", Y: "G", G: null };
 
