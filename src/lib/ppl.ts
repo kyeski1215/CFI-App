@@ -2,6 +2,7 @@
 // plus full lesson / ground-module details for the Syllabus tab, briefings and the student side.
 import raw from "../data/ppl-syllabus.json";
 import type { GuideSection } from "./curriculum";
+import { get, put, type BaseRec } from "./store";
 
 type Str = string | null | undefined;
 export interface PlanDetail {
@@ -60,15 +61,36 @@ for (const st of PPL.stages) {
 S2.nightBlock!.lessons.forEach((l) => flight(l, "Night block"));
 add({ kind: "test", id: "kt", name: "Knowledge test passed", stage: "Stage 3 · Checkride Prep", objective: S3.knowledgeTest!.timing, steps: [S3.knowledgeTest!.before, S3.knowledgeTest!.after] });
 
-/** Full details for a plan item key ("G3", "s1-emergencies", "gate-mock-oral"…), or undefined for checkbox items. */
-export const pplDetail = (itemKey: string): PlanDetail | undefined => DETAIL[itemKey];
+/* ---- your edits to the syllabus text (Syllabus → open a lesson → Edit), synced like everything else ---- */
+export type PlanEdit = Partial<Pick<PlanDetail, "name" | "objective" | "doneWhen" | "briefing" | "hood" | "homework" | "steps" | "inFlight" | "profile" | "note" | "cfiNote" | "due" | "covers" | "sources" | "oralCheck" | "detail">>;
+interface EditsRec extends BaseRec { edits: Record<string, PlanEdit> }
+const EDITS_ID = "ppl-syllabus";
+export const pplEdits = (): Record<string, PlanEdit> => get<EditsRec>("profile", EDITS_ID)?.edits ?? {};
+export function savePplEdit(id: string, patch: PlanEdit | null) {
+  const cur = get<EditsRec>("profile", EDITS_ID);
+  const edits = { ...(cur?.edits ?? {}) };
+  if (patch) edits[id] = patch;
+  else delete edits[id];
+  const now = Date.now();
+  put<EditsRec>("profile", { id: EDITS_ID, createdAt: cur?.createdAt ?? now, updatedAt: now, edits });
+}
+/** The syllabus as written in the app, before your edits. */
+export const pplOriginal = (id: string): PlanDetail | undefined => DETAIL[id];
+
+/** Full details for a plan item key ("G3", "s1-emergencies", "gate-mock-oral"…) with your edits, or undefined for checkbox items. */
+export const pplDetail = (itemKey: string): PlanDetail | undefined => {
+  const d = DETAIL[itemKey];
+  if (!d) return undefined;
+  const e = pplEdits()[itemKey];
+  return e ? { ...d, ...e } : d;
+};
 
 const label = (id: string) => {
-  const d = DETAIL[id];
+  const d = pplDetail(id)!;
   return d.kind === "ground" ? `${d.code} — ${d.name}` : d.name;
 };
 const doneWhen = (id: string) => {
-  const d = DETAIL[id];
+  const d = pplDetail(id)!;
   if (d.kind === "ground") return d.oralCheck?.length && d.oralCheck.length > 1 ? "Answers the oral check without help" : d.oralCheck?.[0];
   if (d.kind === "gate") return d.detail;
   return d.doneWhen;
@@ -78,7 +100,7 @@ const endo = (phase: string) =>
   PPL.endorsements.filter((e) => e.phase === phase).map((e): [string, string, string?] => [e.id, e.name + (e.reg ? ` (${e.reg})` : "")]);
 
 /** The Private Pilot training plan, in the recommended order: ground modules sit before the flight that needs them. */
-export const PPL_SECTIONS: GuideSection[] = [
+export const pplSections = (): GuideSection[] => [
   {
     id: "p1",
     n: "Stage 1 · Pre-Solo",
@@ -116,17 +138,18 @@ export const PPL_SECTIONS: GuideSection[] = [
     ],
   },
 ];
-export const PPL_SECTION_IDS = new Set(PPL_SECTIONS.map((s) => s.id));
+export const PPL_SECTION_IDS = new Set(pplSections().map((s) => s.id));
 
 /** Homework the syllabus lists for a plan key ("p1.G3"), in the app's [type, text] form. */
 export function pplHomework(key: string): [string, string][] | undefined {
   const id = key.slice(key.indexOf(".") + 1);
-  const d = DETAIL[id];
+  const d = pplDetail(id);
   if (!d) return undefined;
   if (d.kind === "ground") return (d.sources ?? []).map((s) => ["Read", s]);
   return (d.homework ?? []).map((h): [string, string] => {
     const m = h.match(/\b(G\d+)\b/) ?? (/solo regs/i.test(h) ? ["", "SOLO-REGS"] : null);
-    if (m && DETAIL[m[1]]) return ["Study", `${h.replace(/\bG\d+\b/, DETAIL[m[1]].code ?? m[1])} · ${DETAIL[m[1]].name}`.replace(/^Solo Regs prep · /, "")];
+    const md = m ? pplDetail(m[1]) : undefined;
+    if (m && md) return ["Study", `${h.replace(/\bG\d+\b/, md.code ?? m[1])} · ${md.name}`.replace(/^Solo Regs prep · /, "")];
     if (/^read\b/i.test(h)) return ["Read", h.replace(/^read\s+/i, "")];
     return ["Do", h];
   });

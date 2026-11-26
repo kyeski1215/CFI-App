@@ -15,6 +15,7 @@ import {
   all,
 } from "./store";
 import { buildCard, type StudentCard } from "./card";
+import { getProfile } from "./profile";
 import type { Resource, Ride, Student } from "./types";
 
 // The publishable key is designed to ship in client code; row-level security protects the data.
@@ -230,12 +231,15 @@ async function publishCards(uid: string) {
   try { sent = JSON.parse(localStorage.getItem(CARD_HASH) ?? "{}"); } catch { /* first run */ }
   const rides = all<Ride>("rides");
   const library = all<Resource>("resources");
-  const instructor = state.session?.user.email ?? undefined;
+  const prof = getProfile();
+  const instructor = prof?.displayName?.trim() || state.session?.user.email || undefined;
+  const school = prof?.schoolName?.trim() || prof?.logo ? { name: prof?.schoolName?.trim() || undefined, logo: prof?.logo } : undefined;
   const rows: Record<string, unknown>[] = [];
   const next: Record<string, string> = {};
   for (const st of all<Student>("students")) {
-    const card = buildCard(st, rides, instructor, library);
-    if (!card) continue;
+    const built = buildCard(st, rides, instructor, library);
+    if (!built) continue;
+    const card = school ? { ...built, school } : built;
     const { updated: _u, ...stable } = card;
     const hash = JSON.stringify(stable);
     next[st.id] = String(hash.length) + ":" + simpleHash(hash);

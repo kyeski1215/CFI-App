@@ -2,7 +2,7 @@
 import raw from "../data/curriculum.json";
 import { todayStr } from "./store";
 import type { Student } from "./types";
-import { PPL_SECTIONS, pplDetail } from "./ppl";
+import { pplDetail, pplSections } from "./ppl";
 
 export interface GroundTask {
   t: string;
@@ -90,7 +90,7 @@ export function groundFor(s: Student): { area: string; tasks: GroundTask[] } {
 export const groundKey = (t: string, item: string) => t + "|" + item;
 
 export function guideFor(s: Student): GuideSection[] | null {
-  if (s.goal === "Private Pilot") return [...C.GUIDE.filter((g) => g.id === "enroll" || g.id === "meet"), ...PPL_SECTIONS];
+  if (s.goal === "Private Pilot") return [...C.GUIDE.filter((g) => g.id === "enroll" || g.id === "meet"), ...pplSections()];
   if (s.goal !== "Instrument" && s.goal !== "Commercial") return null;
   const ir = s.goal === "Instrument";
   return [

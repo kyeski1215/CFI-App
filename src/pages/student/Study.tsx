@@ -5,7 +5,6 @@ import { Bar } from "../../components/ui";
 import { useActivity } from "../../lib/activity";
 import { bankForGoal, useFullBank } from "../../lib/banks";
 import type { StudentCard } from "../../lib/card";
-import { pplDetail } from "../../lib/ppl";
 import { bankDecks, deckStats, isDue, isMastered, nextLessonModules, recordReview, sessionOrder, syllabusDecks, type Deck, type Flash } from "../../lib/study";
 import { AskSheet, StudentGate } from "./shared";
 
@@ -13,12 +12,12 @@ function useDecks(c: StudentCard) {
   const bankId = bankForGoal(c.goal);
   const bank = useFullBank(bankId);
   return useMemo(() => {
-    const syl = syllabusDecks(c.goal);
+    const syl = syllabusDecks(c.goal, c.oralEdits);
     const oral = bankDecks(bankId, bank);
     const mods = nextLessonModules(c);
     const nextCards = syl.filter((d) => mods.includes(d.id.slice(4))).flatMap((d) => d.cards);
     const next: Deck | null = nextCards.length
-      ? { id: "next", title: mods.map((m) => { const x = pplDetail(m); return x ? `${x.code} ${x.name}` : m; }).join(" · "), group: "syllabus", cards: nextCards }
+      ? { id: "next", title: syl.filter((d) => mods.includes(d.id.slice(4))).map((d) => `${d.code} ${d.title}`).join(" · "), group: "syllabus", cards: nextCards }
       : null;
     return { syl, oral, next, all: [...syl, ...oral], bankName: bank?.name, loadingBank: !bank };
   }, [c, bankId, bank]);

@@ -6,6 +6,7 @@ import { signIn, signOut, signUp, syncConfigured, syncNow, useSharedLibrary, use
 import BlitzAccess from "../components/BlitzAccess";
 import { ACCENTS, setAccent, setTheme, useAccent, useTheme, type ThemeMode } from "../lib/theme";
 import { checkForUpdate, forceRefresh } from "../lib/updates";
+import { logoFromFile, saveProfile, useProfile } from "../lib/profile";
 
 export default function Settings() {
   const sync = useSync();
@@ -17,6 +18,8 @@ export default function Settings() {
   const [legacy, setLegacy] = useState("");
   const accent = useAccent();
   const theme = useTheme();
+  const profile = useProfile();
+  const logoRef = useRef<HTMLInputElement>(null);
 
   const download = () => {
     const blob = new Blob([JSON.stringify(exportAll(), null, 1)], { type: "application/json" });
@@ -30,6 +33,26 @@ export default function Settings() {
   return (
     <div className="page">
       <header className="page-head"><h1>Settings</h1></header>
+
+      <section className="card">
+        <h3>You & your school</h3>
+        <div className="small muted">Students see your name instead of your email, and your school's name and logo on their side.</div>
+        <div className="fields">
+          <label className="f">Your name<input value={profile?.displayName ?? ""} placeholder="e.g. Alex Morgan" onChange={(e) => saveProfile({ displayName: e.target.value })} /></label>
+          <label className="f">School<input value={profile?.schoolName ?? ""} placeholder="e.g. your flight school" onChange={(e) => saveProfile({ schoolName: e.target.value })} /></label>
+        </div>
+        <div className="row">
+          {profile?.logo ? <img src={profile.logo} alt="School logo" className="logoprev" /> : <span className="logoprev empty" aria-hidden="true">Logo</span>}
+          <button className="btn sm" onClick={() => logoRef.current?.click()}>{profile?.logo ? "Change logo" : "Add logo"}</button>
+          {profile?.logo && <button className="btn sm danger" onClick={() => saveProfile({ logo: undefined })}>Remove</button>}
+          <input ref={logoRef} type="file" accept="image/*" hidden onChange={async (e) => {
+            const f = e.target.files?.[0];
+            e.target.value = "";
+            if (!f) return;
+            try { saveProfile({ logo: await logoFromFile(f) }); toast("Logo saved"); } catch (err) { toast(err instanceof Error ? err.message : "Couldn't read that image"); }
+          }} />
+        </div>
+      </section>
 
       <section className="card">
         <h3>Appearance</h3>

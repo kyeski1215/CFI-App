@@ -11,17 +11,17 @@ export interface Flash { id: string; q: string; a?: string; ref?: string }
 export interface Deck { id: string; title: string; short?: string; group: "syllabus" | "oral"; code?: string; cards: Flash[] }
 
 /** One deck per ground module of the Private Pilot syllabus. Answers aren't written out: the student answers out loud and checks the sources. */
-export function syllabusDecks(goal: string): Deck[] {
+export function syllabusDecks(goal: string, edits?: StudentCard["oralEdits"]): Deck[] {
   if (goal !== "Private Pilot") return [];
   return PPL.stages.flatMap((st) =>
-    st.groundModules.map((g) => ({
+    st.groundModules.map((orig) => ({ ...orig, ...(edits?.[orig.id] ?? {}) })).map((g) => ({
       id: "syl-" + g.id,
       title: g.name,
       code: g.id === "SOLO-REGS" ? "Regs" : g.id,
       group: "syllabus" as const,
       cards: g.oralCheck
         .filter((q) => !/is the oral check for this module/i.test(q))
-        .map((q, i) => ({ id: `syl:${g.id}:${i}`, q, ref: g.sources.join(" · ") })),
+        .map((q) => ({ id: `syl:${g.id}:${simpleId(q)}`, q, ref: (g.sources ?? []).join(" · ") })),
     })).filter((d) => d.cards.length),
   );
 }
@@ -101,4 +101,11 @@ export function sessionOrder(cards: Flash[], a: Activity, max = 20): Flash[] {
 export function studiedThisWeek(a: Activity) {
   const cutoff = addDays(todayStr(), -6);
   return Object.entries(a.studied ?? {}).filter(([d]) => d >= cutoff).reduce((n, [, v]) => n + v, 0);
+}
+
+/** Flashcard ids follow the question text, so editing one question doesn't reset progress on the others. */
+function simpleId(q: string) {
+  let h = 0;
+  for (let k = 0; k < q.length; k++) h = (Math.imul(31, h) + q.charCodeAt(k)) | 0;
+  return (h >>> 0).toString(36);
 }

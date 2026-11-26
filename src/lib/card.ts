@@ -2,6 +2,7 @@
 // student record and published to Supabase (collection "cards"); RLS lets only the account whose email
 // matches studentEmail read it. Private fields (your notes, phone, availability notes) stay out unless
 // "share lesson notes" is on for that student.
+import { pplEdits, pplOriginal } from "./ppl";
 import { buildBriefing, type Briefing } from "./briefing";
 import { guideFor, guideKey, guideMark, topicMark, isActive, lastFlight, topicsFor, totalHours } from "./curriculum";
 import { mockSummary, skillSummary } from "./skills";
@@ -32,6 +33,10 @@ export interface StudentCard {
   log: { date: string; kind: string; tail?: string; hrs?: string; lesson?: string; text?: string; notes?: string; ratings?: Record<string, Rating> }[];
   /** Your replies to the student's in-app questions, by question id. */
   replies?: Record<string, { text: string; at: string; inPerson?: boolean }>;
+  /** Your edits to ground-module names, sources and oral-check questions, for the student's flashcards. */
+  oralEdits?: Record<string, { name?: string; sources?: string[]; oralCheck?: string[] }>;
+  /** Your school's name and logo, from Settings. */
+  school?: { name?: string; logo?: string };
   /** Set on the student's device from the shared row: who shared it, and the card id. Not published. */
   _owner?: string;
   _id?: string;
@@ -39,6 +44,15 @@ export interface StudentCard {
 
 /** A stable id for a lesson-log entry, the same on the instructor's and the student's device. */
 export const logKey = (e: { date: string; kind: string; lesson?: string }) => `${e.date}|${e.kind}|${(e.lesson ?? "").slice(0, 40)}`;
+
+function groundEdits() {
+  const out: NonNullable<StudentCard["oralEdits"]> = {};
+  for (const [id, e] of Object.entries(pplEdits())) {
+    if (pplOriginal(id)?.kind !== "ground" || !(e.name || e.sources || e.oralCheck)) continue;
+    out[id] = { name: e.name, sources: e.sources, oralCheck: e.oralCheck };
+  }
+  return Object.keys(out).length ? out : undefined;
+}
 
 export function buildCard(s: Student, rides: Ride[], instructor?: string, library: Resource[] = []): StudentCard | null {
   const email = (s.email ?? "").trim().toLowerCase();
@@ -85,6 +99,7 @@ export function buildCard(s: Student, rides: Ride[], instructor?: string, librar
       .slice(0, 40)
       .map((e) => ({ date: e.date, kind: e.kind, tail: e.tail, hrs: e.hrs, lesson: e.lesson, text: e.text, ratings: e.ratings, notes: s.shareNotes ? e.notes : undefined })),
     replies: s.qReplies && Object.keys(s.qReplies).length ? s.qReplies : undefined,
+    oralEdits: s.goal === "Private Pilot" ? groundEdits() : undefined,
   };
 }
 

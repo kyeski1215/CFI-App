@@ -14,6 +14,7 @@ import {
 } from "../lib/curriculum";
 import { create, daysBetween, fmtDate, todayStr, useCollection } from "../lib/store";
 import type { Ride, Student } from "../lib/types";
+import { useProfile } from "../lib/profile";
 
 const FILTERS = ["Active", "All", "Overdue", "Ready", "Done / hold"];
 type SortKey = "name" | "recent" | "overdue" | "progress";
@@ -35,6 +36,7 @@ function recency(s: Student) {
 }
 
 export default function Roster() {
+  const profile = useProfile();
   const students = useCollection<Student>("students");
   const rides = useCollection<Ride>("rides");
   const [filter, setFilter] = useState("Active");
@@ -83,8 +85,8 @@ export default function Roster() {
   return (
     <div className="page">
       <div className="hello">
-        <span className="appmark" aria-hidden="true"><img src="icon.svg" alt="" /></span>
-        <div className="greet"><small>{greeting()}</small><h1>Your students</h1></div>
+        {profile?.logo ? <span className="appmark logo" aria-hidden="true"><img src={profile.logo} alt="" /></span> : <span className="appmark" aria-hidden="true"><img src="icon.svg" alt="" /></span>}
+        <div className="greet"><small>{greeting()}{profile?.displayName ? ", " + profile.displayName.split(" ")[0] : ""}{profile?.schoolName ? " · " + profile.schoolName : ""}</small><h1>Your students</h1></div>
         <Link className="roundbtn" to="/import" aria-label="Import logbook" title="Import logbook">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg>
         </Link>

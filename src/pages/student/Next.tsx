@@ -5,8 +5,8 @@ import BriefingCard from "../../components/BriefingCard";
 import { Avatar } from "../../components/ui";
 import { togglePrep, useActivity } from "../../lib/activity";
 import type { StudentCard } from "../../lib/card";
-import { pplDetail } from "../../lib/ppl";
-import { nextLessonModules } from "../../lib/study";
+
+import { nextLessonModules, syllabusDecks } from "../../lib/study";
 import { AskSheet, StudentGate, firstOf, instructorName } from "./shared";
 
 type Prep = { key: string; title: string; sub?: string; kind: "Read" | "Study" | "Watch" | "Do" | "Quiz"; href?: string; to?: string };
@@ -24,8 +24,9 @@ export function prepItems(c: StudentCard): Prep[] {
   });
   b.extras.items.forEach((v, i) => out.push({ key: `${base}|v:${i}`, title: v.title, sub: /youtu/.test(v.url) ? "Video" : "Link", kind: "Watch", href: v.url }));
   const mods = nextLessonModules(c);
-  const qs = mods.reduce((n, m) => n + (pplDetail(m)?.oralCheck?.filter((q) => !/is the oral check/i.test(q)).length ?? 0), 0);
-  if (qs) out.push({ key: `${base}|quiz`, title: "Oral check questions", sub: `${qs} questions · ${mods.map((m) => pplDetail(m)?.code ?? m).join(", ")}`, kind: "Quiz", to: "/me/study/next" });
+  const decks = syllabusDecks(c.goal, c.oralEdits).filter((d) => mods.includes(d.id.slice(4)));
+  const qs = decks.reduce((n, d) => n + d.cards.length, 0);
+  if (qs) out.push({ key: `${base}|quiz`, title: "Oral check questions", sub: `${qs} questions · ${decks.map((d) => d.code).join(", ")}`, kind: "Quiz", to: "/me/study/next" });
   return out;
 }
 
@@ -44,6 +45,12 @@ function NextBody({ c }: { c: StudentCard }) {
   const workOn = [...(b?.warmup ?? []), ...(lastWork ? Object.entries(lastWork.ratings!).filter(([, r]) => r === "work").map(([k]) => k) : [])].slice(0, 5);
   return (
     <>
+      {c.school && (
+        <div className="schoolbar">
+          {c.school.logo && <img src={c.school.logo} alt="" />}
+          <span>{c.school.name ?? ""}{c.school.name ? " · " : ""}with {instructorName(c)}</span>
+        </div>
+      )}
       <div className="hello">
         <Avatar name={c.name} goal={c.goal} size={46} />
         <div className="greet"><small>{[c.goal, c.stage].filter(Boolean).join(" · ")}</small><h1>Hi {firstOf(c.name)}</h1></div>

@@ -4,6 +4,7 @@ import { useStudentActivity } from "../lib/activity";
 import { buildBriefing } from "../lib/briefing";
 import { logKey, type StudentCard } from "../lib/card";
 import { put, fmtDate, todayStr } from "../lib/store";
+import { pplEdits } from "../lib/ppl";
 import { deckStats, studiedThisWeek, syllabusDecks } from "../lib/study";
 import type { Student } from "../lib/types";
 import { prepItems } from "../pages/student/Next";
@@ -35,7 +36,7 @@ function Body({ s, act, updated }: { s: Student; act: NonNullable<ReturnType<typ
   const lastDebrief = [...(s.log ?? [])].filter((e) => e.date && (e.text || e.ratings)).sort((x, y) => y.date.localeCompare(x.date))[0];
   const readIt = lastDebrief ? act.reviewed?.[logKey(lastDebrief)] : undefined;
   const week = studiedThisWeek(act);
-  const decks = syllabusDecks(s.goal).map((d) => ({ d, st: deckStats(d, act) })).filter((x) => x.st.seen > 0);
+  const decks = syllabusDecks(s.goal, pplEdits()).map((d) => ({ d, st: deckStats(d, act) })).filter((x) => x.st.seen > 0);
   const weakest = decks.sort((x, y) => x.st.mastered / x.st.total - y.st.mastered / y.st.total)[0];
   const reply = (id: string, text: string, inPerson = false) => put("students", { ...s, qReplies: { ...replies, [id]: { text, at: todayStr(), inPerson } } });
 

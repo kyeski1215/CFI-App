@@ -2,6 +2,7 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Modal, useToast } from "../../components/ui";
+import PullToRefresh from "../../components/PullToRefresh";
 import { askQuestion, useActivity } from "../../lib/activity";
 import type { StudentCard } from "../../lib/card";
 import { loadMyCards, syncConfigured, useMyCards, useSync } from "../../lib/sync";
@@ -40,6 +41,7 @@ export function StudentGate({ title, children }: { title: string; children: (c: 
   }
   return (
     <div className="page">
+      <PullToRefresh onRefresh={() => loadMyCards()} />
       {cards.length > 1 && (
         <select className="cardpick" value={pick} onChange={(e) => setPick(+e.target.value)} aria-label="Training record">
           {cards.map((x, i) => <option key={i} value={i}>{x.goal}{x.instructor ? ` with ${x.instructor}` : ""}</option>)}
@@ -51,7 +53,8 @@ export function StudentGate({ title, children }: { title: string; children: (c: 
 }
 
 export const firstOf = (n?: string) => String(n ?? "").trim().split(/\s+/)[0] || "";
-export const instructorName = (c: StudentCard) => (c.instructor ? c.instructor.split("@")[0].replace(/[._]+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) : "your instructor");
+export const instructorName = (c: StudentCard) =>
+  !c.instructor ? "your instructor" : c.instructor.includes("@") ? c.instructor.split("@")[0].replace(/[._]+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) : c.instructor;
 
 /** Sheet for sending a question to the instructor. */
 export function AskSheet({ card, ctx, onClose }: { card: StudentCard; ctx?: string; onClose: () => void }) {

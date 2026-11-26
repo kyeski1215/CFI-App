@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { NavLink, Navigate, Route, Routes } from "react-router-dom";
+import { NavLink, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Icon } from "./components/ui";
 import { useMyCards, useSync } from "./lib/sync";
 import { useCollection } from "./lib/store";
@@ -45,6 +45,7 @@ const STUDENT_MORE = [
 ];
 
 export default function App() {
+  const loc = useLocation();
   const sync = useSync();
   const updateReady = useUpdateAvailable();
   const { cards } = useMyCards();
@@ -78,6 +79,7 @@ export default function App() {
           </div>
         )}
         <Suspense fallback={<div className="page"><div className="muted small">Loading…</div></div>}>
+        <div key={loc.pathname} className="routefade">
         <Routes>
           <Route path="/" element={<Navigate to={home} replace />} />
           <Route path="/students" element={<Roster />} />
@@ -98,6 +100,7 @@ export default function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to={home} replace />} />
         </Routes>
+        </div>
         </Suspense>
       </main>
       <nav className="tabbar" aria-label="Main" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)` }}>

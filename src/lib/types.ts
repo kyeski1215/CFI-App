@@ -3,6 +3,8 @@ import type { BaseRec } from "./store";
 export type Grade = "S" | "W" | "U";
 
 export interface LogEntry {
+  /** Plan key of the syllabus lesson this entry was graded against, e.g. "p1.s1-emergencies". */
+  syl?: string;
   id: string;
   kind: "flight" | "ground";
   date: string;

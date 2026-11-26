@@ -7,6 +7,7 @@ import { claudePrompt, firstName, smsHref, studentText } from "../lib/studentTex
 import BriefingCard from "../components/BriefingCard";
 import StudentActivityCard from "../components/StudentActivityCard";
 import CheckrideModal from "../components/CheckrideModal";
+import PlanEditor from "../components/PlanEditor";
 import { hoursProgress, type ReqRow } from "../lib/hours";
 import { useSync } from "../lib/sync";
 import { buildBriefing, briefingText } from "../lib/briefing";
@@ -40,7 +41,7 @@ import {
   topicsFor,
   totalHours,
 } from "../lib/curriculum";
-import { PPL_PRINCIPLES, PPL_RUNNING, pplDetail, type PlanDetail } from "../lib/ppl";
+import { PPL_PRINCIPLES, PPL_RUNNING, pplDetail, pplEdits, type PlanDetail } from "../lib/ppl";
 import { create, daysBetween, fmtDate, newId, put, remove, restoreSnapshot, snapshot, todayStr, useCollection, useRecord } from "../lib/store";
 import type { Checkride, LogEntry, Ride, Student } from "../lib/types";
 
@@ -50,6 +51,7 @@ type Tab = (typeof TABS)[number];
 export default function StudentPage() {
   const { id } = useParams();
   const s = useRecord<Student>("students", id);
+  useCollection("profile"); // your syllabus edits and name live here; re-render when they change
   const [params, setParams] = useSearchParams();
   const tabParam = params.get("tab") === "Ground" ? "ACS" : params.get("tab");
   const tab = (TABS.includes(tabParam as Tab) ? tabParam : "Overview") as Tab;
@@ -106,11 +108,13 @@ export default function StudentPage() {
         ))}
       </div>
 
+      <div key={tab} className="tabfade">
       {tab === "Overview" && <Overview s={s} update={update} goTo={setTab} onDelete={() => { const snap = snapshot("Before deleting " + s.name); remove("students", s.id); nav("/students"); toast(s.name + " deleted", { label: "Undo", run: () => restoreSnapshot(snap) }); }} />}
       {tab === "Log" && <Log s={s} update={update} prefillRegs={params.get("regs") ?? ""} />}
       {tab === "Syllabus" && <Syllabus s={s} update={update} />}
       {tab === "ACS" && <Ground s={s} update={update} />}
       {tab === "Mocks" && <StudentMocks s={s} />}
+      </div>
     </div>
   );
 }
@@ -626,6 +630,7 @@ function Log({ s, update, prefillRegs }: P & { prefillRegs: string }) {
           e={draft}
           student={s}
           skills={topicsFor(s)}
+          onGrade={(key, m, p) => update({ ...setGuideMark(s, key, m), ...(p ? { logDraft: { ...draft, ...p } } : {}) })}
           title="New lesson"
           onChange={(p) => update({ logDraft: { ...draft, ...p } })}
           primary={{ label: "Save to log", run: () => update({ log: [...(s.log ?? []), draft], logDraft: undefined }) }}
@@ -648,6 +653,7 @@ function Log({ s, update, prefillRegs }: P & { prefillRegs: string }) {
               e={e}
               student={s}
               skills={topicsFor(s)}
+              onGrade={(key, m, p) => update({ ...setGuideMark(s, key, m), ...(p ? { log: (s.log ?? []).map((x) => (x.id === e.id ? { ...x, ...p } : x)) } : {}) })}
               title="Edit lesson"
               onChange={(p) => patchEntry(e.id, p)}
               primary={{ label: "Done", run: () => setEditing(null) }}
@@ -678,9 +684,55 @@ function Log({ s, update, prefillRegs }: P & { prefillRegs: string }) {
   );
 }
 
-function EntryForm({ e, student, skills, title, onChange, primary, remove, note }: {
+/** Pick the syllabus lesson this entry covers and grade it right here, so logging and grading happen together. */
+type Grade = (key: string, m: Mark | null, entryPatch?: Partial<LogEntry>) => void;
+function SyllabusGrader({ s, e, set, onGrade }: { s: Student; e: LogEntry; set: (p: Partial<LogEntry>) => void; onGrade: Grade }) {
+  const plan = guideFor(s);
+  if (!plan) return null;
+  const opts: { key: string; label: string; kind: string }[] = [];
+  for (const sec of plan)
+    for (const it of sec.items) {
+      if (!isGradedItem(it[0])) continue;
+      const d = pplDetail(it[0]);
+      opts.push({ key: guideKey(sec.id, it[0]), label: it[1].replace(" — ", " · "), kind: d?.kind === "ground" ? "Ground" : d ? "Flight" : sec.n });
+    }
+  if (!opts.length) return null;
+  const byLabel = opts.find((o) => e.lesson && o.label.toLowerCase() === e.lesson.trim().toLowerCase());
+  const nextFlight = guideProgress(s).nextItem;
+  const firstOpen = (kind: string) => opts.find((o) => o.kind === kind && !s.guide?.[o.key]);
+  const key = e.syl ?? byLabel?.key ?? (e.kind === "ground" ? firstOpen("Ground")?.key : nextFlight ? guideKey(nextFlight.sec.id, nextFlight.item[0]) : undefined) ?? opts[0].key;
+  const cur = guideMark(s, key)?.m;
+  const groups = [...new Set(opts.map((o) => o.kind))];
+  return (
+    <div className="full sylgrade">
+      <div className="kv">Syllabus lesson</div>
+      <select value={key} aria-label="Syllabus lesson" onChange={(ev) => {
+        const o = opts.find((x) => x.key === ev.target.value)!;
+        set({ syl: o.key, ...(e.lesson?.trim() ? {} : { lesson: o.label }) });
+      }}>
+        {groups.map((gname) => (
+          <optgroup key={gname} label={gname}>
+            {opts.filter((o) => o.kind === gname).map((o) => <option key={o.key} value={o.key}>{o.label}{s.guide?.[o.key] ? " ✓" : ""}</option>)}
+          </optgroup>
+        ))}
+      </select>
+      <div className="chips kindtabs gradeseg" role="radiogroup" aria-label="Grade this lesson">
+        {MARK_ORDER.map((m) => (
+          <button key={m} type="button" role="radio" className={"chip g" + m} aria-checked={cur === m} aria-pressed={cur === m}
+            onClick={() => onGrade(key, cur === m ? null : m, e.syl ? undefined : { syl: key, ...(e.lesson?.trim() ? {} : { lesson: opts.find((o) => o.key === key)?.label }) })}>
+            {MARK_LABEL[m]}
+          </button>
+        ))}
+      </div>
+      <div className="small muted">Saves to the Syllabus tab right away. Proficient counts the lesson as done.</div>
+    </div>
+  );
+}
+
+function EntryForm({ e, student, skills, title, onChange, primary, remove, note, onGrade }: {
   e: LogEntry;
   student: Student;
+  onGrade?: Grade;
   skills: string[];
   title: string;
   onChange: (p: Partial<LogEntry>) => void;
@@ -725,7 +777,8 @@ function EntryForm({ e, student, skills, title, onChange, primary, remove, note 
             </label>
           </>
         )}
-        <label className="f full">Lesson<input value={e.lesson ?? ""} placeholder="e.g. F5 — The traffic pattern" onChange={(ev) => set({ lesson: ev.target.value })} /></label>
+        <label className="f full">Lesson<input value={e.lesson ?? ""} placeholder="e.g. Pattern & Normal Landings" onChange={(ev) => set({ lesson: ev.target.value })} /></label>
+        {onGrade && <SyllabusGrader s={student} e={e} set={set} onGrade={onGrade} />}
         <label className="f full">Notes / debrief<textarea style={{ minHeight: 140 }} value={e.notes ?? ""} onChange={(ev) => set({ notes: ev.target.value })} /></label>
         <SkillRater goal={student.goal} skills={skills} ratings={e.ratings ?? {}} onChange={(ratings) => set({ ratings })} />
         <StudentTextBox s={student} e={e} onText={(text) => set({ text })} />
@@ -912,6 +965,8 @@ function Lesson({ k, label, when, L, s, mark }: {
 
 /** A lesson or ground module from the named Private Pilot syllabus, with everything the syllabus says about it. */
 function PlanLesson({ k, d, value, onSet }: { k: string; d: PlanDetail; value?: { m: Mark; d?: string }; onSet: (m: Mark | null) => void }) {
+  const [editing, setEditing] = useState(false);
+  const isEdited = !!pplEdits()[d.id];
   const List = ({ title, items, ordered }: { title: string; items?: string[]; ordered?: boolean }) =>
     items?.length ? (
       <div className="pblock">
@@ -924,7 +979,7 @@ function PlanLesson({ k, d, value, onSet }: { k: string; d: PlanDetail; value?: 
     <details className={"lesson plesson" + (value ? " m" + value.m : "")}>
       <summary>
         {d.code ? <span className="lcode">{d.code}</span> : <span className="lcode fl" aria-hidden="true">✈</span>}
-        <span className={"ln" + (value?.m === "G" ? " ldone" : "")}>{d.name}{d.repeatable ? <small className="muted"> · repeat as needed</small> : null}</span>
+        <span className={"ln" + (value?.m === "G" ? " ldone" : "")}>{d.name}{d.repeatable ? <small className="muted"> · repeat as needed</small> : null}{isEdited ? <small className="edtag"> · edited</small> : null}</span>
         {value?.d && <span className="mdate small">{MARK_LABEL[value.m]} · {fmtDate(value.d)}</span>}
         <button type="button" className={"mball" + (value ? " " + value.m : "")}
           aria-label={`${d.name}: ${value ? MARK_LABEL[value.m] : "not graded"}. Tap to change.`}
@@ -961,6 +1016,8 @@ function PlanLesson({ k, d, value, onSet }: { k: string; d: PlanDetail; value?: 
           </>
         )}
         <LessonExtras k={k} />
+        <button type="button" className="linkbtn editsyl" onClick={() => setEditing(true)}>Edit this {d.kind === "ground" ? "module" : "lesson"}'s text</button>
+        {editing && <PlanEditor id={d.id} onClose={() => setEditing(false)} />}
       </div>
     </details>
   );

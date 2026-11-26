@@ -2,8 +2,8 @@
 // mirrored to Supabase by sync.ts when the user is signed in.
 import { useSyncExternalStore } from "react";
 
-export type Collection = "students" | "rides" | "resources" | "lessons" | "aircraft";
-export const COLLECTIONS: Collection[] = ["students", "rides", "resources", "lessons", "aircraft"];
+export type Collection = "students" | "rides" | "resources" | "lessons" | "aircraft" | "profile";
+export const COLLECTIONS: Collection[] = ["students", "rides", "resources", "lessons", "aircraft", "profile"];
 
 export interface BaseRec {
   id: string;
