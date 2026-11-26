@@ -55,8 +55,6 @@ const ppl = (c: Cls): RegGroup[] => {
       t: "Pre-solo",
       s: "61.87",
       items: [
-        { sec: "61.87", p: "(b)", n: "Pre-solo aeronautical knowledge test" },
-        { sec: "61.87", p: "(c)", n: "Pre-solo flight training & proficiency" },
         ...(c === "SE" ? PRESOLO_SE : PRESOLO_ME).map((n, i) => ({ sec: "61.87", p: (c === "SE" ? "(d)" : "(e)") + "(" + (i + 1) + ")", n })),
       ],
     },
