@@ -1,13 +1,43 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
+import { useSearchParams } from "react-router-dom";
+import { AircraftSection } from "./Aircraft";
 import { Modal } from "../components/ui";
 import { RATINGS, fetchYoutubeTitle, goalToRating, hostOf, isLibraryItem, ratingsOf, youtubeId, type LibraryItem } from "../lib/library";
 import { create, put, remove, useCollection } from "../lib/store";
-import { useMyCards, useSharedLibrary } from "../lib/sync";
+import { useMyCards, useSharedFleet, useSharedLibrary } from "../lib/sync";
 import type { Resource } from "../lib/types";
 
 type Item = LibraryItem & { id?: string; rec?: Resource; shared?: boolean };
 
 export default function Resources() {
+  const students = useCollection("students");
+  const aircraft = useCollection("aircraft");
+  const fleet = useSharedFleet().items;
+  const { cards } = useMyCards();
+  const [params, setParams] = useSearchParams();
+  // Instructors can always keep aircraft; students only see the tab when a fleet is shared with them.
+  const isStudent = students.length === 0 && cards.length > 0;
+  const showAircraft = !isStudent || fleet.length > 0 || aircraft.length > 0;
+  const tab = showAircraft && params.get("tab") === "aircraft" ? "aircraft" : "library";
+  const tabs = showAircraft ? (
+    <div className="chips kindtabs" role="tablist" aria-label="Resources">
+      <button role="tab" className="chip" aria-pressed={tab === "library"} aria-selected={tab === "library"} onClick={() => setParams({}, { replace: true })}>Videos & links</button>
+      <button role="tab" className="chip" aria-pressed={tab === "aircraft"} aria-selected={tab === "aircraft"} onClick={() => setParams({ tab: "aircraft" }, { replace: true })}>Aircraft</button>
+    </div>
+  ) : null;
+  if (tab === "aircraft") {
+    return (
+      <div className="page">
+        <header className="page-head"><div><h1>Resources</h1></div></header>
+        {tabs}
+        <AircraftSection />
+      </div>
+    );
+  }
+  return <LibraryPage tabs={tabs} />;
+}
+
+function LibraryPage({ tabs }: { tabs: ReactNode }) {
   const recs = useCollection<Resource>("resources");
   const students = useCollection("students");
   const { cards } = useMyCards();
@@ -26,7 +56,7 @@ export default function Resources() {
     const mine = new Set(["General", ...cards.map((c) => goalToRating(c.goal))]);
     const shared = lib.items.filter(isLibraryItem).filter((r) => ratingsOf(r).some((x) => mine.has(x))).map((r) => toItem(r, true));
     const items = dedupe([...cards.flatMap((c) => c.resources ?? []).map((r) => ({ ...r, shared: false })), ...shared]);
-    return <Library items={items} title="Videos & links" />;
+    return <Library items={items} title="Resources" tabs={tabs} />;
   }
   const own = recs.filter(isLibraryItem).map((r) => toItem(r, false));
   const shared = lib.items.filter(isLibraryItem).map((r) => toItem(r, true));
@@ -35,10 +65,10 @@ export default function Resources() {
     : shared.length
       ? "Items marked Library come from the shared library. What you add is only for you and your students."
       : undefined;
-  return <Library items={dedupe([...own, ...shared])} title="Resources" editable note={note} />;
+  return <Library items={dedupe([...own, ...shared])} title="Resources" editable note={note} tabs={tabs} />;
 }
 
-function Library({ items, title, editable, note }: { items: Item[]; title: string; editable?: boolean; note?: string }) {
+function Library({ items, title, editable, note, tabs }: { items: Item[]; title: string; editable?: boolean; note?: string; tabs?: ReactNode }) {
   const counts = Object.fromEntries(RATINGS.map((r) => [r, items.filter((i) => i.ratings.includes(r)).length]));
   const firstWithItems = RATINGS.find((r) => counts[r] > 0) ?? "Private";
   const [rating, setRating] = useState<string>(() => {
@@ -77,6 +107,7 @@ function Library({ items, title, editable, note }: { items: Item[]; title: strin
         </div>
         {editable && <button className="btn primary" onClick={() => setEditing("new")}>+ Add video or link</button>}
       </header>
+      {tabs}
 
       {note && <div className="small muted">{note}</div>}
       <input className="search" type="search" placeholder="Search all ratings…" value={q} onChange={(e) => setQ(e.target.value)} />

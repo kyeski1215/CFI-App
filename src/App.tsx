@@ -1,14 +1,13 @@
 import { Suspense, lazy } from "react";
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { Icon } from "./components/ui";
-import { useMyCards, useSharedFleet, useSync } from "./lib/sync";
+import { useMyCards, useSync } from "./lib/sync";
 import { useCollection } from "./lib/store";
 import { applyUpdate, useUpdateAvailable } from "./lib/updates";
 import Roster from "./pages/Roster";
 import StudentPage from "./pages/StudentPage";
 
 // Less-used pages load on first visit so the app starts faster.
-const Aircraft = lazy(() => import("./pages/Aircraft"));
 const MyTraining = lazy(() => import("./pages/MyTraining"));
 const StudentNext = lazy(() => import("./pages/student/Next"));
 const StudentReview = lazy(() => import("./pages/student/Review"));
@@ -28,10 +27,9 @@ const MAIN = [
   { to: "/students", label: "Roster", icon: Icon.roster },
   { to: "/mocks", label: "Mocks", icon: Icon.mock },
   { to: "/regs", label: "Regs", icon: Icon.regs },
+  { to: "/resources", label: "Resources", icon: Icon.resources },
 ];
 const SIDE_EXTRA = [
-  { to: "/aircraft", label: "Aircraft", icon: Icon.plane },
-  { to: "/resources", label: "Resources", icon: Icon.resources },
   { to: "/settings", label: "Settings", icon: Icon.settings },
 ];
 // What a student who signs in (and has no roster of their own) sees.
@@ -52,8 +50,7 @@ export default function App() {
   const { cards } = useMyCards();
   const students = useCollection("students");
   const studentMode = cards.length > 0 && students.length === 0;
-  const fleet = useSharedFleet().items;
-  const studentMore = fleet.length ? [{ to: "/aircraft", label: "Aircraft", icon: Icon.plane }, ...STUDENT_MORE] : STUDENT_MORE;
+  const studentMore = STUDENT_MORE;
   const side = studentMode ? [...STUDENT_NAV, ...studentMore] : [...MAIN, ...(cards.length ? [{ to: "/me", label: "My training", icon: Icon.roster }] : []), ...SIDE_EXTRA];
   const tabs = studentMode ? [...STUDENT_NAV, { to: "/more", label: "More", icon: Icon.more }] : [...MAIN, { to: "/more", label: "More", icon: Icon.more }];
   const home = studentMode ? "/me" : "/students";
@@ -90,14 +87,14 @@ export default function App() {
           <Route path="/mocks" element={<Mocks />} />
           <Route path="/mocks/:id" element={<MockRide />} />
           <Route path="/regs" element={<RegLogger />} />
-          <Route path="/aircraft" element={<Aircraft />} />
+          <Route path="/aircraft" element={<Navigate to="/resources?tab=aircraft" replace />} />
           <Route path="/resources" element={<Resources />} />
           <Route path="/me" element={studentMode ? <StudentNext /> : <MyTraining />} />
           <Route path="/me/review" element={<StudentReview />} />
           <Route path="/me/study" element={<StudentStudy />} />
           <Route path="/me/study/:deck" element={<StudentStudy />} />
           <Route path="/me/progress" element={<StudentProgress />} />
-          <Route path="/more" element={<More student={studentMode} fleet={fleet.length > 0} />} />
+          <Route path="/more" element={<More student={studentMode} />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to={home} replace />} />
         </Routes>
@@ -105,7 +102,7 @@ export default function App() {
       </main>
       <nav className="tabbar" aria-label="Main" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)` }}>
         {tabs.map((n) => (
-          <NavLink key={n.to} to={n.to} end={n.to === "/me"} className={({ isActive }) => (isActive || (n.to === "/more" && (studentMode ? /^#\/(aircraft|resources|settings)/ : /^#\/(aircraft|resources|settings|me)/).test(location.hash)) ? "active" : "")}>
+          <NavLink key={n.to} to={n.to} end={n.to === "/me"} className={({ isActive }) => (isActive || (n.to === "/more" && (studentMode ? /^#\/(resources|settings)/ : /^#\/(settings|me)/).test(location.hash)) ? "active" : "")}>
             <n.icon />
             {n.label}
           </NavLink>

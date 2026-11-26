@@ -17,7 +17,8 @@ export interface AircraftRec extends BaseRec {
 const KINDS = ["POH / AFM", "Checklist", "ForeFlight", "Guide", "W&B / performance", "Video", "Other"];
 const VSPEEDS = ["Vr", "Vx", "Vy", "Va", "Vfe", "Vno", "Vne", "Vso", "Vs1", "Best glide", "Approach", "Max demo crosswind"];
 
-export default function Aircraft() {
+/** The aircraft list, shown as a tab inside Resources. */
+export function AircraftSection() {
   const list = useCollection<AircraftRec>("aircraft");
   const [open, setOpen] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -28,12 +29,7 @@ export default function Aircraft() {
   const studentOnly = students.length === 0 && list.length === 0;
 
   return (
-    <div className="page">
-      <header className="page-head">
-        <div>
-          <h1>Aircraft</h1>
-        </div>
-      </header>
+    <>
       {fleetSorted.length > 0 && (
         <section className="list">
           {!studentOnly && <div className="row"><h2>Blitz fleet</h2><span className="muted small">shared, read-only</span></div>}
@@ -53,7 +49,7 @@ export default function Aircraft() {
         <button className="btn primary">Add</button>
       </form>}
       {sorted.map((a) => <AircraftCard key={a.id} a={a} open={open === a.id} onToggle={() => setOpen(open === a.id ? null : a.id)} />)}
-    </div>
+    </>
   );
 }
 
