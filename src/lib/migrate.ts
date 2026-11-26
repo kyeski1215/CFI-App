@@ -31,7 +31,19 @@ function upgradePpl() {
   }
 }
 
+/** One time: the school's three Pilot 100i tails, on your Pilot 100i aircraft record. */
+const TAILS_100I = ["N301BL", "N402BL", "N603BL"];
+function fill100iTails() {
+  try { if (localStorage.getItem("cfi.v1.fix.100i") === "1") return; } catch { return; }
+  const rec = all<{ id: string; name: string; tails?: string; createdAt: number; updatedAt: number }>("aircraft").find((a) => /pilot\s*100\s*i/i.test(a.name));
+  if (!rec) return; // not loaded yet, or this account has no Pilot 100i
+  const have = (rec.tails ?? "").toUpperCase().split(/[\s,;/]+/).filter(Boolean);
+  if (have.every((t) => TAILS_100I.includes(t)) && TAILS_100I.some((t) => !have.includes(t))) put("aircraft", { ...rec, tails: TAILS_100I.join(" ") });
+  try { localStorage.setItem("cfi.v1.fix.100i", "1"); } catch { /* ignore */ }
+}
+
 export function initMigrations() {
   upgradePpl();
-  onStoreChange(() => setTimeout(upgradePpl, 0));
+  fill100iTails();
+  onStoreChange(() => setTimeout(() => { upgradePpl(); fill100iTails(); }, 0));
 }
