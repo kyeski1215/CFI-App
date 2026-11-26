@@ -44,14 +44,15 @@ import { PPL_PRINCIPLES, PPL_RUNNING, pplDetail, type PlanDetail } from "../lib/
 import { create, daysBetween, fmtDate, newId, put, remove, restoreSnapshot, snapshot, todayStr, useCollection, useRecord } from "../lib/store";
 import type { LogEntry, Ride, Student } from "../lib/types";
 
-const TABS = ["Overview", "Log", "Syllabus", "Ground", "Mocks"] as const;
+const TABS = ["Overview", "Log", "Syllabus", "ACS", "Mocks"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function StudentPage() {
   const { id } = useParams();
   const s = useRecord<Student>("students", id);
   const [params, setParams] = useSearchParams();
-  const tab = (TABS.includes(params.get("tab") as Tab) ? params.get("tab") : "Overview") as Tab;
+  const tabParam = params.get("tab") === "Ground" ? "ACS" : params.get("tab");
+  const tab = (TABS.includes(tabParam as Tab) ? tabParam : "Overview") as Tab;
   const nav = useNavigate();
   const toast = useToast();
 
@@ -108,7 +109,7 @@ export default function StudentPage() {
       {tab === "Overview" && <Overview s={s} update={update} goTo={setTab} onDelete={() => { const snap = snapshot("Before deleting " + s.name); remove("students", s.id); nav("/students"); toast(s.name + " deleted", { label: "Undo", run: () => restoreSnapshot(snap) }); }} />}
       {tab === "Log" && <Log s={s} update={update} prefillRegs={params.get("regs") ?? ""} />}
       {tab === "Syllabus" && <Syllabus s={s} update={update} />}
-      {tab === "Ground" && <Ground s={s} update={update} />}
+      {tab === "ACS" && <Ground s={s} update={update} />}
       {tab === "Mocks" && <StudentMocks s={s} />}
     </div>
   );
