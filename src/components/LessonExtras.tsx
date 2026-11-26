@@ -1,4 +1,5 @@
 // Homework & study + videos/resources attached to a lesson or ground task.
+import { pplHomework } from "../lib/ppl";
 // Built-in content comes from src/data/lessons.json; edits are saved as a "lessons" record with id = lesson key.
 import { useState, type ReactNode } from "react";
 import raw from "../data/lessons.json";
@@ -76,8 +77,14 @@ export type LessonContent = { hw: Hw[]; items: LinkItem[] };
 /** Homework and videos for a lesson key, outside React (for briefings and student cards). */
 export function lessonContent(k: string): LessonContent {
   const rec = get<LessonRec>("lessons", k);
-  const def = D.LESSONS[k] ?? {};
+  const def = defaultLesson(k);
   return { hw: rec?.hw ?? def.hw ?? [], items: rec?.items ?? def.items ?? [] };
+}
+/** Built-in homework/videos for a lesson key: the bundled defaults, or the Private Pilot syllabus homework. */
+export function defaultLesson(k: string): { hw?: Hw[]; items?: LinkItem[] } {
+  if (D.LESSONS[k]) return D.LESSONS[k];
+  const hw = pplHomework(k);
+  return hw ? { hw } : {};
 }
 
 /** Read-only homework + videos list. */
@@ -112,7 +119,7 @@ export function ExtrasView({ hw, items }: LessonContent) {
 
 function useLesson(k: string) {
   const rec = useRecord<LessonRec>("lessons", k);
-  const def = D.LESSONS[k] ?? {};
+  const def = defaultLesson(k);
   const hw = rec?.hw ?? def.hw ?? [];
   const items = rec?.items ?? def.items ?? [];
   const save = (p: Partial<LessonRec>) => {

@@ -2,6 +2,7 @@
 import raw from "../data/curriculum.json";
 import { todayStr } from "./store";
 import type { Student } from "./types";
+import { PPL_SECTIONS, pplDetail } from "./ppl";
 
 export interface GroundTask {
   t: string;
@@ -72,7 +73,7 @@ export function groundFor(s: Student): { area: string; tasks: GroundTask[] } {
 export const groundKey = (t: string, item: string) => t + "|" + item;
 
 export function guideFor(s: Student): GuideSection[] | null {
-  if (s.goal === "Private Pilot") return C.GUIDE;
+  if (s.goal === "Private Pilot") return [...C.GUIDE.filter((g) => g.id === "enroll" || g.id === "meet"), ...PPL_SECTIONS];
   if (s.goal !== "Instrument" && s.goal !== "Commercial") return null;
   const ir = s.goal === "Instrument";
   return [
@@ -155,7 +156,7 @@ export function guideProgress(s: Student) {
     for (const it of sec.items) {
       total++;
       if (g[guideKey(sec.id, it[0])]) done++;
-      else if (!next && /^[GF]\d/.test(it[0])) {
+      else if (!next && isNextCandidate(it[0])) {
         next = it[1];
         nextItem = { sec, item: it };
       }
@@ -180,11 +181,25 @@ export function coverage(guide: Record<string, string>) {
   return { d87, stage };
 }
 
-/* ---- green / yellow / red grading ---- */
+/* ---- Introduced / Practiced / Proficient grading ----
+   Stored as G/Y/R so existing data keeps working: G = Proficient (the item counts as done),
+   Y = Practiced, R = Introduced. */
 export type Mark = "G" | "Y" | "R";
-export const MARK_LABEL: Record<Mark, string> = { G: "Checkride ready", Y: "Needs work", R: "Unsatisfactory" };
-/** Lessons (G1, F3…) and their items get colors; paperwork and endorsements stay checkboxes. */
-export const isGradedItem = (k: string) => /^[GF]\d/.test(k);
+export const MARK_LABEL: Record<Mark, string> = { G: "Proficient", Y: "Practiced", R: "Introduced" };
+/** The order a tap cycles through: blank → Introduced → Practiced → Proficient → blank. */
+export const MARK_ORDER: Mark[] = ["R", "Y", "G"];
+/** Lessons and ground modules get graded; paperwork, endorsements and gates stay checkboxes. */
+export const isGradedItem = (k: string) => {
+  const d = pplDetail(k);
+  if (d) return d.kind === "flight" || d.kind === "ground";
+  return /^[GF]\d/.test(k);
+};
+/** "Next lesson" means the next flight lesson in the named syllabus; older plans count G/F items. */
+function isNextCandidate(k: string) {
+  const d = pplDetail(k);
+  if (d) return d.kind === "flight";
+  return /^[GF]\d/.test(k);
+}
 
 export function guideMark(s: Student, key: string): { m: Mark; d: string } | undefined {
   const ym = s.guideMarks?.[key];

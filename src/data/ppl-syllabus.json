@@ -1,0 +1,382 @@
+{
+  "id": "ppl-syllabus",
+  "title": "Private Pilot Syllabus",
+  "version": "1.0",
+  "updated": "2026-11-26",
+  "aircraft": ["Piper Pilot 100i", "Cessna 172"],
+  "homeAirport": "KOGD",
+  "patternAirport": "KBMC",
+  "gradingScale": [
+    { "id": "introduced", "label": "Introduced", "meaning": "CFI demonstrated it, or the student flew it with a lot of help." },
+    { "id": "practiced", "label": "Practiced", "meaning": "The student flies it with some coaching. Safe, but not yet consistent." },
+    { "id": "proficient", "label": "Proficient", "meaning": "The student flies it alone and consistently meets the Done when standard. For checkride tasks, that means ACS tolerances." }
+  ],
+  "principles": [
+    "Lessons have names, not lesson numbers. The order shown is the recommended order.",
+    "A lesson is finished when its Done when line is met. If it isn't met, the lesson repeats. If it is, the student moves on, even on the first try.",
+    "Each skill is taught once. After that it rides along in later flights.",
+    "The CFI can carry 1 or 2 weak items into the next flight as a warm-up instead of repeating a whole lesson.",
+    "Items marked Practiced get finished during later lessons. Before solo, every emergency item and stall recovery must be Proficient."
+  ],
+  "runningThrough": [
+    { "id": "hood", "name": "Hood time", "detail": "A few minutes on most flights, starting in Slow Flight & Power-Off Stalls, until 3 hours are logged." },
+    { "id": "knowledge-test", "name": "Knowledge test", "detail": "Taken any time before the mock oral." },
+    { "id": "night", "name": "Night block", "detail": "Flown whenever the season makes it practical." }
+  ],
+  "stages": [
+    {
+      "id": "stage-1",
+      "order": 1,
+      "name": "Pre-Solo",
+      "summary": "Control of the airplane, emergencies, the pattern, and first solo at KBMC. Ends with a stage check flown by another CFI.",
+      "flightLessons": [
+        {
+          "id": "s1-intro-fundamentals", "order": 1, "name": "Intro & Four Fundamentals", "repeatable": false,
+          "objective": "Preflight, start, taxi, run-up, and the four fundamentals: straight and level, climbs, descents, and turns, all in one lesson.",
+          "doneWhen": "The student preflights with the checklist and little help, taxis with good directional control, and holds altitude ±200 ft and heading ±20° in straight and level flight and in 30° bank turns.",
+          "briefing": ["Positive exchange of controls", "Collision avoidance and scanning", "Attitude flying by outside references", "Trim", "Effects of controls"],
+          "hood": null, "homework": ["Read the POH normal procedures for the airplane"], "groundPrereqs": ["G1", "G2"]
+        },
+        {
+          "id": "s1-slow-flight-power-off-stalls", "order": 2, "name": "Slow Flight & Power-Off Stalls", "repeatable": false,
+          "objective": "Fly slow flight and recover from power-off stalls, using CRAAC before each maneuver.",
+          "doneWhen": "Slow flight held at ±100 ft, ±10° heading, +10/−0 kt. Power-off stalls recognized and recovered promptly with minimum altitude loss, with positive rate verified before retracting the last two flap settings.",
+          "briefing": ["Angle of attack", "Stall warning cues", "Coordination", "Recovery: reduce AOA, level the wings, add power", "Just enough aerodynamics to fly safely (G8 comes later)"],
+          "hood": "Introduce straight and level under the hood", "homework": ["Start G3"], "groundPrereqs": []
+        },
+        {
+          "id": "s1-power-on-stalls-steep-turns", "order": 3, "name": "Power-On Stalls & Steep Turns", "repeatable": false,
+          "objective": "Recover from power-on (departure) stalls and fly 45° steep turns.",
+          "doneWhen": "Power-on stalls recovered without a secondary stall. Steep turns hold ±100 ft, ±10 kt, ±5° bank, and roll out ±10° of entry heading.",
+          "briefing": ["Load factor and why stall speed rises in a turn", "Overbanking tendency", "Left-turning tendencies at high pitch"],
+          "hood": "Climbs, descents, and turns", "homework": ["G3", "G4"], "groundPrereqs": []
+        },
+        {
+          "id": "s1-emergencies", "order": 4, "name": "Emergencies", "repeatable": false,
+          "objective": "Handle engine failures, forced landings, and other in-flight emergencies.",
+          "doneWhen": "The student runs ABCD from memory, sets up a simulated forced landing to a reachable field, flies an emergency descent, and works through the POH checklists for at least two system failures.",
+          "briefing": ["ABCD: Airspeed, Best place to land, Checklist, Declare", "Choosing a field", "Emergency descent", "Using 121.5 and squawking 7700"],
+          "hood": null, "homework": ["G6"], "groundPrereqs": ["G3", "G6"]
+        },
+        {
+          "id": "s1-pattern-normal-landings", "order": 5, "name": "Pattern & Normal Landings", "repeatable": false,
+          "objective": "Fly the traffic pattern at KBMC and make normal takeoffs and landings.",
+          "doneWhen": "The student flies the pattern within ±100 ft of pattern altitude, makes correct CTAF calls, runs GUMPS, and lands safely with only occasional verbal help.",
+          "briefing": ["Pattern entry on the 45 to downwind", "Power and configuration by leg (1,700 RPM abeam the numbers in the 100i)", "Stabilized approach", "Round-out and flare"],
+          "hood": null, "homework": ["G5"], "groundPrereqs": ["G4", "G5"]
+        },
+        {
+          "id": "s1-go-arounds-slips-crosswind", "order": 6, "name": "Go-Arounds, Slips & Crosswind", "repeatable": false,
+          "objective": "Go around from a bad approach, slip to a landing, and handle crosswinds.",
+          "doneWhen": "The student lands consistently without CFI input, goes around on their own when an approach isn't stabilized, and uses a forward slip to lose altitude on final.",
+          "briefing": ["Go-around criteria and sequence", "Forward slip vs. sidestep", "Wind correction on takeoff and landing", "Demonstrated crosswind component"],
+          "hood": null, "homework": ["Finish G5"], "groundPrereqs": []
+        },
+        {
+          "id": "s1-pattern-emergencies", "order": 7, "name": "Pattern Emergencies", "repeatable": false,
+          "objective": "Handle emergencies in the pattern.",
+          "doneWhen": "The student makes the runway from a simulated engine failure abeam the numbers (power-off 180) on most attempts, and states the engine-failure-after-takeoff plan before every departure.",
+          "briefing": ["Engine failure after takeoff and why not to turn back at low altitude", "The power-off 180", "Runway incursion or traffic on the runway", "Radio failure in the pattern"],
+          "hood": null, "homework": ["G7", "G8", "Solo Regs prep"], "groundPrereqs": []
+        },
+        {
+          "id": "s1-presolo-written-stage-check", "order": 8, "name": "Pre-Solo Written & Stage Check", "repeatable": false, "checkedBy": "another CFI",
+          "objective": "Pass the pre-solo written and a stage check with another CFI.",
+          "presoloWritten": "Written by the CFI to cover 61.87(b): the Part 61 and 91 rules that apply, the airspace and procedures at KOGD and KBMC, and the airplane's flight characteristics and limitations. Missed answers reviewed and corrected to 100%.",
+          "steps": ["The student departs KOGD alone on the radios, with proper communication.", "On the way to KBMC: slow flight, stalls, and an emergency.", "At KBMC: a few touch-and-gos, including one simulated engine-out 180.", "Back to KOGD for the landing."],
+          "doneWhen": "The stage check CFI signs off that the student is safe to solo.",
+          "groundPrereqs": ["G7", "G8", "SOLO-REGS"]
+        },
+        {
+          "id": "s1-first-solo", "order": 9, "name": "First Solo", "repeatable": false,
+          "objective": "The student's first solo at KBMC.",
+          "steps": ["Fly dual to KBMC for 2 or 3 laps.", "The CFI steps out.", "The student flies 3 takeoffs and landings to a full stop."],
+          "endorsements": ["61.87(b)", "61.87(c)", "61.87(n)"],
+          "doneWhen": "3 full-stop solo landings complete.",
+          "cfiNote": "Solo flights from KOGD to KBMC later also need the 61.93(b)(1) endorsement (another airport within 25 nm)."
+        }
+      ],
+      "groundModules": [
+        {
+          "id": "G1", "name": "Airports & Radio", "due": "Before Intro & Four Fundamentals",
+          "covers": ["Runway and taxiway markings", "Signs", "Hold short lines", "Taxi procedures", "CTAF vs. tower and ground calls", "Phraseology", "Light gun signals"],
+          "sources": ["Sporty's", "PHAK: Airport Operations", "AIM chapter 2 (markings and lighting)", "AIM chapter 4 (ATC)"],
+          "youtube": [],
+          "oralCheck": ["What does a hold short line look like, and from which side can you cross it?", "What's the difference between a mandatory sign and a location sign?", "Make the initial call to Ogden Ground for a VFR departure to the north.", "What does a steady red light mean on the ground? In the air?", "When and where do you make CTAF calls at KBMC?"]
+        },
+        {
+          "id": "G2", "name": "ForeFlight Setup & Use", "due": "Before Intro & Four Fundamentals",
+          "covers": ["Account and settings", "Aircraft profiles (100i and 172)", "Loading the Blitz checklists", "Map layers: sectional, airspace, TFRs", "Airport pages and the Chart Supplement", "Weather imagery and briefings", "Connecting ADS-B", "Building a basic route"],
+          "sources": ["ForeFlight guides and support pages"],
+          "youtube": [],
+          "oralCheck": ["Find KOGD's tower frequency and runway lengths.", "Turn on the TFR layer. Is anything active near us today?", "Pull up the METAR and TAF for KBMC.", "Open the checklist for today's airplane.", "Connect to the airplane's ADS-B and show me traffic."]
+        },
+        {
+          "id": "G3", "name": "Local Airspace & KOGD Ops", "due": "Before Emergencies (start after Slow Flight & Power-Off Stalls)",
+          "covers": ["KOGD Class D procedures", "Hill AFB (KHIF) Class D and its traffic", "SLC Class B shelves", "Nearby MOAs and restricted areas", "Standard departures and arrivals between KOGD and KBMC", "Which airspace a student solo can and can't enter"],
+          "sources": ["Salt Lake City sectional and SLC Terminal Area Chart", "Chart Supplement: KOGD, KHIF, KBMC", "PHAK: Airspace", "AIM chapter 3"],
+          "youtube": [],
+          "oralCheck": ["Show me on the chart where the SLC Bravo floor is over Ogden and what altitudes keep you out of it.", "What do you need to enter Hill's Class D, and who do you talk to?", "Brief your departure from KOGD to KBMC, including which airspace you pass through.", "What's required to enter Class B? Can you do it as a solo student?", "Which MOAs or restricted areas are nearby, and how do you check whether they're active?"]
+        },
+        {
+          "id": "G4", "name": "Checking Weather", "due": "Before Pattern & Normal Landings",
+          "covers": ["Reading METARs and TAFs", "Where to get a briefing", "Crosswind components", "Personal and solo weather limits", "Go/no-go decisions", "No weather theory yet (Stage 2)"],
+          "sources": ["Sporty's (weather services)", "PHAK: Aviation Weather Services", "aviationweather.gov", "ForeFlight briefing"],
+          "youtube": [],
+          "oralCheck": ["Decode this morning's KOGD METAR.", "What does an FM group in a TAF mean?", "What's the crosswind component for today's runway at KBMC?", "What are the weather and wind limits on your solo endorsement?", "Go or no-go for a pattern flight right now? Why?"]
+        },
+        {
+          "id": "G5", "name": "Traffic Patterns & Landings", "due": "Before Pattern & Normal Landings",
+          "covers": ["Pattern legs, entries, and departures", "KBMC pattern and typical runway use", "Stabilized approach criteria and when to go around", "Round-out, flare, and touchdown", "Crosswind technique and slips", "Wake turbulence"],
+          "sources": ["Airplane Flying Handbook: traffic patterns; approaches and landings", "AIM 4-3", "AC 90-66 (non-towered airport operations)"],
+          "youtube": [],
+          "oralCheck": ["Describe the recommended way to enter the KBMC pattern.", "What are your stabilized approach criteria?", "Name three reasons you'd go around.", "How do you correct for a left crosswind on final and in the flare?", "A larger airplane just landed ahead of you. Where is its wake, and how do you avoid it?"]
+        },
+        {
+          "id": "G6", "name": "Emergencies & ADM", "due": "Before Emergencies",
+          "covers": ["ABCD", "POH emergency checklists", "IMSAFE", "PAVE", "Hazardous attitudes and antidotes", "Basic aeromedical factors"],
+          "sources": ["Sporty's", "PHAK: Aeronautical Decision-Making; Aeromedical Factors", "Airplane Flying Handbook: Emergency Procedures", "POH Section 3"],
+          "youtube": [],
+          "oralCheck": ["Your engine quits at 3,000 ft AGL. Walk me through ABCD.", "What's best glide speed in this airplane?", "What are your first actions for an electrical fire?", "Run IMSAFE and PAVE for today's flight.", "Name the five hazardous attitudes and their antidotes."]
+        },
+        {
+          "id": "G7", "name": "Airplane & Systems", "due": "Before Pre-Solo Written & Stage Check",
+          "covers": ["POH layout", "Engine, fuel, electrical, and vacuum/pitot-static systems", "100i vs. 172 differences (e.g., no carb heat in the 100i)", "Required documents (SPARROW)", "Inspections (AAV1ATE)"],
+          "sources": ["POH Sections 1, 2, 4, 7", "PHAK: Aircraft Systems; Flight Instruments; Flight Manuals", "Sporty's"],
+          "youtube": [],
+          "oralCheck": ["What documents need to be on board? (SPARROW)", "What inspections make this airplane airworthy? (AAV1ATE)", "Trace the fuel from the tank to the engine.", "The alternator fails. What do you see, and what do you do?", "The pitot tube gets blocked. Which instruments are affected, and how?"]
+        },
+        {
+          "id": "G8", "name": "Aerodynamics", "due": "Before Pre-Solo Written & Stage Check",
+          "covers": ["Four forces", "Angle of attack", "Stalls and spins", "Load factor", "Left-turning tendencies", "Ground effect", "Stability"],
+          "sources": ["PHAK: Principles of Flight; Aerodynamics of Flight", "Airplane Flying Handbook: slow flight, stalls, and spins"],
+          "youtube": [],
+          "oralCheck": ["Can you stall at any airspeed? Explain.", "Why does stall speed go up in a steep turn?", "Name the four left-turning tendencies.", "What causes a spin, and how do you recover?", "What is ground effect, and where do you feel it?"]
+        },
+        {
+          "id": "SOLO-REGS", "name": "Solo Regs prep", "due": "Before Pre-Solo Written & Stage Check",
+          "covers": ["61.87 and 61.89 solo requirements and limits", "91.103 preflight action", "91.113 right-of-way", "91.119 minimum safe altitudes", "91.151 fuel requirements", "91.155 VFR weather minimums", "91.17 alcohol and drugs"],
+          "sources": ["FAR/AIM", "Sporty's"],
+          "youtube": [],
+          "oralCheck": ["Name three things a student pilot can't do under 61.89.", "What's the day VFR fuel reserve requirement?", "Two airplanes are converging at the same altitude. Who has the right-of-way?", "What are the VFR weather minimums in Class D?", "What's the minimum altitude over a congested area?"]
+        }
+      ],
+      "gates": [
+        { "id": "gate-presolo-written", "name": "Pre-Solo Written", "detail": "Taken after G1–G8 and the Solo Regs prep. Missed answers reviewed and corrected to 100%." }
+      ]
+    },
+    {
+      "id": "stage-2",
+      "order": 2,
+      "name": "Cross-Country",
+      "summary": "Ground reference, short and soft field, airspace, navigation, solo cross-countries, and the night block.",
+      "flightLessons": [
+        {
+          "id": "s2-ground-reference", "order": 1, "name": "Ground Reference Maneuvers", "repeatable": false,
+          "objective": "Fly the rectangular course, S-turns, and turns around a point with correct wind correction.",
+          "doneWhen": "Altitude ±100 ft, airspeed ±10 kt, a steady ground track, and correct entry and exit headings.",
+          "briefing": ["Wind drift", "Groundspeed and bank changes", "Picking a safe reference with forced landing options", "600 to 1,000 ft AGL"],
+          "homework": ["Start G9"]
+        },
+        {
+          "id": "s2-short-soft-field", "order": 2, "name": "Short & Soft Field Takeoffs and Landings", "repeatable": false,
+          "objective": "Fly short field and soft field takeoffs and landings to ACS standards.",
+          "doneWhen": "Short field landings touch down on or within 200 ft past the chosen point at POH approach speed. Soft field takeoffs and landings keep weight off the nosewheel with no unwanted touchdowns or settling.",
+          "briefing": ["POH procedures and speeds", "Obstacle clearance", "Vx vs. Vy", "Performance charts for the runway"],
+          "homework": ["G12"]
+        },
+        {
+          "id": "s2-local-solo-practice", "order": 3, "name": "Local Solo Practice", "repeatable": true,
+          "objective": "Build solo time and finish Practiced items.",
+          "eachFlight": "The CFI assigns 1 or 2 specific items and checks them on the next dual flight.",
+          "endorsements": ["61.87(n) or 61.87(p)", "61.93(b)(1) for solo to KBMC"],
+          "doneWhen": "No fixed end. Fly as needed toward 10 hours of solo."
+        },
+        {
+          "id": "s2-towered-ops-airspace", "order": 4, "name": "Towered Ops & Local Airspace", "repeatable": false,
+          "objective": "Operate confidently at KOGD and around Hill AFB and the SLC Bravo.",
+          "doneWhen": "The student handles all KOGD tower and ground communications alone, gets and uses flight following, and plans a route around or under the Bravo without CFI input.",
+          "briefing": ["VFR flight following", "\"Cleared into the Class Bravo\" and when you need it", "Hill AFB traffic", "Transponder and ADS-B requirements"],
+          "homework": ["G10"]
+        },
+        {
+          "id": "s2-dual-xc-wendover", "order": 5, "name": "Dual Cross-Country (Wendover)", "repeatable": false,
+          "route": ["KOGD", "KENV", "KOGD"],
+          "objective": "Fly a full cross-country from KOGD to Wendover and back, planned by the student.",
+          "doneWhen": "The student flies the nav log within ±3 min of ETAs, opens and closes a flight plan, completes a diversion to an alternate, and runs lost procedures.",
+          "inFlight": ["Pilotage and dead reckoning, cross-checked with VOR and GPS", "A simulated diversion partway through the route", "Lost procedures (Climb, Communicate, Confess, Comply, Conserve)", "Hood: unusual attitude recoveries and a 180° turn out of simulated IMC", "Mountain flying and density altitude considerations on the route"],
+          "briefing": ["Flight plans", "Fuel planning", "UTTR and Dugway restricted areas along the route (check status before every flight)"],
+          "homework": ["G11", "G13", "G14"]
+        },
+        {
+          "id": "s2-solo-xc", "order": 6, "name": "Solo Cross-Countries", "repeatable": true,
+          "objective": "Fly solo cross-countries that the student plans alone.",
+          "beforeFirst": "Ground gate met, plus the 61.93(c)(1) endorsement.",
+          "eachFlight": "The CFI reviews the plan and gives the 61.93(c)(2) endorsement for that flight.",
+          "doneWhen": "5 hours of solo cross-country logged, counting the long solo cross-country.",
+          "note": "Finish at least 3 solo full-stop takeoffs and landings at KOGD (towered) on any of these flights."
+        },
+        {
+          "id": "s2-long-solo-xc", "order": 7, "name": "Long Solo Cross-Country", "repeatable": false,
+          "route": ["KOGD", "KENV", "KTVY", "KOGD"],
+          "approxTotalNm": 210,
+          "meets": "61.109(a)(5)(ii): at least 150 nm total, full-stop landings at 3 points, one leg over 50 nm straight-line (KOGD–KENV about 96 nm).",
+          "briefing": ["UTTR and Dugway restricted areas west of KTVY", "SLC Bravo on the KTVY–KOGD leg", "Fuel stops"],
+          "doneWhen": "Flight complete and logged with the endorsement."
+        }
+      ],
+      "nightBlock": {
+        "flexible": true,
+        "note": "Fly whenever the season makes it practical. In winter, as early as the end of Stage 1 once the student is ready for the pattern.",
+        "lessons": [
+          {
+            "id": "night-local", "name": "Night Local",
+            "objective": "Night pattern work, night emergencies, and night vision and lighting.",
+            "doneWhen": "The student lands safely at night without CFI input and handles a simulated electrical failure.",
+            "briefing": ["Dark adaptation", "Illusions (black hole, autokinesis)", "Airport lighting", "Pilot-controlled lighting", "Required night equipment"],
+            "homework": ["G15"]
+          },
+          {
+            "id": "night-xc", "name": "Night Cross-Country",
+            "objective": "A night cross-country over 100 nm total distance.",
+            "doneWhen": "Over 100 nm total. Across the night block: 3 hours of night and 10 full-stop takeoffs and landings.",
+            "route": ["KOGD", "KPVU", "KOGD"],
+            "approxTotalNm": 120,
+            "briefing": ["SLC Bravo transition, or the route around it"]
+          }
+        ]
+      },
+      "groundModules": [
+        {
+          "id": "G9", "name": "Student Pilot Regs", "due": "Before Local Solo Practice to KBMC (first module of the stage)",
+          "covers": ["61.89 limits in full", "61.93 solo cross-country requirements and endorsements", "61.95 Class B", "91.159 VFR cruising altitudes", "91.211 oxygen", "91.215 and 91.225 transponder and ADS-B", "91.107 seat belts"],
+          "sources": ["FAR/AIM", "Sporty's"],
+          "youtube": [],
+          "oralCheck": ["What has to happen before you can fly solo to an airport more than 25 nm away?", "What does your solo cross-country endorsement have to say?", "You're flying a magnetic course of 260°, more than 3,000 ft AGL. Which cruising altitudes can you use?", "When are you required to use oxygen?", "Where do you need ADS-B Out?"]
+        },
+        {
+          "id": "G10", "name": "Airspace & Charts", "due": "Before Towered Ops & Local Airspace",
+          "covers": ["All airspace classes A–G", "Weather minimums and entry requirements", "Special use airspace", "TFRs", "Sectional legend", "Chart Supplement"],
+          "sources": ["PHAK: Airspace", "AIM chapter 3", "Sectional chart legend", "Chart Supplement legend"],
+          "youtube": [],
+          "oralCheck": ["What are the VFR weather minimums in Class E above and below 10,000 ft MSL?", "What's the difference between a restricted area and a MOA?", "What does a magenta vignette mean on the sectional?", "Find KENV in the Chart Supplement. What's the CTAF and fuel availability?", "How do you check for TFRs along your route?"]
+        },
+        {
+          "id": "G11", "name": "Weather Theory & Services", "due": "Before Dual Cross-Country",
+          "covers": ["The atmosphere", "Stability", "Fronts", "Fog", "Thunderstorms", "Icing", "Mountain winds and mountain wave", "GFA", "AIRMETs, SIGMETs, Convective SIGMETs", "PIREPs", "Winds aloft"],
+          "sources": ["Sporty's", "PHAK: Weather Theory; Aviation Weather Services", "aviationweather.gov"],
+          "youtube": [],
+          "oralCheck": ["What makes air stable or unstable, and what clouds go with each?", "What weather comes with a cold front passing through?", "What's the difference between AIRMET Sierra, Tango, and Zulu?", "Read me the winds aloft at 9,000 ft for SLC.", "What signs of mountain wave would you look for?"]
+        },
+        {
+          "id": "G12", "name": "Performance & W&B", "due": "Before Short & Soft Field",
+          "covers": ["Density altitude", "Takeoff and landing distance charts", "Climb and cruise performance", "Weight and balance math", "CG shift as fuel burns"],
+          "sources": ["POH Sections 5 and 6", "PHAK: Weight and Balance; Aircraft Performance"],
+          "youtube": [],
+          "oralCheck": ["Figure today's density altitude at KOGD.", "What's the takeoff distance over a 50 ft obstacle today?", "Run a weight and balance with you, me, and full fuel.", "Does the CG move forward or aft as fuel burns in this airplane?", "How does high density altitude change your takeoff and climb?"]
+        },
+        {
+          "id": "G13", "name": "Navigation & Planning", "due": "Before Dual Cross-Country",
+          "covers": ["Pilotage and dead reckoning", "E6B", "VOR and GPS navigation", "Nav log", "ForeFlight planning: filing, nav logs, performance, W&B", "Flight following", "Opening and closing flight plans", "Diversions", "Lost procedures"],
+          "sources": ["Sporty's", "PHAK: Navigation", "ForeFlight guides"],
+          "youtube": [],
+          "oralCheck": ["Figure true heading and groundspeed for a leg using the E6B.", "How do you open and close a VFR flight plan?", "You need to divert right now. Walk me through it.", "You're lost. What are the 5 Cs?", "How do you tell which way to turn to intercept a VOR radial?"]
+        },
+        {
+          "id": "G14", "name": "Mountain Flying", "due": "Before Dual Cross-Country",
+          "covers": ["Terrain and density altitude", "Mountain winds", "Crossing ridges at an angle", "Escape routes", "Canyon flying", "Mountain passes", "Wind limits for mountain flights"],
+          "sources": ["FAA Tips on Mountain Flying pamphlet", "PHAK: density altitude and mountain weather"],
+          "youtube": [],
+          "oralCheck": ["Why do you cross a ridge at an angle?", "Where would you expect downdrafts with a west wind over the Wasatch?", "When would you cancel a mountain flight because of wind?", "What's your escape plan if you're in a canyon and the terrain rises faster than you can climb?", "How does density altitude change your plan for a hot afternoon departure from KENV?"]
+        },
+        {
+          "id": "G15", "name": "Night & Aeromedical", "due": "Before Night Local",
+          "covers": ["Night vision and scanning", "Dark adaptation", "Visual illusions", "Hypoxia", "Carbon monoxide", "Required night equipment (91.205)", "Airport lighting", "Pilot-controlled lighting", "Night currency (61.57(b))"],
+          "sources": ["PHAK: Aeromedical Factors", "Airplane Flying Handbook: Night Operations", "AIM chapter 2"],
+          "youtube": [],
+          "oralCheck": ["Why do you look slightly off-center at night?", "What's the black hole illusion, and how do you counter it?", "What extra equipment is required for night VFR?", "How do you turn on pilot-controlled lighting at KBMC?", "What do you need to carry passengers at night?"]
+        }
+      ],
+      "gates": [
+        { "id": "gate-solo-xc-planning", "name": "Solo Cross-Country Planning", "detail": "The student plans the whole flight alone (nav log, weather briefing, W&B, performance, go/no-go) and briefs it to the CFI. CFI then gives the 61.93(c)(1) endorsement." }
+      ]
+    },
+    {
+      "id": "stage-3",
+      "order": 3,
+      "name": "Checkride Prep",
+      "summary": "Bring every ACS task to Proficient. Ends with a mock oral and a mock checkride flown by another CFI.",
+      "flightLessons": [
+        {
+          "id": "s3-acs-review", "order": 1, "name": "ACS Review & Checkride Prep", "repeatable": true,
+          "objective": "Bring every ACS task to Proficient.",
+          "eachFlight": "The CFI picks only tasks still at Introduced or Practiced. Proficient tasks are not re-flown unless they slip.",
+          "requirement": "At least 3 hours within the 2 calendar months before the checkride (61.109(a)(4)).",
+          "doneWhen": "Every ACS task is Proficient."
+        },
+        {
+          "id": "s3-mock-checkride", "order": 2, "name": "Mock Checkride", "repeatable": false, "checkedBy": "another CFI",
+          "objective": "A full checkride profile flown by another CFI, run like the real one.",
+          "profile": ["Plan and start a cross-country (e.g., to KENV)", "Diversion", "Hood work", "Slow flight and stalls", "Steep turns", "Ground reference", "Emergencies", "Every takeoff and landing type"],
+          "doneWhen": "Every task rated at ACS standards. Tasks that don't meet ACS go back to ACS Review for just that task."
+        }
+      ],
+      "groundModules": [
+        {
+          "id": "G16", "name": "Private Pilot Regs & Maintenance", "due": "Before the Mock Oral",
+          "covers": ["61.113 privileges and limitations (cost sharing)", "61.23 medical and BasicMed", "61.56 flight review", "61.57 currency", "61.60 change of address", "91.7 airworthiness", "91.205 required equipment", "91.213 inoperative equipment", "91.403–91.417 maintenance and records", "ADs", "NTSB 830"],
+          "sources": ["FAR/AIM", "Sporty's", "PHAK: Flight Manuals and Other Documents"],
+          "youtube": [],
+          "oralCheck": ["A friend offers to pay for the whole flight. Can you accept? Why or why not?", "What do you need to carry passengers?", "The landing light is inoperative. Can you go? Walk me through 91.213.", "Show me the last annual and 100-hour in the logbooks.", "When do you have to notify the NTSB?"]
+        },
+        {
+          "id": "G17", "name": "ACS Walk-Through", "due": "Before the Mock Oral",
+          "covers": ["Every knowledge and risk management element in the Private Pilot Airplane ACS, tied back to G1–G16", "Scenario-based questions"],
+          "sources": ["Private Pilot Airplane ACS (current revision)", "Checkride Prep Hub"],
+          "youtube": [],
+          "oralCheck": ["The Mock Oral is the oral check for this module."]
+        }
+      ],
+      "knowledgeTest": {
+        "timing": "Any time before the Mock Oral.",
+        "before": "Sporty's course plus the CFI's knowledge test endorsement (61.35(a)(1), 61.103(d)).",
+        "after": "CFI reviews every missed ACS code with the student."
+      },
+      "gates": [
+        { "id": "gate-mock-oral", "name": "Mock Oral", "detail": "Full mock oral covering the ACS. Pass when the student can answer, or find the answer for, every element without coaching. Weak areas go back to the matching G module before the Mock Checkride." }
+      ]
+    }
+  ],
+  "requirements": [
+    { "id": "total", "name": "Total flight time", "minimum": 40, "unit": "hr", "reg": "61.109(a)", "earnedIn": "All stages" },
+    { "id": "dual", "name": "Dual instruction", "minimum": 20, "unit": "hr", "reg": "61.109(a)", "earnedIn": "All stages" },
+    { "id": "dual-xc", "name": "Dual cross-country", "minimum": 3, "unit": "hr", "reg": "61.109(a)(1)", "earnedIn": "Dual Cross-Country, Night Cross-Country" },
+    { "id": "dual-night", "name": "Dual night", "minimum": 3, "unit": "hr", "reg": "61.109(a)(2)", "earnedIn": "Night Block" },
+    { "id": "night-xc", "name": "Night cross-country over 100 nm total", "minimum": 1, "unit": "flight", "reg": "61.109(a)(2)(i)", "earnedIn": "Night Cross-Country" },
+    { "id": "night-landings", "name": "Night full-stop takeoffs and landings", "minimum": 10, "unit": "count", "reg": "61.109(a)(2)(ii)", "earnedIn": "Night Block" },
+    { "id": "instrument", "name": "Instrument (hood)", "minimum": 3, "unit": "hr", "reg": "61.109(a)(3)", "earnedIn": "Spread across all stages" },
+    { "id": "checkride-prep", "name": "Checkride prep within 2 calendar months", "minimum": 3, "unit": "hr", "reg": "61.109(a)(4)", "earnedIn": "ACS Review & Checkride Prep" },
+    { "id": "solo", "name": "Solo", "minimum": 10, "unit": "hr", "reg": "61.109(a)(5)", "earnedIn": "Stages 1 and 2" },
+    { "id": "solo-xc", "name": "Solo cross-country", "minimum": 5, "unit": "hr", "reg": "61.109(a)(5)(i)", "earnedIn": "Solo Cross-Countries" },
+    { "id": "long-solo-xc", "name": "Long solo cross-country (150 nm, 3 points, one leg over 50 nm)", "minimum": 1, "unit": "flight", "reg": "61.109(a)(5)(ii)", "earnedIn": "Long Solo Cross-Country" },
+    { "id": "towered-landings", "name": "Solo full-stop takeoffs and landings at a towered airport", "minimum": 3, "unit": "count", "reg": "61.109(a)(5)(iii)", "earnedIn": "Any solo returning to KOGD" }
+  ],
+  "endorsements": [
+    { "id": "student-cert", "phase": "before-first-solo", "name": "Student pilot certificate issued (IACRA) and medical in hand", "reg": null },
+    { "id": "presolo-knowledge", "phase": "before-first-solo", "name": "Pre-solo aeronautical knowledge", "reg": "61.87(b)" },
+    { "id": "presolo-flight", "phase": "before-first-solo", "name": "Pre-solo flight training", "reg": "61.87(c)" },
+    { "id": "solo-90", "phase": "before-first-solo", "name": "Solo flight, first 90 days (limits written in)", "reg": "61.87(n)" },
+    { "id": "solo-renewal", "phase": "stage-2", "name": "Solo flight renewal every 90 days, as needed", "reg": "61.87(p)" },
+    { "id": "solo-25nm", "phase": "stage-2", "name": "Solo takeoffs and landings at another airport within 25 nm (e.g., KBMC)", "reg": "61.93(b)(1)" },
+    { "id": "presolo-night", "phase": "stage-2", "name": "Pre-solo night flight training (only if soloing at night)", "reg": "61.87(o)", "conditional": true },
+    { "id": "solo-xc-training", "phase": "stage-2", "name": "Solo cross-country training", "reg": "61.93(c)(1)" },
+    { "id": "solo-xc-each", "phase": "stage-2", "name": "Solo cross-country, each flight", "reg": "61.93(c)(2)" },
+    { "id": "repeated-solo-xc", "phase": "stage-2", "name": "Repeated solo cross-country within 50 nm (if used)", "reg": "61.93(b)(2)", "conditional": true },
+    { "id": "solo-class-b", "phase": "stage-2", "name": "Solo in Class B (only if used)", "reg": "61.95", "conditional": true },
+    { "id": "knowledge-test", "phase": "before-checkride", "name": "Knowledge test", "reg": "61.35(a)(1), 61.103(d), 61.105" },
+    { "id": "kt-review", "phase": "before-checkride", "name": "Review of missed knowledge test areas", "reg": "61.39(a)(6)(iii)" },
+    { "id": "prep-2-months", "phase": "before-checkride", "name": "Prep within the preceding 2 calendar months", "reg": "61.39(a)(6)(i)" },
+    { "id": "practical-test", "phase": "before-checkride", "name": "Practical test: flight proficiency and aeronautical experience", "reg": "61.103(f), 61.107(b), 61.109" },
+    { "id": "iacra-8710", "phase": "before-checkride", "name": "8710 application completed in IACRA and logbook reviewed", "reg": null }
+  ]
+}

@@ -178,6 +178,10 @@ export function importAll(json: { data?: Record<string, BaseRec[]> }) {
 }
 
 /* ---- React ---- */
+/** Run a callback after any local or synced change (used for one-time data upgrades). */
+export function onStoreChange(l: Listener) {
+  return subscribe(l);
+}
 function subscribe(l: Listener) {
   listeners.add(l);
   return () => listeners.delete(l);

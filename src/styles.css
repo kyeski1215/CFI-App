@@ -655,3 +655,28 @@ h3:has(> .ichip), .row:has(> h3 > .ichip) h3 { display: inline-flex; align-items
 .legend button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
 .legend button[aria-pressed="true"] .muted { color: inherit; opacity: .7; }
 .irow.compact .ibody > .rdot { margin-right: -2px; }
+
+/* Introduced / Practiced / Proficient (stored as R / Y / G) */
+:root { --m-intro: #6b7fa8; --m-prac: #d18f00; --m-prof: var(--good); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --m-intro: #8ea2cc; --m-prac: #f2b33d; } }
+:root[data-theme="dark"] { --m-intro: #8ea2cc; --m-prac: #f2b33d; }
+.mdot.R { background: var(--m-intro); } .mdot.Y { background: var(--m-prac); } .mdot.G { background: var(--m-prof); }
+.mball.R { background: var(--m-intro); border-color: var(--m-intro); }
+.mball.Y { background: var(--m-prac); border-color: var(--m-prac); }
+.mball.G { background: var(--m-prof); border-color: var(--m-prof); }
+
+/* named-syllabus lessons */
+.plesson > summary { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; list-style: none; }
+.plesson > summary::-webkit-details-marker { display: none; }
+.plesson > summary .ln { flex: 1; min-width: 0; font-weight: 600; }
+.plesson > summary .mdate { color: var(--muted); white-space: nowrap; }
+.plesson > summary .mball { margin-left: 0; }
+.plesson .lcode.fl { background: var(--accent-soft); color: var(--accent); }
+.plesson .lbody { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+.pblock .kv { font-weight: 600; color: var(--ink); }
+.pdone { background: var(--good-soft); border-radius: 10px; padding: 8px 10px; }
+.plist { margin: 2px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 2px; }
+.pchips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 3px; }
+.pchips span { font-size: 12.5px; background: var(--surface); border-radius: 8px; padding: 3px 8px; }
+@media (max-width: 480px) { .plesson > summary .mdate { display: none; } }
+.plesson .ln.ldone { text-decoration: none; color: var(--good); }

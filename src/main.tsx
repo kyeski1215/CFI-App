@@ -7,9 +7,11 @@ import { initSync } from "./lib/sync";
 import { initUpdates } from "./lib/updates";
 import "./styles.css";
 import { applyAccent } from "./lib/theme";
+import { initMigrations } from "./lib/migrate";
 
 applyAccent();
 initSync();
+initMigrations();
 initUpdates();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

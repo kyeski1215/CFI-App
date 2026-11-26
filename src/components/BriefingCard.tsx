@@ -18,13 +18,18 @@ export default function BriefingCard({ b, actions }: { b: Briefing; actions?: Re
       {b.scenario && <p className="bscen">{b.scenario}</p>}
       {b.objectives.length > 0 && (
         <div>
-          <div className="kv">We'll cover</div>
+          <div className="kv">{b.groundFirst ? "Brief" : "We'll cover"}</div>
           <ul className="bobj">
             {b.objectives.map((o, i) => <li key={i} className={o.done ? "done" : ""}>{o.text}</li>)}
           </ul>
         </div>
       )}
       {b.doneWhen && <div className="small"><b>Done when:</b> {b.doneWhen}</div>}
+      {b.hood && <div className="small"><b>Hood:</b> {b.hood}</div>}
+      {b.groundFirst && b.groundFirst.length > 0 && (
+        <div className="small"><b>Ground first:</b> {b.groundFirst.map((g, i) => <span key={g.code}>{i ? " · " : ""}<span style={g.done ? { color: "var(--good)" } : undefined}>{g.done ? "✓ " : ""}{g.code} {g.name}</span></span>)}</div>
+      )}
+      {b.warmup && b.warmup.length > 0 && <div className="small"><b>Warm-up:</b> {b.warmup.join(" · ")}</div>}
       {b.takeover && <div className="small"><b>Student takes over:</b> {b.takeover}</div>}
       {b.focus.length > 0 && (
         <div className="small"><b>Keep working on:</b> {b.focus.join(" · ")}</div>

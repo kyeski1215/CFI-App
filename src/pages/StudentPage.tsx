@@ -19,6 +19,7 @@ import {
   groundFor,
   groundKey,
   MARK_LABEL,
+  MARK_ORDER,
   PRESOLO,
   coverage,
   guideMark,
@@ -35,6 +36,7 @@ import {
   topicsFor,
   totalHours,
 } from "../lib/curriculum";
+import { PPL_PRINCIPLES, PPL_RUNNING, pplDetail, type PlanDetail } from "../lib/ppl";
 import { create, daysBetween, fmtDate, newId, put, remove, restoreSnapshot, snapshot, todayStr, useCollection, useRecord } from "../lib/store";
 import type { LogEntry, Ride, Student } from "../lib/types";
 
@@ -725,6 +727,16 @@ function Syllabus({ s, update }: P) {
             </div>
             <Bar value={prog.done} total={prog.total} />
             {prog.next && <div className="small">Next lesson: <b>{prog.next}</b></div>}
+            {s.goal === "Private Pilot" && (
+              <details className="fold sub">
+                <summary><span className="ft small">How this syllabus works</span></summary>
+                <div className="fb small">
+                  <ul className="plist">{PPL_PRINCIPLES.map((p) => <li key={p}>{p}</li>)}</ul>
+                  <div className="kv" style={{ marginTop: 6 }}>Running through every stage</div>
+                  <ul className="plist">{PPL_RUNNING.map((r) => <li key={r.id}><b>{r.name}:</b> {r.detail}</li>)}</ul>
+                </div>
+              </details>
+            )}
           </div>
           {plan.map((sec) => {
             const n = sec.items.filter((it) => g[guideKey(sec.id, it[0])]).length;
@@ -741,6 +753,8 @@ function Syllabus({ s, update }: P) {
                   <div className="checks">
                     {sec.items.map((it) => {
                       const key = guideKey(sec.id, it[0]);
+                      const d = pplDetail(it[0]);
+                      if (d && (d.kind === "flight" || d.kind === "ground")) return <PlanLesson key={key} k={key} d={d} value={guideMark(s, key)} onSet={(m) => mark(key, m)} />;
                       const L = sec.id === "s1" ? PRESOLO[it[0]] : undefined;
                       if (L) return <Lesson key={key} k={key} label={it[1]} when={it[2]} L={L} s={s} mark={mark} />;
                       if (isGradedItem(it[0])) return <MarkRow key={key} label={it[1]} when={it[2]} value={guideMark(s, key)} onSet={(m) => mark(key, m)} />;
@@ -818,13 +832,69 @@ function Lesson({ k, label, when, L, s, mark }: {
   );
 }
 
-const NEXT_MARK: Record<string, Mark | null> = { "": "G", G: "Y", Y: "R", R: null };
+/** A lesson or ground module from the named Private Pilot syllabus, with everything the syllabus says about it. */
+function PlanLesson({ k, d, value, onSet }: { k: string; d: PlanDetail; value?: { m: Mark; d?: string }; onSet: (m: Mark | null) => void }) {
+  const List = ({ title, items, ordered }: { title: string; items?: string[]; ordered?: boolean }) =>
+    items?.length ? (
+      <div className="pblock">
+        <div className="kv">{title}</div>
+        {ordered ? <ol className="plist">{items.map((x) => <li key={x}>{x}</li>)}</ol> : <ul className="plist">{items.map((x) => <li key={x}>{x}</li>)}</ul>}
+      </div>
+    ) : null;
+  const Line = ({ title, text }: { title: string; text?: string | null }) => (text ? <div className="pblock"><span className="kv">{title}</span> <span>{text}</span></div> : null);
+  return (
+    <details className={"lesson plesson" + (value ? " m" + value.m : "")}>
+      <summary>
+        {d.code ? <span className="lcode">{d.code}</span> : <span className="lcode fl" aria-hidden="true">✈</span>}
+        <span className={"ln" + (value?.m === "G" ? " ldone" : "")}>{d.name}{d.repeatable ? <small className="muted"> · repeat as needed</small> : null}</span>
+        {value?.d && <span className="mdate small">{MARK_LABEL[value.m]} · {fmtDate(value.d)}</span>}
+        <button type="button" className={"mball" + (value ? " " + value.m : "")}
+          aria-label={`${d.name}: ${value ? MARK_LABEL[value.m] : "not graded"}. Tap to change.`}
+          title={value ? MARK_LABEL[value.m] : "Not graded"}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSet(NEXT_MARK[value?.m ?? ""]); }} />
+      </summary>
+      <div className="lbody">
+        {d.kind === "ground" ? (
+          <>
+            <Line title="Due" text={d.due} />
+            {d.covers?.length ? <div className="pblock"><div className="kv">Covers</div><div className="pchips">{d.covers.map((c) => <span key={c}>{c}</span>)}</div></div> : null}
+            <List title="Oral check" items={d.oralCheck} ordered />
+          </>
+        ) : (
+          <>
+            <Line title="Objective" text={d.objective} />
+            {d.doneWhen && <div className="pblock pdone"><span className="kv">Done when</span> {d.doneWhen}</div>}
+            {d.route && <Line title="Route" text={d.route.join(" → ") + (d.approxTotalNm ? ` · about ${d.approxTotalNm} nm` : "")} />}
+            <Line title="Meets" text={d.meets} />
+            <List title="Brief" items={d.briefing} />
+            <List title="In flight" items={d.inFlight} />
+            <List title="Steps" items={d.steps} ordered />
+            <List title="Profile" items={d.profile} />
+            <Line title="Pre-solo written" text={d.presoloWritten} />
+            <Line title="Hood" text={d.hood} />
+            <Line title="Before the first one" text={d.beforeFirst} />
+            <Line title="Each flight" text={d.eachFlight} />
+            <Line title="Requirement" text={d.requirement} />
+            <Line title="Checked by" text={d.checkedBy} />
+            {d.groundPrereqs?.length ? <Line title="Ground first" text={d.groundPrereqs.map((g) => { const x = pplDetail(g); return x ? `${x.code} ${x.name}` : g; }).join(" · ")} /> : null}
+            {d.endorsements?.length ? <Line title="Endorsements" text={d.endorsements.join(" · ")} /> : null}
+            <Line title="Note" text={d.note} />
+            <Line title="CFI note" text={d.cfiNote} />
+          </>
+        )}
+        <LessonExtras k={k} />
+      </div>
+    </details>
+  );
+}
+
+const NEXT_MARK: Record<string, Mark | null> = { "": "R", R: "Y", Y: "G", G: null };
 
 function MarkLegend() {
   return (
     <div className="mlegend small">
-      {(["G", "Y", "R"] as Mark[]).map((m) => <span key={m}><span className={"mdot " + m} /> {MARK_LABEL[m]}</span>)}
-      <span className="muted">Tap the circle to change: blank → green → yellow → red → blank.</span>
+      {MARK_ORDER.map((m) => <span key={m}><span className={"mdot " + m} /> {MARK_LABEL[m]}</span>)}
+      <span className="muted">Tap the circle: blank → Introduced → Practiced → Proficient → blank. Proficient counts as done.</span>
     </div>
   );
 }

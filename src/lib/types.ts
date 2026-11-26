@@ -49,6 +49,8 @@ export interface Student extends BaseRec {
   guide?: Record<string, string>; // "section.key" -> date done
   // Yellow / red grades. Green ("checkride ready") is stored as done: guide[key] / covered[].
   guideMarks?: Record<string, { m: "Y" | "R"; d: string }>;
+  /** 2 = progress carried over to the named-lesson Private Pilot syllabus. */
+  pplPlan?: number;
   topicMarks?: Record<string, { m: "Y" | "R"; d: string }>;
   hoursAdj?: Record<string, string>; // hours toward checkride from other logbooks, per requirement
   hoursFlags?: Record<string, boolean>; // requirements marked complete by hand (e.g. long cross-country)
