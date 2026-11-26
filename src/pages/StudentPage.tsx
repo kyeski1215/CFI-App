@@ -6,6 +6,7 @@ import { mockSummary, skillSummary, type SkillStat } from "../lib/skills";
 import { claudePrompt, firstName, smsHref, studentText } from "../lib/studentText";
 import BriefingCard from "../components/BriefingCard";
 import StudentActivityCard from "../components/StudentActivityCard";
+import CheckrideModal from "../components/CheckrideModal";
 import { hoursProgress, type ReqRow } from "../lib/hours";
 import { useSync } from "../lib/sync";
 import { buildBriefing, briefingText } from "../lib/briefing";
@@ -114,6 +115,34 @@ export default function StudentPage() {
 }
 
 type P = { s: Student; update: (p: Partial<Student>) => void };
+
+/** Real checkrides for this student, and the button that logs one (and can move them to the next rating). */
+function CheckridesCard({ s }: { s: Student }) {
+  const [open, setOpen] = useState(false);
+  const list = [...(s.checkrides ?? [])].sort((a, b) => b.date.localeCompare(a.date));
+  const ready = ["Checkride ready", "Stage check"].includes(s.status);
+  if (!list.length && !ready) {
+    return (
+      <>
+        <button className="btn ghost sm" style={{ alignSelf: "flex-start" }} onClick={() => setOpen(true)}>+ Record a checkride</button>
+        {open && <CheckrideModal students={[s]} initial={s} onClose={() => setOpen(false)} />}
+      </>
+    );
+  }
+  return (
+    <section className="card">
+      <div className="row"><h3><IconChip icon="star" tone="green" />Checkrides</h3><span className="spacer" /><button className="btn primary sm" onClick={() => setOpen(true)}>Record result</button></div>
+      {list.length === 0 && <div className="small muted">{s.name.split(" ")[0]} is marked {s.status}. Log the result here after the checkride.</div>}
+      {list.map((c) => (
+        <div key={c.id} className="crrow">
+          <span className={"pill " + (c.result === "Pass" ? "p-good" : c.result === "Fail" ? "p-bad" : "p-mute")}>{c.result}</span>
+          <span className="crt"><b>{c.rating}</b><small>{fmtDate(c.date)}{c.examiner ? " · " + c.examiner : ""}{c.notes ? " · " + c.notes : ""}</small></span>
+        </div>
+      ))}
+      {open && <CheckrideModal students={[s]} initial={s} onClose={() => setOpen(false)} />}
+    </section>
+  );
+}
 
 /** Instagram-style profile header: avatar, three key numbers, name and one line of context. */
 function ProfileHeader({ s }: { s: Student }) {
@@ -226,6 +255,8 @@ function Overview({ s, update, onDelete, goTo }: P & { onDelete: () => void; goT
       </section>
 
       <HoursCard s={s} update={update} />
+
+      <CheckridesCard s={s} />
 
       <StudentActivityCard s={s} />
 

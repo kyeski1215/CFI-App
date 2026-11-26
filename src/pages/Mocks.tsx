@@ -1,11 +1,68 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import CheckrideModal from "../components/CheckrideModal";
+import { allCheckrides, checkrideStats } from "../lib/checkrides";
 import { Modal } from "../components/ui";
 import { BANKS, BANK_IDS, KINDS, bankForGoal, questionCount } from "../lib/banks";
 import { create, fmtDate, todayStr, useCollection } from "../lib/store";
 import type { Ride, Student } from "../lib/types";
 
 export default function Mocks() {
+  const [params, setParams] = useSearchParams();
+  const real = params.get("tab") === "real";
+  const tabs = (
+    <div className="chips kindtabs" role="tablist" aria-label="Checkrides">
+      <button role="tab" className="chip" aria-pressed={!real} aria-selected={!real} onClick={() => setParams({}, { replace: true })}>Mock checkrides</button>
+      <button role="tab" className="chip" aria-pressed={real} aria-selected={real} onClick={() => setParams({ tab: "real" }, { replace: true })}>Real checkrides</button>
+    </div>
+  );
+  return real ? <RealCheckrides tabs={tabs} /> : <MockList tabs={tabs} />;
+}
+
+function RealCheckrides({ tabs }: { tabs: React.ReactNode }) {
+  const students = useCollection<Student>("students");
+  const [adding, setAdding] = useState(false);
+  const rows = allCheckrides(students);
+  const st = checkrideStats(rows);
+  return (
+    <div className="page">
+      <header className="page-head">
+        <div><h1>Checkrides</h1></div>
+        <button className="btn primary" onClick={() => setAdding(true)}>+ Record result</button>
+      </header>
+      {tabs}
+      <section className="pstrip">
+        <div><b style={{ color: "var(--good)" }}>{st.pass}</b><span>passed</span></div>
+        <div><b style={{ color: st.fail ? "var(--bad)" : undefined }}>{st.fail}</b><span>failed</span></div>
+        <div><b>{st.rate == null ? "—" : st.rate + "%"}</b><span>pass rate</span></div>
+        <div className="acc"><b>{st.firstRate == null ? "—" : st.firstRate + "%"}</b><span>first try</span></div>
+      </section>
+      {st.byRating.length > 0 && (
+        <section className="card">
+          <h3>By rating</h3>
+          {st.byRating.map(([r, x]) => (
+            <div key={r} className="crrow"><span className="crt"><b>{r}</b></span><span className="small"><span style={{ color: "var(--good)" }}>{x.pass} pass</span>{x.fail ? <span style={{ color: "var(--bad)" }}> · {x.fail} fail</span> : null}</span></div>
+          ))}
+        </section>
+      )}
+      {rows.length === 0 ? (
+        <div className="empty">No checkrides logged yet. When a student takes theirs, tap “+ Record result” (or use the Checkrides card on their page).</div>
+      ) : (
+        <section className="rows">
+          {rows.map((r) => (
+            <Link key={r.id} to={"/students/" + r.studentId} className="lrow crlist">
+              <span className={"pill " + (r.result === "Pass" ? "p-good" : r.result === "Fail" ? "p-bad" : "p-mute")}>{r.result}</span>
+              <span className="crt"><b>{r.studentName}</b><small>{r.rating}{r.attempt > 1 ? ` · attempt ${r.attempt}` : ""} · {fmtDate(r.date)}{r.examiner ? " · " + r.examiner : ""}</small>{r.notes && <small>{r.notes}</small>}</span>
+            </Link>
+          ))}
+        </section>
+      )}
+      {adding && <CheckrideModal students={students} onClose={() => setAdding(false)} />}
+    </div>
+  );
+}
+
+function MockList({ tabs }: { tabs: React.ReactNode }) {
   const rides = useCollection<Ride>("rides");
   const students = useCollection<Student>("students");
   const [q, setQ] = useState("");
@@ -25,6 +82,7 @@ export default function Mocks() {
         </div>
         <button className="btn primary" onClick={() => setCreating(true)}>+ New mock</button>
       </header>
+      {tabs}
 
       <div className="row">
         <input className="search" type="search" placeholder="Filter by student…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 240 }} />

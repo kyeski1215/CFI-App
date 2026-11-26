@@ -23,6 +23,16 @@ export interface LogEntry {
   text?: string; // message sent to the student about this lesson
 }
 
+/** A real checkride with a DPE (not a mock). */
+export interface Checkride {
+  id: string;
+  date: string;
+  rating: string; // "Instrument"
+  result: "Pass" | "Fail" | "Discontinued";
+  examiner?: string;
+  notes?: string; // e.g. the areas that weren't passed
+}
+
 export interface Student extends BaseRec {
   name: string;
   goal: string;
@@ -51,6 +61,7 @@ export interface Student extends BaseRec {
   guideMarks?: Record<string, { m: "Y" | "R"; d: string }>;
   /** 2 = progress carried over to the named-lesson Private Pilot syllabus. */
   pplPlan?: number;
+  checkrides?: Checkride[];
   /** Your replies to the student's in-app questions (published on their card). */
   qReplies?: Record<string, { text: string; at: string; inPerson?: boolean }>;
   topicMarks?: Record<string, { m: "Y" | "R"; d: string }>;

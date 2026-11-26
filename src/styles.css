@@ -773,3 +773,9 @@ h3:has(> .ichip), .row:has(> h3 > .ichip) h3 { display: inline-flex; align-items
 @media (min-width: 700px) { .rategroup .ratechips { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .rategroup .ratechip { border-radius: 12px; min-height: 40px; padding: 6px 8px; font-size: 13.5px; line-height: 1.2; border-width: 1px; }
 .rategroup .ratechip .mark { width: 18px; height: 18px; }
+.movebox { background: var(--good-soft); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.movebox select { background-color: var(--surface) !important; }
+.crrow { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-top: .5px solid var(--line); }
+.crt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.crt small { color: var(--muted); font-size: 13px; }
+.lrow.crlist { display: flex; align-items: center; gap: 12px; }
