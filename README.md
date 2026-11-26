@@ -1,4 +1,4 @@
-# CFI Cockpit
+# Dual Given
 
 An installable web app for flight instructors: student roster, mock checkride grading, a logbook reg logger and a resources library. Works on iPhone, iPad and computers, offline in the airplane, and syncs between devices when signed in.
 

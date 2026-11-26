@@ -3,7 +3,6 @@ import { NavLink, Navigate, Route, Routes, useLocation } from "react-router-dom"
 import { Icon } from "./components/ui";
 import { useMyCards, useSync } from "./lib/sync";
 import { useCollection } from "./lib/store";
-import { useProfile } from "./lib/profile";
 import { applyUpdate, useUpdateAvailable } from "./lib/updates";
 import Roster from "./pages/Roster";
 import StudentPage from "./pages/StudentPage";
@@ -46,7 +45,6 @@ const STUDENT_MORE = [
 ];
 
 export default function App() {
-  const profile = useProfile();
   const loc = useLocation();
   const sync = useSync();
   const updateReady = useUpdateAvailable();
@@ -61,7 +59,7 @@ export default function App() {
     <div className="app">
       <nav className="sidenav" aria-label="Main">
         <div className="brand">
-          <img src={profile?.logo || "icon.svg"} alt="" /> {profile?.appName?.trim() || "CFI Cockpit"}
+          <img src="icon.svg" alt="" /> Dual Given
         </div>
         {side.map((n) => (
           <NavLink key={n.to} to={n.to} end={n.to === "/me"}>

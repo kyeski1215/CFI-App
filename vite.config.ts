@@ -12,9 +12,9 @@ export default defineConfig({
       registerType: "prompt",
       includeAssets: ["icon.svg"],
       manifest: {
-        name: "CFI Cockpit",
-        short_name: "CFI",
-        description: "Student roster, mock checkrides, logbook regs and resources for flight instructors.",
+        name: "Dual Given",
+        short_name: "Dual Given",
+        description: "Training for flight instructors and their students: roster, syllabus, debriefs, mock checkrides and study.",
         theme_color: "#f7f5f2",
         background_color: "#f7f5f2",
         display: "standalone",
