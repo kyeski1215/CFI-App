@@ -5,6 +5,7 @@ import { exportAll, restoreSnapshot, snapshot, useCollection, useSnapshots } fro
 import { signIn, signOut, signUp, syncConfigured, syncNow, useSharedLibrary, useSync } from "../lib/sync";
 import BlitzAccess from "../components/BlitzAccess";
 import { ACCENTS, setAccent, useAccent } from "../lib/theme";
+import { checkForUpdate, forceRefresh } from "../lib/updates";
 
 export default function Settings() {
   const sync = useSync();
@@ -121,7 +122,15 @@ export default function Settings() {
           It opens full-screen and works offline in the airplane.
         </p>
       </section>
-      <div className="small muted">App version: {__BUILD__}</div>
+      <div className="row">
+        <span className="small muted">App version: {__BUILD__}</span>
+        <span className="spacer" />
+        <button className="btn sm" onClick={async () => {
+          const r = await checkForUpdate();
+          toast(r === "updating" ? "Updating…" : r === "current" ? "You're on the newest version" : "Updates aren't available in this browser");
+        }}>Check for updates</button>
+        <button className="btn sm" onClick={() => forceRefresh()} title="Reloads the app files from the web. Your students and logs are not touched.">Force refresh</button>
+      </div>
     </div>
   );
 }
