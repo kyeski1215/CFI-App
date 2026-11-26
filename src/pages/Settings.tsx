@@ -4,6 +4,7 @@ import { importLegacy } from "../lib/legacy";
 import { exportAll, restoreSnapshot, snapshot, useCollection, useSnapshots } from "../lib/store";
 import { signIn, signOut, signUp, syncConfigured, syncNow, useSharedLibrary, useSync } from "../lib/sync";
 import BlitzAccess from "../components/BlitzAccess";
+import { ACCENTS, setAccent, useAccent } from "../lib/theme";
 
 export default function Settings() {
   const sync = useSync();
@@ -13,6 +14,7 @@ export default function Settings() {
   const rides = useCollection("rides");
   const fileRef = useRef<HTMLInputElement>(null);
   const [legacy, setLegacy] = useState("");
+  const accent = useAccent();
 
   const download = () => {
     const blob = new Blob([JSON.stringify(exportAll(), null, 1)], { type: "application/json" });
@@ -26,6 +28,17 @@ export default function Settings() {
   return (
     <div className="page">
       <header className="page-head"><h1>Settings</h1></header>
+
+      <section className="card">
+        <h3>App color</h3>
+        <div className="small muted">Buttons, tabs and highlights use this one color. Pick your school's color.</div>
+        <div className="swatches" role="radiogroup" aria-label="App color">
+          {ACCENTS.map((a) => (
+            <button key={a.id} role="radio" aria-checked={accent === a.id} aria-label={a.name} title={a.name} className="swatch"
+              style={{ ["--c" as string]: a.light, ["--cd" as string]: a.dark }} onClick={() => setAccent(a.id)} />
+          ))}
+        </div>
+      </section>
 
       <section className="card">
         <h3>Sync across devices</h3>

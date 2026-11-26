@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Bar, useCopy, useToast } from "../components/ui";
+import { Avatar, BackLink, Bar, useCopy, useToast } from "../components/ui";
 import LessonExtras from "../components/LessonExtras";
 import { mockSummary, skillSummary, type SkillStat } from "../lib/skills";
 import { claudePrompt, firstName, smsHref, studentText } from "../lib/studentText";
@@ -61,45 +61,37 @@ export default function StudentPage() {
 
   return (
     <div className="page">
-      <header className="page-head">
-        <div>
-          <Link to="/students" className="small">← Roster</Link>
-          <h1 style={{ marginTop: 6 }}>{s.name || "Unnamed"}</h1>
-          <div className="tags">
-            <span className={"pill " + statusClass(s.status)}>{s.status}</span>
-            <span className="pill p-blue">{s.goal}</span>
-          </div>
-        </div>
-        <div className="row">
-          <button className="btn primary" onClick={() => {
-            if (!s.logDraft) update({ logDraft: blankEntry() });
-            setTab("Log");
-          }}>{s.logDraft ? "Finish lesson draft" : "+ Log a lesson"}</button>
-          <Link className="btn" to={`/regs?student=${s.id}`}>Log regs</Link>
-          <button
-            className="btn"
-            onClick={() => {
-              const bank = bankForGoal(s.goal);
-              const r = create<Ride>("rides", {
-                bank,
-                studentId: s.id,
-                student: s.name,
-                date: todayStr(),
-                kind: "Oral",
-                aircraft: s.aircraft,
-                route: BANKS[bank]?.route,
-                prep: s.goal,
-                grades: {},
-                qnotes: {},
-                sections: {},
-              });
-              nav("/mocks/" + r.id);
-            }}
-          >
-            + Mock checkride
-          </button>
-        </div>
-      </header>
+      <BackLink to="/students" label="Roster" />
+      <ProfileHeader s={s} />
+      <div className="pbtns">
+        <button className="btn primary" onClick={() => {
+          if (!s.logDraft) update({ logDraft: blankEntry() });
+          setTab("Log");
+        }}>{s.logDraft ? "Finish draft" : "Log lesson"}</button>
+        <Link className="btn" to={`/regs?student=${s.id}`}>Regs</Link>
+        <button
+          className="btn"
+          onClick={() => {
+            const bank = bankForGoal(s.goal);
+            const r = create<Ride>("rides", {
+              bank,
+              studentId: s.id,
+              student: s.name,
+              date: todayStr(),
+              kind: "Oral",
+              aircraft: s.aircraft,
+              route: BANKS[bank]?.route,
+              prep: s.goal,
+              grades: {},
+              qnotes: {},
+              sections: {},
+            });
+            nav("/mocks/" + r.id);
+          }}
+        >
+          Mock
+        </button>
+      </div>
 
       <div className="tabs" role="tablist">
         {TABS.map((t) => (
@@ -117,6 +109,38 @@ export default function StudentPage() {
 }
 
 type P = { s: Student; update: (p: Partial<Student>) => void };
+
+/** Instagram-style profile header: avatar, three key numbers, name and one line of context. */
+function ProfileHeader({ s }: { s: Student }) {
+  const today = todayStr();
+  const flights = (s.log ?? []).filter((e) => e.kind !== "ground" && e.date).sort((a, b) => b.date.localeCompare(a.date));
+  const since = flights[0] ? daysBetween(flights[0].date, today) : null;
+  const plan = guideFor(s) ? guideProgress(s) : null;
+  const topics = topicsFor(s);
+  const done = plan ? plan.done : (s.covered ?? []).filter((t) => topics.includes(t)).length;
+  const total = plan ? plan.total : topics.length;
+  const sinceTxt = since == null ? "no flights logged yet" : since === 0 ? "flew today" : since === 1 ? "flew yesterday" : `flew ${since} days ago`;
+  return (
+    <>
+      <div className="profile">
+        <Avatar name={s.name} size={80} />
+        <div className="pstats">
+          <div><b>{totalHours(s).toFixed(1)}</b><span>hours</span></div>
+          <div><b>{flights.length}</b><span>flights</span></div>
+          <div><b>{total ? Math.round((done / total) * 100) + "%" : "—"}</b><span>syllabus</span></div>
+        </div>
+      </div>
+      <div className="pname">
+        <h1>{s.name || "Unnamed"}</h1>
+        <div className="subtitle">
+          {[s.goal, s.stage, s.aircraft].filter(Boolean).join(" · ")}
+          {" · "}<span style={since != null && since >= OVERDUE_DAYS ? { color: "var(--bad)", fontWeight: 600 } : undefined}>{sinceTxt}</span>
+        </div>
+        <div className="tags"><span className={"pill " + statusClass(s.status)}>{s.status}</span></div>
+      </div>
+    </>
+  );
+}
 
 function Field({ s, update, k, label, type = "text", full }: P & { k: keyof Student; label: string; type?: string; full?: boolean }) {
   return (
@@ -146,20 +170,12 @@ function Overview({ s, update, onDelete, goTo }: P & { onDelete: () => void; goT
   const copy = useCopy();
   if (editing) return <ProfileEditor s={s} update={update} onDelete={onDelete} onDone={() => setEditing(false)} />;
 
-  const today = todayStr();
-  const flights = (s.log ?? []).filter((e) => e.kind !== "ground" && e.date).sort((a, b) => b.date.localeCompare(a.date));
   const last = [...(s.log ?? [])].filter((e) => e.date).sort((a, b) => b.date.localeCompare(a.date))[0];
-  const since = flights[0] ? daysBetween(flights[0].date, today) : null;
-  const in30 = flights.filter((e) => daysBetween(e.date, today) <= 30).length;
-  const num = (v?: string) => parseFloat(v ?? "") || 0;
-  const night = flights.reduce((a, e) => a + num(e.night), 0);
-  const ldg = flights.reduce((a, e) => a + num(e.ldgDay) + num(e.ldgNight), 0);
   const plan = guideFor(s);
   const prog = guideProgress(s);
   const topics = topicsFor(s);
   const covered = (s.covered ?? []).filter((t) => topics.includes(t)).length;
   const lastMock = rides.filter((r) => r.studentId === s.id).sort((a, b) => b.date.localeCompare(a.date))[0];
-  const target = num(s.targetPerWeek);
   const brief = buildBriefing(s);
 
   return (
@@ -171,14 +187,6 @@ function Overview({ s, update, onDelete, goTo }: P & { onDelete: () => void; goT
         </button>
       )}
 
-      <section className="stats" aria-label="Summary">
-        <div className="stat"><b>{totalHours(s).toFixed(1)}</b><span>Total hours{night ? ` · ${night.toFixed(1)} night` : ""}</span></div>
-        <div className={"stat" + (since != null && since >= OVERDUE_DAYS ? " alert" : "")}>
-          <b>{since == null ? "—" : since === 0 ? "Today" : since + "d"}</b><span>Since last flight</span>
-        </div>
-        <div className="stat"><b>{in30}</b><span>Flights · last 30 days{target ? ` (goal ${target}/wk)` : ""}</span></div>
-        <div className="stat"><b>{ldg || "—"}</b><span>Landings logged</span></div>
-      </section>
 
       <section className="card">
         <div className="row">

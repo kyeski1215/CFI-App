@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { Link } from "react-router-dom";
 
 /* ---- icons (inline so they work offline) ---- */
 const P = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" } as const;
@@ -103,5 +104,25 @@ export function Bar({ value, total, color }: { value: number; total: number; col
     <div className="bar" aria-label={`${value} of ${total}`}>
       <i style={{ width: pct + "%", background: color }} />
     </div>
+  );
+}
+
+/* ---- iOS list bits ---- */
+export const initials = (name: string) => {
+  const w = String(name || "").trim().split(/\s+/).filter(Boolean);
+  return ((w[0]?.[0] ?? "?") + (w.length > 1 ? w[w.length - 1][0] : "")).toUpperCase();
+};
+export function Avatar({ name, size = 40 }: { name: string; size?: number }) {
+  return <span className="av" style={{ ["--s" as string]: size + "px" }} aria-hidden="true">{initials(name)}</span>;
+}
+export function Chevron() {
+  return <svg className="chev" viewBox="0 0 8 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M1 1l6 6-6 6" /></svg>;
+}
+export function BackLink({ to, label }: { to: string; label: string }) {
+  return (
+    <Link to={to} className="backlink">
+      <svg viewBox="0 0 12 20" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 2L2 10l8 8" /></svg>
+      {label}
+    </Link>
   );
 }

@@ -6,7 +6,9 @@ import { ToastProvider } from "./components/ui";
 import { initSync } from "./lib/sync";
 import { initUpdates } from "./lib/updates";
 import "./styles.css";
+import { applyAccent } from "./lib/theme";
 
+applyAccent();
 initSync();
 initUpdates();
 

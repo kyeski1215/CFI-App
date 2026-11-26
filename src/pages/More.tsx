@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Icon } from "../components/ui";
+import { Chevron, Icon } from "../components/ui";
 
 export const MORE_LINKS = [
   { to: "/aircraft", label: "Aircraft", desc: "POHs, checklists, V-speeds and squawks", icon: Icon.plane },
@@ -12,11 +12,14 @@ export default function More() {
   return (
     <div className="page">
       <h1>More</h1>
-      <section className="list">
+      <section className="rows">
         {MORE_LINKS.map((l) => (
-          <Link key={l.to} to={l.to} className="lrow morerow">
+          <Link key={l.to} to={l.to} className="irow">
             <span className="moreic"><l.icon /></span>
-            <span><span className="name">{l.label}</span><span className="sub" style={{ display: "block" }}>{l.desc}</span></span>
+            <span className="ibody">
+              <span className="itext"><span className="t1">{l.label}</span><span className="t2">{l.desc}</span></span>
+              <Chevron />
+            </span>
           </Link>
         ))}
       </section>

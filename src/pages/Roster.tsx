@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Bar, Modal } from "../components/ui";
+import { Avatar, Chevron, Modal } from "../components/ui";
 import {
   GOALS,
   OVERDUE_DAYS,
@@ -55,7 +55,6 @@ export default function Roster() {
   }, [students, sortBy]);
   const active = sorted.filter(isActive);
   const overdue = active.filter((s) => (recency(s) ?? 999) >= OVERDUE_DAYS);
-  const week = active.filter((s) => (recency(s) ?? 999) <= 7);
   const ready = active.filter((s) => ["Stage check", "Checkride ready"].includes(s.status));
 
   const shown = sorted.filter((s) => {
@@ -67,95 +66,105 @@ export default function Roster() {
     return true;
   });
 
+  const stories = [...active].sort((x, y) => (recency(x) ?? 9999) - (recency(y) ?? 9999));
+  const label = filter === "Done / hold" ? "Done or on hold" : filter;
+
   return (
     <div className="page">
-      <header className="page-head">
-        <div>
-          <h1>Student Roster</h1>
-        </div>
-        <div className="row">
-          <Link className="btn" to="/import">Import logbook</Link>
-          <button className="btn primary" onClick={() => setAdding(true)}>+ Add student</button>
-        </div>
-      </header>
+      <div className="navactions">
+        <Link className="navbtn" to="/import">Import</Link>
+        <button className="navbtn" aria-label="Add student" onClick={() => setAdding(true)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        </button>
+      </div>
+      <h1>Roster</h1>
+      <input className="search" type="search" placeholder="Search" aria-label="Search students" value={q} onChange={(e) => setQ(e.target.value)} />
 
-      <section className="stats" aria-label="Summary">
-        <div className="stat"><b>{active.length}</b><span>Active students</span></div>
-        <div className="stat"><b>{week.length}</b><span>Flew in last 7 days</span></div>
-        <div className="stat alert"><b>{overdue.length}</b><span>Overdue · {OVERDUE_DAYS}+ days</span></div>
-        <div className="stat ready"><b>{ready.length}</b><span>Stage / checkride ready</span></div>
-      </section>
+      {stories.length > 0 && !q && (
+        <div className="stories" aria-label="Recent students">
+          {stories.map((s) => {
+            const d = recency(s);
+            return (
+              <Link key={s.id} to={"/students/" + s.id} className="story" title={s.name}>
+                <span className={"ring" + (d != null && d >= OVERDUE_DAYS ? " bad" : "")}><Avatar name={s.name} size={52} /></span>
+                <span>{(s.name || "Unnamed").split(/\s+/)[0]}</span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="chips" role="group" aria-label="Filter">
+        {FILTERS.map((f) => (
+          <button key={f} className="chip" aria-pressed={filter === f} onClick={() => setFilter(f)}>
+            {f === "Done / hold" ? "Done" : f}{f === "Overdue" && overdue.length ? ` ${overdue.length}` : f === "Ready" && ready.length ? ` ${ready.length}` : ""}
+          </button>
+        ))}
+      </div>
 
       <section className="list">
-        <div className="row">
-          <input className="search" type="search" placeholder="Search students…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 260 }} />
-          <select value={sortBy} aria-label="Sort" style={{ width: "auto", fontSize: 14 }} onChange={(e) => { setSortBy(e.target.value as SortKey); writePref("sort", e.target.value); }}>
-            <option value="name">Sort: Name</option>
-            <option value="recent">Sort: Flew most recently</option>
-            <option value="overdue">Sort: Longest since flying</option>
-            <option value="progress">Sort: Closest to checkride</option>
+        <div className="ghdr">
+          <span>{shown.length} {label}</span>
+          <span className="spacer" />
+          <select value={sortBy} aria-label="Sort" onChange={(e) => { setSortBy(e.target.value as SortKey); writePref("sort", e.target.value); }}>
+            <option value="name">Name</option>
+            <option value="recent">Flew recently</option>
+            <option value="overdue">Longest since flying</option>
+            <option value="progress">Closest to checkride</option>
           </select>
-          <button className="chip" aria-pressed={compact} onClick={() => { setCompact(!compact); writePref("compact", compact ? "0" : "1"); }}>Compact</button>
-          <div className="chips">
-            {FILTERS.map((f) => (
-              <button key={f} className="chip" aria-pressed={filter === f} onClick={() => setFilter(f)}>{f}</button>
-            ))}
-          </div>
+          <button aria-pressed={compact} onClick={() => { setCompact(!compact); writePref("compact", compact ? "0" : "1"); }}>{compact ? "Expand" : "Compact"}</button>
         </div>
         {shown.length === 0 && (
           <div className="empty">
-            {students.length ? "No students match." : <>No students yet. Add your first one, or <Link to="/import">import your ForeFlight logbook</Link>.</>}
+            {students.length ? "No students match." : <>No students yet. Tap + to add one, or <Link to="/import">import your ForeFlight logbook</Link>.</>}
           </div>
         )}
-        <div className={compact ? "rows compact" : "rows"}>
+        {shown.length > 0 && (
+        <div className="rows">
         {shown.map((s) => {
           const d = recency(s);
           const plan = guideFor(s) ? guideProgress(s) : null;
           const topics = topicsFor(s);
-          const prog = plan ?? { done: (s.covered ?? []).filter((t) => topics.includes(t)).length, total: topics.length, next: null };
+          const prog = plan ?? { done: (s.covered ?? []).filter((t) => topics.includes(t)).length, total: topics.length };
+          const pct = prog.total ? Math.round((prog.done / prog.total) * 100) : 0;
           const lastMock = rides.filter((r) => r.studentId === s.id).sort((a, b) => b.date.localeCompare(a.date))[0];
+          const days = d == null ? "—" : d === 0 ? "Today" : d + "d";
+          const dcls = "ival" + (d == null ? "" : d >= OVERDUE_DAYS ? " bad" : d >= 6 ? " warn" : "");
           if (compact) {
-            const pct = prog.total ? Math.round((prog.done / prog.total) * 100) : 0;
             return (
-              <Link key={s.id} to={"/students/" + s.id} className="crow">
-                <span className={"cdot " + statusClass(s.status)} title={s.status} />
-                <span className="cname">{s.name || "Unnamed"}</span>
-                <span className="cgoal">{GOAL_SHORT[s.goal] ?? s.goal}</span>
-                <span className={"cdays mono " + (d == null ? "muted" : d >= OVERDUE_DAYS ? "bad" : d >= 6 ? "warn" : "good")}>{d == null ? "—" : d === 0 ? "today" : d + "d"}</span>
-                <span className="cpct mono">{pct}%</span>
+              <Link key={s.id} to={"/students/" + s.id} className="irow compact">
+                <span className="ibody">
+                  <span className="itext"><span className="t1">{s.name || "Unnamed"} <span className="muted" style={{ fontSize: 14 }}>{GOAL_SHORT[s.goal] ?? s.goal}</span></span></span>
+                  <span className="ival">{pct}%</span>
+                  <span className={dcls} style={{ minWidth: 44, textAlign: "right" }}>{days}</span>
+                  <Chevron />
+                </span>
               </Link>
             );
           }
+          const sub = [GOAL_SHORT[s.goal] ?? s.goal, s.stage || (isActive(s) ? null : s.status), totalHours(s).toFixed(1) + " hr", prog.total ? pct + "%" : null].filter(Boolean).join(" · ");
           return (
-            <Link key={s.id} to={"/students/" + s.id} className="lrow">
-              <div className="who">
-                <div className="name">{s.name || "Unnamed"}</div>
-                <div className="sub">{[s.goal, s.aircraft, s.stage].filter(Boolean).join(" · ")}</div>
-                {s.nextLesson && <div className="sub clamp">Next: {s.nextLesson}</div>}
-                <div className="tags">
-                  <span className={"pill " + statusClass(s.status)}>{s.status}</span>
-                  {lastMock?.result && <span className="pill p-acc">Mock: {lastMock.result}</span>}
-                </div>
-              </div>
-              <div>
-                <div className="kv">Last flight</div>
-                <div className={"mono " + (d == null ? "muted" : d >= OVERDUE_DAYS ? "pill p-bad" : d >= 6 ? "pill p-warn" : "pill p-good")}>
-                  {d == null ? "—" : d === 0 ? "Today" : `${d}d ago`}
-                </div>
-                <div className="kv" style={{ marginTop: 4 }}>
-                  <b>{totalHours(s).toFixed(1)}</b> hrs
-                </div>
-              </div>
-              <div>
-                <div className="kv">Syllabus {prog.done}/{prog.total}</div>
-                <Bar value={prog.done} total={prog.total} />
-                {prog.next && <div className="kv clamp" style={{ marginTop: 4 }}>Up next: <b>{prog.next}</b></div>}
-                {lastMock && <div className="kv" style={{ marginTop: 4 }}>Mock {fmtDate(lastMock.date)}</div>}
-              </div>
+            <Link key={s.id} to={"/students/" + s.id} className="irow">
+              <Avatar name={s.name} />
+              <span className="ibody">
+                <span className="itext">
+                  <span className="t1">{s.name || "Unnamed"}</span>
+                  <span className="t2">{sub}</span>
+                  {(["Stage check", "Checkride ready"].includes(s.status) || lastMock?.result) && (
+                    <span className="tags" style={{ marginTop: 4 }}>
+                      {["Stage check", "Checkride ready"].includes(s.status) && <span className={"pill " + statusClass(s.status)}>{s.status}</span>}
+                      {lastMock?.result && <span className="pill p-mute">Mock {fmtDate(lastMock.date)}: {lastMock.result}</span>}
+                    </span>
+                  )}
+                </span>
+                <span className={dcls}>{days}</span>
+                <Chevron />
+              </span>
             </Link>
           );
         })}
         </div>
+        )}
       </section>
 
       {adding && <AddStudent onClose={() => setAdding(false)} />}
