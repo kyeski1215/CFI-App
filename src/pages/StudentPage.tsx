@@ -123,7 +123,7 @@ function ProfileHeader({ s }: { s: Student }) {
   return (
     <>
       <div className="phead">
-        <Avatar name={s.name} size={60} />
+        <Avatar name={s.name} goal={s.goal} size={60} />
         <div className="who">
           <h1>{s.name || "Unnamed"}</h1>
           <div className="subtitle">{[s.goal, s.stage, s.aircraft].filter(Boolean).join(" · ")}</div>

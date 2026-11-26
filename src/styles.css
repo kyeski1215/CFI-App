@@ -604,7 +604,7 @@ h3 { font-family: var(--f-display); font-size: 18px; font-weight: 700; letter-sp
 /* avatars: rounded squares, a soft tint per student */
 .av { border-radius: 32%; font-family: var(--f-display); font-weight: 700; }
 .av.t0 { background: #d7eef0; color: #0b6a6f; } .av.t1 { background: #fce1e7; color: #a61e46; } .av.t2 { background: #ddf0e2; color: #1b6b39; }
-.av.t3 { background: #fde8d0; color: #9a4a06; } .av.t4 { background: #e9e1fb; color: #5b2ebd; } .av.t5 { background: #e3ecfb; color: #1e4fb8; }
+.av.t3 { background: #fde8d0; color: #9a4a06; } .av.t4 { background: #e2d6fb; color: #5b2ebd; } .av.t5 { background: #e3ecfb; color: #1e4fb8; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .av.t0 { background: #0e3b40; color: #86dde5; } :root:not([data-theme="light"]) .av.t1 { background: #4a1a28; color: #ffa3b8; } :root:not([data-theme="light"]) .av.t2 { background: #163d25; color: #8ee3a8; } :root:not([data-theme="light"]) .av.t3 { background: #4a2e0e; color: #ffc488; } :root:not([data-theme="light"]) .av.t4 { background: #33245e; color: #c9b3ff; } :root:not([data-theme="light"]) .av.t5 { background: #1f3a66; color: #a9c8ff; } }
 .ring { border-radius: 36%; }
 .story .ring .av { border: 2px solid var(--bg); }
@@ -643,3 +643,15 @@ h3:has(> .ichip), .row:has(> h3 > .ichip) h3 { display: inline-flex; align-items
 .card > .row:first-child { flex-wrap: nowrap; }
 .card > .row:first-child h3 { flex: 0 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card > .row:first-child .btn { flex: none; }
+
+/* rating colors: avatars and dots share the .tN palette */
+.av.t6 { background: #ebe7e1; color: #5e5852; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .av.t6 { background: #34302c; color: #c9c3bb; } }
+.rdot { width: 10px; height: 10px; border-radius: 50%; flex: none; display: inline-block; }
+.rdot.t0 { background: #0f8f96; } .rdot.t1 { background: #d23a66; } .rdot.t2 { background: #2f9a55; }
+.rdot.t3 { background: #e07a16; } .rdot.t4 { background: #7c4ddb; } .rdot.t5 { background: #2f6fe0; } .rdot.t6 { background: #a39c94; }
+.legend { display: flex; gap: 6px; flex-wrap: wrap; margin-top: -4px; }
+.legend button { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; padding: 5px 11px 5px 9px; background: var(--surface); box-shadow: var(--shadow-btn); color: var(--ink); font-size: 13px; font-weight: 600; }
+.legend button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.legend button[aria-pressed="true"] .muted { color: inherit; opacity: .7; }
+.irow.compact .ibody > .rdot { margin-right: -2px; }

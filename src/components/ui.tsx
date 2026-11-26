@@ -113,8 +113,15 @@ export const initials = (name: string) => {
   return ((w[0]?.[0] ?? "?") + (w.length > 1 ? w[w.length - 1][0] : "")).toUpperCase();
 };
 const tintOf = (name: string) => { let h = 0; for (const c of String(name || "")) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h % 6; };
-export function Avatar({ name, size = 40 }: { name: string; size?: number }) {
-  return <span className={"av t" + tintOf(name)} style={{ ["--s" as string]: size + "px" }} aria-hidden="true">{initials(name)}</span>;
+/** One color per rating, so a glance at the roster shows who is training for what. */
+export const RATING_TONE: Record<string, number> = { "Private Pilot": 5, Instrument: 4, Commercial: 3, "Multi-Engine": 1, CFI: 2, CFII: 0 };
+export const toneFor = (goal?: string) => (goal && goal in RATING_TONE ? RATING_TONE[goal] : 6);
+export function Avatar({ name, goal, size = 40 }: { name: string; goal?: string; size?: number }) {
+  const t = goal === undefined ? tintOf(name) : toneFor(goal);
+  return <span className={"av t" + t} style={{ ["--s" as string]: size + "px" }} aria-hidden="true">{initials(name)}</span>;
+}
+export function RatingDot({ goal }: { goal?: string }) {
+  return <span className={"rdot t" + toneFor(goal)} aria-hidden="true" />;
 }
 /** Small colored square with an icon, for section headers. */
 export function IconChip({ icon, tone }: { icon: "next" | "clock" | "chart" | "star" | "log"; tone?: "green" | "orange" | "purple" }) {

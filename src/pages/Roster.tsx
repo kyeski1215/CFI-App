@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Avatar, Chevron, Modal } from "../components/ui";
+import { Avatar, Chevron, Modal, RatingDot, toneFor } from "../components/ui";
 import {
   GOALS,
   OVERDUE_DAYS,
@@ -21,6 +21,9 @@ const GOAL_SHORT: Record<string, string> = { "Private Pilot": "PPL", Instrument:
 const readPref = (k: string) => { try { return localStorage.getItem("cfi.v1.roster." + k) ?? ""; } catch { return ""; } };
 const writePref = (k: string, v: string) => { try { localStorage.setItem("cfi.v1.roster." + k, v); } catch { /* private mode */ } };
 
+const ORDER = ["Private Pilot", "Instrument", "Commercial", "Multi-Engine", "CFI", "CFII"];
+const toneOrder = (g: string) => { const i = ORDER.indexOf(g); return i < 0 ? 99 + toneFor(g) : i; };
+
 function greeting() {
   const h = new Date().getHours();
   return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
@@ -37,6 +40,7 @@ export default function Roster() {
   const [filter, setFilter] = useState("Active");
   const [q, setQ] = useState("");
   const [adding, setAdding] = useState(false);
+  const [rating, setRating] = useState<string | null>(null);
 
   const [sortBy, setSortBy] = useState<SortKey>(() => (readPref("sort") as SortKey) || "name");
   const [compact, setCompact] = useState(() => readPref("compact") === "1");
@@ -62,6 +66,7 @@ export default function Roster() {
   const ready = active.filter((s) => ["Stage check", "Checkride ready"].includes(s.status));
 
   const shown = sorted.filter((s) => {
+    if (rating && s.goal !== rating) return false;
     if (q && !(s.name + " " + s.goal + " " + (s.aircraft ?? "")).toLowerCase().includes(q.toLowerCase())) return false;
     if (filter === "Active") return isActive(s);
     if (filter === "Overdue") return overdue.includes(s);
@@ -70,6 +75,9 @@ export default function Roster() {
     return true;
   });
 
+  const ratingsHere = Object.entries(
+    active.reduce<Record<string, number>>((m, s) => ((m[s.goal || "Other"] = (m[s.goal || "Other"] ?? 0) + 1), m), {}),
+  ).sort((a, b) => toneOrder(a[0]) - toneOrder(b[0]));
   const stories = [...active].sort((x, y) => (recency(x) ?? 9999) - (recency(y) ?? 9999));
   const label = filter === "Done / hold" ? "Done or on hold" : filter;
 
@@ -93,7 +101,7 @@ export default function Roster() {
             const d = recency(s);
             return (
               <Link key={s.id} to={"/students/" + s.id} className="story" title={s.name}>
-                <span className={"ring" + (d != null && d >= OVERDUE_DAYS ? " bad" : "")}><Avatar name={s.name} size={54} /></span>
+                <span className={"ring" + (d != null && d >= OVERDUE_DAYS ? " bad" : "")}><Avatar name={s.name} goal={s.goal} size={54} /></span>
                 <span>{(s.name || "Unnamed").split(/\s+/)[0]}</span>
               </Link>
             );
@@ -108,6 +116,16 @@ export default function Roster() {
           </button>
         ))}
       </div>
+
+      {ratingsHere.length > 1 && (
+        <div className="legend" role="group" aria-label="Filter by rating">
+          {ratingsHere.map(([g, n]) => (
+            <button key={g} aria-pressed={rating === g} onClick={() => setRating(rating === g ? null : g)}>
+              <RatingDot goal={g} />{GOAL_SHORT[g] ?? g}<span className="muted"> {n}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       <section className="list">
         <div className="ghdr">
@@ -141,6 +159,7 @@ export default function Roster() {
             return (
               <Link key={s.id} to={"/students/" + s.id} className="irow compact">
                 <span className="ibody">
+                  <RatingDot goal={s.goal} />
                   <span className="itext"><span className="t1">{s.name || "Unnamed"} <span className="muted" style={{ fontSize: 14 }}>{GOAL_SHORT[s.goal] ?? s.goal}</span></span></span>
                   <span className="ival">{pct}%</span>
                   <span className={dcls} style={{ minWidth: 44, textAlign: "right" }}>{days}</span>
@@ -152,7 +171,7 @@ export default function Roster() {
           const when = d == null ? "no flights yet" : d === 0 ? "flew today" : d >= OVERDUE_DAYS ? `${d} days, overdue` : `flew ${d}d ago`;
           return (
             <Link key={s.id} to={"/students/" + s.id} className="irow">
-              <Avatar name={s.name} size={44} />
+              <Avatar name={s.name} goal={s.goal} size={44} />
               <span className="ibody">
                 <span className="itext">
                   <span className="t1">{s.name || "Unnamed"}</span>
