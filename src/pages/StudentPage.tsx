@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { Avatar, BackLink, Bar, IconChip, useCopy, useToast } from "../components/ui";
 import LessonExtras from "../components/LessonExtras";
 import { mockSummary, skillSummary, type SkillStat } from "../lib/skills";
-import { claudePrompt, firstName, smsHref, studentText } from "../lib/studentText";
+import { claudePrompt, firstName, smsHref, studentText, type TextMode } from "../lib/studentText";
 import BriefingCard from "../components/BriefingCard";
 import StudentActivityCard from "../components/StudentActivityCard";
 import CheckrideModal from "../components/CheckrideModal";
@@ -307,13 +307,20 @@ function Overview({ s, update, onDelete, goTo }: P & { onDelete: () => void; goT
 function StudentTextBox({ s, e, onText }: { s: Student; e: LogEntry; onText: (t: string | undefined) => void }) {
   const copy = useCopy();
   const hasNotes = !!(e.notes ?? "").trim() || Object.keys(e.ratings ?? {}).length > 0;
+  const [mode, setMode] = useState<TextMode>(() => { try { return localStorage.getItem("cfi.v1.textmode") === "short" ? "short" : "full"; } catch { return "full"; } });
+  const pickMode = (m: TextMode) => { setMode(m); try { localStorage.setItem("cfi.v1.textmode", m); } catch { /* private mode */ } };
   return (
     <div className="full txtbox">
       <div className="row">
         <b className="small">Text for {firstName(s.name)}</b>
         <span className="spacer" />
+        <div className="seg" role="radiogroup" aria-label="Text length">
+          {(["short", "full"] as const).map((m) => (
+            <button key={m} type="button" role="radio" aria-checked={mode === m} aria-pressed={mode === m} onClick={() => pickMode(m)}>{m === "short" ? "Short" : "Full"}</button>
+          ))}
+        </div>
         <button type="button" className="btn sm" disabled={!hasNotes} title={hasNotes ? "" : "Write notes or rate skills first"}
-          onClick={() => onText(studentText(s, e))}>{e.text ? "Redo from notes" : "Make student text"}</button>
+          onClick={() => onText(studentText(s, e, mode))}>{e.text ? "Redo" : "Make text"}</button>
       </div>
       {e.text !== undefined && (
         <>
@@ -760,21 +767,26 @@ function EntryForm({ e, student, skills, title, onChange, primary, remove, note,
               <datalist id="tails">{TAILS.map((t) => <option key={t} value={t} />)}</datalist>
             </label>
             <label className="f">Hours<input inputMode="decimal" value={e.hrs ?? ""} onChange={(ev) => set({ hrs: ev.target.value })} /></label>
-            <label className="f">Night hrs<input inputMode="decimal" value={e.night ?? ""} onChange={(ev) => set({ night: ev.target.value })} /></label>
             <label className="f">Landings day / night
               <div className="row" style={{ flexWrap: "nowrap" }}>
                 <input inputMode="numeric" aria-label="Day landings" value={e.ldgDay ?? ""} onChange={(ev) => set({ ldgDay: ev.target.value })} />
                 <input inputMode="numeric" aria-label="Night landings" value={e.ldgNight ?? ""} onChange={(ev) => set({ ldgNight: ev.target.value })} />
               </div>
             </label>
-            <label className="f">Solo hrs (of total)<input inputMode="decimal" value={e.solo ?? ""} onChange={(ev) => set({ solo: ev.target.value })} placeholder="0 = all dual" /></label>
-            <label className="f">Cross-country hrs<input inputMode="decimal" value={e.xc ?? ""} onChange={(ev) => set({ xc: ev.target.value })} /></label>
-            <label className="f">Instrument hrs<input inputMode="decimal" value={e.inst ?? ""} onChange={(ev) => set({ inst: ev.target.value })} placeholder="actual + hood" /></label>
-            <label className="f">Approaches<input inputMode="numeric" value={e.approaches ?? ""} onChange={(ev) => set({ approaches: ev.target.value })} /></label>
-            <label className="check full" style={{ borderBottom: 0 }}>
-              <input type="checkbox" checked={!!e.prep} onChange={() => set({ prep: !e.prep })} />
-              <span className="ct"><span>Checkride prep</span><small>Counts toward the 3 hr of practical test prep within 2 calendar months</small></span>
-            </label>
+            <details className="full fold sub moretimes" open={!!(e.night || e.solo || e.xc || e.inst || e.approaches || e.prep)}>
+              <summary><span className="ft small">More times</span><span className="small muted">{[e.night && "night", e.solo && "solo", e.xc && "XC", e.inst && "instrument", e.approaches && "approaches", e.prep && "checkride prep"].filter(Boolean).join(" · ") || "night, solo, XC, instrument"}</span></summary>
+              <div className="fb fields">
+                <label className="f">Night hrs<input inputMode="decimal" value={e.night ?? ""} onChange={(ev) => set({ night: ev.target.value })} /></label>
+                <label className="f">Solo hrs (of total)<input inputMode="decimal" value={e.solo ?? ""} onChange={(ev) => set({ solo: ev.target.value })} placeholder="0 = all dual" /></label>
+                <label className="f">Cross-country hrs<input inputMode="decimal" value={e.xc ?? ""} onChange={(ev) => set({ xc: ev.target.value })} /></label>
+                <label className="f">Instrument hrs<input inputMode="decimal" value={e.inst ?? ""} onChange={(ev) => set({ inst: ev.target.value })} placeholder="actual + hood" /></label>
+                <label className="f">Approaches<input inputMode="numeric" value={e.approaches ?? ""} onChange={(ev) => set({ approaches: ev.target.value })} /></label>
+                <label className="check full" style={{ borderBottom: 0 }}>
+                  <input type="checkbox" checked={!!e.prep} onChange={() => set({ prep: !e.prep })} />
+                  <span className="ct"><span>Checkride prep</span><small>Counts toward the 3 hr of practical test prep within 2 calendar months</small></span>
+                </label>
+              </div>
+            </details>
           </>
         )}
         <label className="f full">Lesson<input value={e.lesson ?? ""} placeholder="e.g. Pattern & Normal Landings" onChange={(ev) => set({ lesson: ev.target.value })} /></label>

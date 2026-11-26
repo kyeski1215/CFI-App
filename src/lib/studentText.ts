@@ -1,35 +1,111 @@
 // Turns a logged lesson into a text message for the student. Runs on the device; no AI, no credits.
+import { guideMark } from "./curriculum";
+import { pplDetail } from "./ppl";
+import { headName, tipFor } from "./skillTips";
 import { fmtDate, todayStr } from "./store";
 import type { LogEntry, Student } from "./types";
 
 export const firstName = (n: string) => String(n || "").trim().split(/\s+/)[0] || "there";
 
-/** Note text → bullet lines. Keeps the instructor's own lines; splits one long paragraph into sentences. */
-function bullets(notes: string) {
-  let lines = notes.split(/\n+/).map((l) => l.trim()).filter(Boolean);
-  if (lines.length === 1 && lines[0].length > 160) lines = lines[0].split(/(?<=[.!?])\s+(?=[A-Z0-9])/);
-  return lines.map((l) => "- " + l.replace(/^[-•*\d.)\s]+/, "").trim()).filter((l) => l.length > 2);
+/** Your notes as clean sentences: split on line breaks and sentence ends, first letter capitalized, ending punctuation added. */
+export function noteSentences(notes: string): string[] {
+  return notes
+    .split(/\n+|(?<=[.!?])\s+/)
+    .map((l) => l.trim().replace(/^[-•*\d.)\s]+/, "").trim())
+    .filter((l) => l.length > 2)
+    .map((l) => {
+      const t = l.charAt(0).toUpperCase() + l.slice(1);
+      return /[.!?]$/.test(t) ? t : t + ".";
+    });
 }
 
-export function studentText(s: Student, e: LogEntry) {
-  const when = e.date === todayStr() ? "today's" : `your ${fmtDate(e.date)}`;
-  const what = e.lesson ? `${when} ${e.lesson} ${e.kind === "ground" ? "ground lesson" : "flight"}` : `${when} ${e.kind === "ground" ? "ground lesson" : "flight"}`;
-  const facts = [e.kind !== "ground" && e.tail, e.hrs && `${e.hrs} hr`, (e.ldgDay || e.ldgNight) && `${(+(e.ldgDay || 0)) + (+(e.ldgNight || 0))} landings`].filter(Boolean);
-  const good = Object.entries(e.ratings ?? {}).filter(([, r]) => r === "good").map(([k]) => "- " + k);
-  const work = Object.entries(e.ratings ?? {}).filter(([, r]) => r === "work").map(([k]) => "- " + k);
-  const notes = bullets(e.notes ?? "");
+const list = (xs: string[]) => (xs.length <= 1 ? xs.join("") : xs.slice(0, -1).join(", ") + " and " + xs[xs.length - 1]);
+const SIGNOFFS = ["Questions? Just text me.", "Text me if anything's unclear.", "Good work. Questions any time.", "See you next lesson. Text me with any questions."];
 
-  const parts = [`Hey ${firstName(s.name)}, here's the debrief from ${what}${facts.length ? ` (${facts.join(", ")})` : ""}.`];
-  if (good.length) parts.push("WENT WELL\n" + good.join("\n"));
-  if (work.length) parts.push("WORK ON\n" + work.join("\n"));
-  if (notes.length) parts.push((good.length || work.length ? "NOTES\n" : "") + notes.join("\n"));
-  parts.push("Let me know if you have any questions!");
+export type TextMode = "full" | "short";
+
+/**
+ * The debrief text for a lesson, built from your ✓/✗ ratings, notes and syllabus grade.
+ * Full: a coaching tip for each thing to work on, your notes tied to the skill they're about, a chair-fly line.
+ * Short: a few lines for a routine flight.
+ */
+export function studentText(s: Student, e: LogEntry, mode: TextMode = "full") {
+  const first = firstName(s.name);
+  const ground = e.kind === "ground";
+  const today = todayStr();
+  const yest = (() => { const d = new Date(today + "T12:00:00"); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); })();
+  const when = e.date === today ? "today" : e.date === yest ? "yesterday" : "on " + fmtDate(e.date);
+  const ldg = (+(e.ldgDay || 0)) + (+(e.ldgNight || 0));
+  const facts = [e.hrs && `${e.hrs} hr`, ldg && `${ldg} landing${ldg === 1 ? "" : "s"}`].filter(Boolean) as string[];
+
+  const rated = Object.entries(e.ratings ?? {});
+  const good = rated.filter(([, r]) => r === "good").map(([k]) => k);
+  const work = rated.filter(([, r]) => r === "work").map(([k]) => k);
+
+  // Tie each note sentence to the first rated skill it talks about (things to work on first).
+  const sentences = noteSentences(e.notes ?? "");
+  const tied = new Map<string, string[]>();
+  const loose: string[] = [];
+  for (const sen of sentences) {
+    const low = sen.toLowerCase();
+    const hit = [...work, ...good].find((k) => (tipFor(k).keys ?? []).some((w) => low.includes(w)));
+    if (hit) tied.set(hit, [...(tied.get(hit) ?? []), sen]);
+    else loose.push(sen);
+  }
+
+  const where = `${e.tail ? ` in ${e.tail}` : ""}${facts.length ? ` (${facts.join(", ")})` : ""}`;
+  const opener = ground
+    ? `Hey ${first}, thanks for the ground lesson ${when}${e.lesson ? ` on ${e.lesson}` : ""}.`
+    : work.length > good.length
+      ? `Hey ${first}, here's how ${when === "today" ? "today's flight" : "the flight " + when} went${where}.`
+      : `Hey ${first}, nice flight ${when}${where}.`;
+  const parts = [opener];
+
+  if (good.length) {
+    const extra = mode === "full" ? good.flatMap((k) => tied.get(k) ?? []) : [];
+    parts.push(`What went well: ${list(good.map((k) => tipFor(k).say))}.${extra.length ? " " + extra.join(" ") : ""}`);
+  }
+
+  if (work.length) {
+    if (mode === "short") parts.push(`To work on: ${list(work.map((k) => tipFor(k).say))}.`);
+    else {
+      const lines = work.map((k) => {
+        const notes = (tied.get(k) ?? []).join(" ");
+        const tip = tipFor(k).tip;
+        const lower = (t: string) => (/^[A-Z][a-z]/.test(t) ? t.charAt(0).toLowerCase() + t.slice(1) : t);
+        const tipText = tip ? (notes ? "Next time: " + lower(tip) : tip) : "";
+        return `- ${headName(k)}: ${[notes, tipText].filter(Boolean).join(" ")}`.trim();
+      });
+      parts.push("To work on:\n" + lines.join("\n"));
+    }
+  }
+
+  if (mode === "full" && loose.length) parts.push((good.length || work.length ? "Also: " : "") + loose.join(" "));
+  if (mode === "short" && !good.length && !work.length && sentences.length) parts.push(sentences.slice(0, 2).join(" "));
+
+  if (mode === "full") {
+    const chair = work.map((k) => tipFor(k).chair).filter(Boolean).slice(0, 2) as string[];
+    if (chair.length === 1) parts.push(`Chair fly before next time: ${chair[0]}.`);
+    else if (chair.length) parts.push("Chair fly before next time:\n" + chair.map((c) => "- " + c.charAt(0).toUpperCase() + c.slice(1)).join("\n"));
+  }
+
+  // The syllabus grade you gave this lesson in the log form.
+  const m = e.syl ? guideMark(s, e.syl)?.m : undefined;
+  if (e.syl && m) {
+    const id = e.syl.slice(e.syl.indexOf(".") + 1);
+    const name = pplDetail(id)?.name ?? e.lesson ?? "this lesson";
+    parts.push(m === "G" ? `That wraps up ${name}. ✓` : m === "Y" ? `We'll finish up ${name} next lesson.` : `We'll keep building on ${name} next time.`);
+  }
+
+  let h = 0;
+  for (const c of e.date + (e.lesson ?? "")) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  parts.push(SIGNOFFS[h % SIGNOFFS.length]);
   return parts.join("\n\n");
 }
 
 /** The original artifact's drafting instructions, for pasting into the Claude app with the notes. */
 export function claudePrompt(s: Student, e: LogEntry) {
-  const rated = Object.entries(e.ratings ?? {}).map(([k, r]) => `${r === "good" ? "good" : "needs work"}: ${k}`).join("; ");
+  const rated = Object.entries(e.ratings ?? {}).map(([k, r]) => `${r === "good" ? "good" : "needs work"}: ${tipFor(k).say}`).join("; ");
   return `You are helping a CFI (flight instructor) at Blitz Aviation in Ogden, Utah, turn rough post-flight notes into a text message to send to the student.
 
 Student first name: ${firstName(s.name)}

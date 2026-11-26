@@ -835,3 +835,7 @@ h3:has(> .ichip), .row:has(> h3 > .ichip) h3 { display: inline-flex; align-items
 .hello .greet small, .hello h1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hello .greet small { font-size: 13.5px; }
 @media (max-width: 380px) { .hello h1 { font-size: 24px; } }
+.moretimes > summary { display: flex; align-items: center; gap: 10px; }
+.moretimes > summary .muted { flex: 1; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.moretimes > .fb { padding-top: 6px; }
+.txtbox .seg button { padding: 0 10px; }
