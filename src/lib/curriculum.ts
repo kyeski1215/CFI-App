@@ -49,15 +49,17 @@ export const AIRCRAFT = C.AIRCRAFT;
 /** Private Pilot skills you can grade on a lesson ("How did it go?") and check off in the maneuver list, by phase of flight. */
 export const PPL_SKILL_GROUPS: { h: string; items: string[] }[] = [
   { h: "Ground & departure", items: ["Preflight", "Checklist usage", "Taxi", "Run-up", "Untowered radio calls", "Towered radio calls", "Normal takeoff", "Crosswind takeoff", "Short field takeoff", "Soft field takeoff"] },
-  { h: "Airwork", items: ["Straight & level", "Climbs & descents", "Turns", "Trim", "Collision avoidance", "Slow flight", "Power-off stalls", "Power-on stalls", "Steep turns", "Ground reference"] },
-  { h: "Emergencies", items: ["Emergency procedures", "Engine-out / forced landing", "Power-off 180"] },
-  { h: "Pattern & landings", items: ["Traffic pattern", "Stabilized approach", "Normal landing", "Crosswind landing", "Short field landing", "Soft field landing", "Forward slip", "Go-around"] },
-  { h: "Navigation & ATC", items: ["Pilotage & DR", "VOR / GPS navigation", "Diversion", "Flight following", "Airspace awareness"] },
-  { h: "Hood & night", items: ["Hood work", "Unusual attitudes", "Night operations"] },
-  { h: "Judgment", items: ["Situational awareness", "Decision making", "Workload management"] },
+  { h: "Airwork", items: ["Checklist usage · Airwork", "Straight & level", "Climbs & descents", "Turns", "Trim", "Collision avoidance", "Slow flight", "Power-off stalls", "Power-on stalls", "Steep turns", "Ground reference"] },
+  { h: "Emergencies", items: ["Checklist usage · Emergencies", "Emergency procedures", "Engine-out / forced landing", "Power-off 180"] },
+  { h: "Pattern & landings", items: ["Untowered radio calls · Pattern", "Towered radio calls · Pattern", "Traffic pattern", "Pre-landing checklist", "Stabilized approach", "Normal landing", "Crosswind landing", "Short field landing", "Soft field landing", "Forward slip", "Go-around"] },
+  { h: "Navigation & ATC", items: ["Checklist usage · Navigation", "Pilotage & DR", "VOR / GPS navigation", "Diversion", "Flight following", "Airspace awareness"] },
+  { h: "Hood & night", items: ["Checklist usage · Hood & night", "Hood work", "Unusual attitudes", "Night operations"] },
+  { h: "Judgment", items: ["Checklist usage · Judgment", "Situational awareness", "Decision making", "Workload management"] },
 ];
 C.CURR["Private Pilot"] = PPL_SKILL_GROUPS.flatMap((g) => g.items);
 export const CURR = C.CURR;
+/** How a skill reads inside its group: "Checklist usage · Airwork" shows as "Checklist usage" under Airwork. */
+export const skillLabel = (k: string) => k.replace(/ · .*$/, "");
 /** Skills split into headed groups for quick grading; anything not in a group goes under "Your additions". */
 export function groupSkills(goal: string, skills: string[]): { h: string | null; items: string[] }[] {
   if (goal !== "Private Pilot") return [{ h: null, items: skills }];

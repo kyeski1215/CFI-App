@@ -30,6 +30,7 @@ import {
   topicMark,
   type Mark,
   groupSkills,
+  skillLabel,
   guideFor,
   guideKey,
   guideProgress,
@@ -355,7 +356,7 @@ function SkillRater({ goal, skills, ratings, onChange }: { goal: string; skills:
                   {g.items.map((k) => (
                     <button key={k} type="button" className={"ratechip " + (ratings[k] ?? "")} aria-label={`${k}: ${ratings[k] === "good" ? "good" : ratings[k] === "work" ? "needs work" : "not rated"}`} onClick={() => cycle(k)}>
                       <span className="mark" aria-hidden="true">{ratings[k] === "good" ? "✓" : ratings[k] === "work" ? "✗" : ""}</span>
-                      {k}
+                      {g.h ? skillLabel(k) : k}
                     </button>
                   ))}
                 </div>
