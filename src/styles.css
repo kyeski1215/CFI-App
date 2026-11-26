@@ -767,3 +767,9 @@ h3:has(> .ichip), .row:has(> h3 > .ichip) h3 { display: inline-flex; align-items
 .kvlist .good { color: var(--good); } .kvlist .warn { color: var(--warn); }
 .dhead { display: flex; flex-direction: column; gap: 1px; }
 .gradebar { margin: 0 -16px; padding: 18px 16px 6px; background: linear-gradient(to bottom, transparent, var(--bg) 22px); }
+.rategroup + .rategroup { margin-top: 10px; }
+.rgh { font-size: 12.5px; font-weight: 700; color: var(--muted); margin: 0 0 5px 2px; }
+.rategroup .ratechips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+@media (min-width: 700px) { .rategroup .ratechips { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.rategroup .ratechip { border-radius: 12px; min-height: 40px; padding: 6px 8px; font-size: 13.5px; line-height: 1.2; border-width: 1px; }
+.rategroup .ratechip .mark { width: 18px; height: 18px; }

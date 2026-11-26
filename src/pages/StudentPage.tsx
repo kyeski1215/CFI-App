@@ -29,6 +29,7 @@ import {
   setTopicMark,
   topicMark,
   type Mark,
+  groupSkills,
   guideFor,
   guideKey,
   guideProgress,
@@ -325,7 +326,7 @@ function StudentAccess({ s, update }: P) {
   );
 }
 
-function SkillRater({ skills, ratings, onChange }: { skills: string[]; ratings: Record<string, "good" | "work">; onChange: (r: Record<string, "good" | "work">) => void }) {
+function SkillRater({ goal, skills, ratings, onChange }: { goal: string; skills: string[]; ratings: Record<string, "good" | "work">; onChange: (r: Record<string, "good" | "work">) => void }) {
   const n = Object.keys(ratings).length;
   const cycle = (k: string) => {
     const next = { ...ratings };
@@ -346,14 +347,21 @@ function SkillRater({ skills, ratings, onChange }: { skills: string[]; ratings: 
         {skills.length + extra.length === 0 ? (
           <div className="small muted">No skills for this rating yet. Add some under Syllabus → Maneuver checklist.</div>
         ) : (
-          <div className="ratechips">
-            {[...skills, ...extra].map((k) => (
-              <button key={k} type="button" className={"ratechip " + (ratings[k] ?? "")} aria-label={`${k}: ${ratings[k] === "good" ? "good" : ratings[k] === "work" ? "needs work" : "not rated"}`} onClick={() => cycle(k)}>
-                <span className="mark" aria-hidden="true">{ratings[k] === "good" ? "✓" : ratings[k] === "work" ? "✗" : ""}</span>
-                {k}
-              </button>
+          <>
+            {[...groupSkills(goal, skills), ...(extra.length ? [{ h: "Rated earlier", items: extra }] : [])].map((g) => (
+              <div key={g.h ?? "all"} className="rategroup">
+                {g.h && <div className="rgh">{g.h}</div>}
+                <div className="ratechips">
+                  {g.items.map((k) => (
+                    <button key={k} type="button" className={"ratechip " + (ratings[k] ?? "")} aria-label={`${k}: ${ratings[k] === "good" ? "good" : ratings[k] === "work" ? "needs work" : "not rated"}`} onClick={() => cycle(k)}>
+                      <span className="mark" aria-hidden="true">{ratings[k] === "good" ? "✓" : ratings[k] === "work" ? "✗" : ""}</span>
+                      {k}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
-          </div>
+          </>
         )}
       </div>
     </details>
@@ -683,7 +691,7 @@ function EntryForm({ e, student, skills, title, onChange, primary, remove, note 
         )}
         <label className="f full">Lesson<input value={e.lesson ?? ""} placeholder="e.g. F5 — The traffic pattern" onChange={(ev) => set({ lesson: ev.target.value })} /></label>
         <label className="f full">Notes / debrief<textarea style={{ minHeight: 140 }} value={e.notes ?? ""} onChange={(ev) => set({ notes: ev.target.value })} /></label>
-        <SkillRater skills={skills} ratings={e.ratings ?? {}} onChange={(ratings) => set({ ratings })} />
+        <SkillRater goal={student.goal} skills={skills} ratings={e.ratings ?? {}} onChange={(ratings) => set({ ratings })} />
         <StudentTextBox s={student} e={e} onText={(text) => set({ text })} />
         <label className="f full">Regs (from the Reg Logger)<input className="mono" value={e.regs ?? ""} onChange={(ev) => set({ regs: ev.target.value })} /></label>
       </div>
