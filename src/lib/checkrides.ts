@@ -64,3 +64,9 @@ export function recordCheckride(s: Student, c: Omit<Checkride, "id">, moveTo?: s
   return next;
 }
 export const blankCheckride = (s: Student): Omit<Checkride, "id"> => ({ date: todayStr(), rating: s.goal, result: "Pass" });
+
+/** Change one logged checkride (the student's rating and status stay as they are). */
+export const editCheckride = (s: Student, id: string, p: Partial<Checkride>): Student => ({
+  ...s, checkrides: (s.checkrides ?? []).map((c) => (c.id === id ? { ...c, ...p } : c)),
+});
+export const deleteCheckride = (s: Student, id: string): Student => ({ ...s, checkrides: (s.checkrides ?? []).filter((c) => c.id !== id) });

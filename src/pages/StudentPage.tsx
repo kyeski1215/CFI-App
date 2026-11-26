@@ -42,7 +42,7 @@ import {
 } from "../lib/curriculum";
 import { PPL_PRINCIPLES, PPL_RUNNING, pplDetail, type PlanDetail } from "../lib/ppl";
 import { create, daysBetween, fmtDate, newId, put, remove, restoreSnapshot, snapshot, todayStr, useCollection, useRecord } from "../lib/store";
-import type { LogEntry, Ride, Student } from "../lib/types";
+import type { Checkride, LogEntry, Ride, Student } from "../lib/types";
 
 const TABS = ["Overview", "Log", "Syllabus", "ACS", "Mocks"] as const;
 type Tab = (typeof TABS)[number];
@@ -120,6 +120,7 @@ type P = { s: Student; update: (p: Partial<Student>) => void };
 /** Real checkrides for this student, and the button that logs one (and can move them to the next rating). */
 function CheckridesCard({ s }: { s: Student }) {
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Checkride | null>(null);
   const list = [...(s.checkrides ?? [])].sort((a, b) => b.date.localeCompare(a.date));
   const ready = ["Checkride ready", "Stage check"].includes(s.status);
   if (!list.length && !ready) {
@@ -135,12 +136,14 @@ function CheckridesCard({ s }: { s: Student }) {
       <div className="row"><h3><IconChip icon="star" tone="green" />Checkrides</h3><span className="spacer" /><button className="btn primary sm" onClick={() => setOpen(true)}>Record result</button></div>
       {list.length === 0 && <div className="small muted">{s.name.split(" ")[0]} is marked {s.status}. Log the result here after the checkride.</div>}
       {list.map((c) => (
-        <div key={c.id} className="crrow">
+        <button key={c.id} type="button" className="crrow crbtn" onClick={() => setEditing(c)} aria-label={`Edit ${c.rating} checkride ${fmtDate(c.date)}`}>
           <span className={"pill " + (c.result === "Pass" ? "p-good" : c.result === "Fail" ? "p-bad" : "p-mute")}>{c.result}</span>
           <span className="crt"><b>{c.rating}</b><small>{fmtDate(c.date)}{c.examiner ? " · " + c.examiner : ""}{c.notes ? " · " + c.notes : ""}</small></span>
-        </div>
+          <span className="small" style={{ color: "var(--accent)" }}>Edit</span>
+        </button>
       ))}
       {open && <CheckrideModal students={[s]} initial={s} onClose={() => setOpen(false)} />}
+      {editing && <CheckrideModal students={[s]} initial={s} edit={editing} onClose={() => setEditing(null)} />}
     </section>
   );
 }

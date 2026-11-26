@@ -779,3 +779,5 @@ h3:has(> .ichip), .row:has(> h3 > .ichip) h3 { display: inline-flex; align-items
 .crt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .crt small { color: var(--muted); font-size: 13px; }
 .lrow.crlist { display: flex; align-items: center; gap: 12px; }
+.crbtn { width: 100%; background: none; border: 0; border-top: .5px solid var(--line); text-align: left; font: inherit; color: var(--ink); cursor: pointer; }
+.crlink { text-decoration: none; color: var(--ink); }

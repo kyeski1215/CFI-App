@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import CheckrideModal from "../components/CheckrideModal";
-import { allCheckrides, checkrideStats } from "../lib/checkrides";
+import { allCheckrides, checkrideStats, type CheckrideRow } from "../lib/checkrides";
 import { Modal } from "../components/ui";
 import { BANKS, BANK_IDS, KINDS, bankForGoal, questionCount } from "../lib/banks";
 import { create, fmtDate, todayStr, useCollection } from "../lib/store";
@@ -22,6 +22,7 @@ export default function Mocks() {
 function RealCheckrides({ tabs }: { tabs: React.ReactNode }) {
   const students = useCollection<Student>("students");
   const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<CheckrideRow | null>(null);
   const rows = allCheckrides(students);
   const st = checkrideStats(rows);
   return (
@@ -50,14 +51,16 @@ function RealCheckrides({ tabs }: { tabs: React.ReactNode }) {
       ) : (
         <section className="rows">
           {rows.map((r) => (
-            <Link key={r.id} to={"/students/" + r.studentId} className="lrow crlist">
+            <div key={r.id} className="lrow crlist">
               <span className={"pill " + (r.result === "Pass" ? "p-good" : r.result === "Fail" ? "p-bad" : "p-mute")}>{r.result}</span>
-              <span className="crt"><b>{r.studentName}</b><small>{r.rating}{r.attempt > 1 ? ` · attempt ${r.attempt}` : ""} · {fmtDate(r.date)}{r.examiner ? " · " + r.examiner : ""}</small>{r.notes && <small>{r.notes}</small>}</span>
-            </Link>
+              <Link to={"/students/" + r.studentId} className="crt crlink"><b>{r.studentName}</b><small>{r.rating}{r.attempt > 1 ? ` · attempt ${r.attempt}` : ""} · {fmtDate(r.date)}{r.examiner ? " · " + r.examiner : ""}</small>{r.notes && <small>{r.notes}</small>}</Link>
+              <button className="btn sm" onClick={() => setEditing(r)}>Edit</button>
+            </div>
           ))}
         </section>
       )}
       {adding && <CheckrideModal students={students} onClose={() => setAdding(false)} />}
+      {editing && <CheckrideModal students={students} initial={students.find((x) => x.id === editing.studentId)} edit={editing} onClose={() => setEditing(null)} />}
     </div>
   );
 }
