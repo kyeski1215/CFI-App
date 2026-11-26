@@ -683,3 +683,17 @@ h3:has(> .ichip), .row:has(> h3 > .ichip) h3 { display: inline-flex; align-items
 .kindtabs { display: flex; width: 100%; margin-bottom: 10px; }
 .kindtabs .chip { flex: 1; font-size: 14px; padding: 8px 12px; }
 .kindtabs .chip .muted { font-weight: 500; margin-left: 4px; }
+
+/* reg logger: the selection card floats above the tab bar instead of a full-width bar under it */
+.regout { left: 12px; right: 12px; bottom: calc(86px + env(safe-area-inset-bottom)); border: 0; border-radius: 22px; box-shadow: var(--shadow-float); padding: 12px 14px; background: var(--surface); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .regout { box-shadow: 0 0 0 .5px var(--line), var(--shadow-float); } }
+:root[data-theme="dark"] .regout { box-shadow: 0 0 0 .5px var(--line), var(--shadow-float); }
+@media (min-width: 900px) { .regout { left: 236px; right: 16px; bottom: 16px; } }
+.regout .in { gap: 10px; }
+.regtext { min-height: 0; max-height: 18vh; border: 0; background: var(--fill); border-radius: 12px; }
+.regout .row.nowrap { flex-wrap: nowrap; }
+.regstudent { flex: 1; min-width: 0; }
+.regout .seg { margin: 0; }
+.seg { border: 0; border-radius: 10px; background: var(--fill); padding: 2px; gap: 0; }
+.seg button { background: none; border-radius: 8px; min-height: 32px; font-size: 13px; color: var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--seg-on); color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }

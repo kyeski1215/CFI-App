@@ -46,7 +46,7 @@ export default function RegLogger() {
   };
 
   return (
-    <div className="page" style={{ paddingBottom: 200 }}>
+    <div className="page" style={{ paddingBottom: sel.size ? 300 : 24 }}>
       <header className="page-head">
         <div>
           <h1>Logbook Reg Logger</h1>
@@ -93,33 +93,37 @@ export default function RegLogger() {
       })}
       <p className="muted small">Paragraph numbers checked against the eCFR (14 CFR Part 61), Nov 2026. Regs change — spot-check at <a href="https://www.ecfr.gov/current/title-14/chapter-I/subchapter-D/part-61" target="_blank" rel="noreferrer">ecfr.gov</a>.</p>
 
-      <div className="regout">
-        <div className="in">
-          <div className="row">
-            <div className="seg">
-              <button aria-pressed={fmt === "compact"} onClick={() => setFmt("compact")}>Compact</button>
-              <button aria-pressed={fmt === "full"} onClick={() => setFmt("full")}>With names</button>
+      {sel.size > 0 && (
+        <div className="regout" role="region" aria-label="Selected regs">
+          <div className="in">
+            <div className="row">
+              <b className="small">{sel.size} selected</b>
+              <span className="spacer" />
+              <div className="seg">
+                <button aria-pressed={fmt === "compact"} onClick={() => setFmt("compact")}>Compact</button>
+                <button aria-pressed={fmt === "full"} onClick={() => setFmt("full")}>With names</button>
+              </div>
             </div>
-            <select value={studentId} onChange={(e) => setStudentId(e.target.value)} style={{ flex: "1 1 160px", maxWidth: 260, fontSize: 14 }} aria-label="Student">
-              <option value="">No student</option>
-              {[...students].sort((a, b) => a.name.localeCompare(b.name)).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-            <span className="spacer" />
-            <span className="small muted">{sel.size} selected</span>
-          </div>
-          <div className={"regtext" + (text ? "" : " empty-t")}>{text || "Nothing selected yet"}</div>
-          <div className="row">
-            <button className="btn primary" style={{ flex: 1 }} disabled={!text} onClick={() => copy(text)}>Copy</button>
-            {student && (
-              <button className="btn blue" disabled={!text}
-                onClick={() => nav(`/students/${student.id}?tab=Log&regs=${encodeURIComponent(formatRegs([...sel.values()], "compact"))}`)}>
-                Add to {student.name.split(" ")[0]}'s log
-              </button>
-            )}
-            <button className="btn" onClick={() => setSel(new Map())}>Clear</button>
+            <div className="regtext">{text}</div>
+            <div className="row nowrap">
+              <select value={studentId} onChange={(e) => setStudentId(e.target.value)} aria-label="Student" className="regstudent">
+                <option value="">No student</option>
+                {[...students].sort((a, b) => a.name.localeCompare(b.name)).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <button className="btn" onClick={() => setSel(new Map())}>Clear</button>
+            </div>
+            <div className="row nowrap">
+              <button className="btn primary" style={{ flex: 1 }} onClick={() => copy(text)}>Copy</button>
+              {student && (
+                <button className="btn primary" style={{ flex: 1 }}
+                  onClick={() => nav(`/students/${student.id}?tab=Log&regs=${encodeURIComponent(formatRegs([...sel.values()], "compact"))}`)}>
+                  Add to {student.name.split(" ")[0]}'s log
+                </button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
