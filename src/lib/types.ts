@@ -91,6 +91,7 @@ export interface Ride extends BaseRec {
   sections: Record<string, { note?: string; grade?: Grade }>;
   result?: string;
   overall?: string;
+  text?: string; // the debrief text for the student
 }
 
 export interface Resource extends BaseRec {

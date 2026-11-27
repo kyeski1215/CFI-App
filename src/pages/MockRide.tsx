@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { Bar, useCopy } from "../components/ui";
 import { BANKS, GRADE_LABEL, KINDS, RESULTS, useFullBank, type Question } from "../lib/banks";
 import { fmtDate, put, remove, useCollection, useRecord } from "../lib/store";
+import { mockText } from "../lib/mockText";
+import { firstName, smsHref, type TextMode } from "../lib/studentText";
 import type { Grade, Ride, Student } from "../lib/types";
 
 const GRADES: Grade[] = ["S", "W", "U"];
@@ -79,7 +81,7 @@ export default function MockRide() {
             {student ? <Link to={"/students/" + student.id}>{student.name}</Link> : r.student || "No student"} · {fmtDate(r.date)}
           </div>
         </div>
-        <button className="btn" onClick={() => copy(debrief(), "Debrief copied")}>Copy debrief</button>
+        <button className="btn" onClick={() => copy(debrief(), "Grading sheet copied")}>Copy grading sheet</button>
       </header>
 
       <details className="fold" open={graded === 0}>
@@ -185,9 +187,11 @@ export default function MockRide() {
             </>
           )}
           <span className="spacer" />
-          <button className="btn primary" onClick={() => copy(debrief(), "Debrief copied")}>Copy debrief</button>
+          <button className="btn" onClick={() => copy(debrief(), "Grading sheet copied")}>Copy grading sheet</button>
         </div>
       </section>
+
+      <MockTextCard r={r} bank={bank} student={student} update={update} />
     </div>
   );
 }
@@ -224,5 +228,51 @@ function QuestionRow({ q, grade, note, showKey, onGrade, onNote }: {
         <textarea placeholder="What they said / what to re-brief…" value={note} onChange={(e) => onNote(e.target.value)} autoFocus={noteOpen && !note} />
       )}
     </div>
+  );
+}
+
+/** The debrief text for the student, built from the grades, your notes and the result. */
+function MockTextCard({ r, bank, student, update }: { r: Ride; bank: NonNullable<ReturnType<typeof useFullBank>>; student?: Student; update: (p: Partial<Ride>) => void }) {
+  const copy = useCopy();
+  const read = (k: string, d: string) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
+  const [mode, setMode] = useState<TextMode>(() => (read("cfi.v1.mocktextmode", "full") === "short" ? "short" : "full"));
+  const [answers, setAnswers] = useState(() => read("cfi.v1.mockanswers", "0") === "1");
+  const save = (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* private mode */ } };
+  const name = firstName(student?.name ?? r.student ?? "");
+  const graded = Object.keys(r.grades).length > 0 || !!r.overall?.trim() || !!r.result;
+  const make = () => update({ text: mockText(r, bank, student, { mode, answers }) });
+  return (
+    <section className="card txtbox">
+      <div className="row">
+        <h3>Text for {name || "the student"}</h3>
+        <span className="spacer" />
+        <div className="seg" role="radiogroup" aria-label="Text length">
+          {(["short", "full"] as const).map((m) => (
+            <button key={m} type="button" role="radio" aria-checked={mode === m} aria-pressed={mode === m} onClick={() => { setMode(m); save("cfi.v1.mocktextmode", m); }}>{m === "short" ? "Short" : "Full"}</button>
+          ))}
+        </div>
+      </div>
+      {mode === "full" && (
+        <label className="check" style={{ borderBottom: 0, padding: 0 }}>
+          <input type="checkbox" checked={answers} onChange={(e) => { setAnswers(e.target.checked); save("cfi.v1.mockanswers", e.target.checked ? "1" : "0"); }} />
+          <span className="ct"><span>Include the answers</span><small>Adds the answer key under each question they missed. Makes the text much longer.</small></span>
+        </label>
+      )}
+      <div className="row">
+        <button className="btn primary" disabled={!graded} title={graded ? "" : "Grade some questions first"} onClick={make}>{r.text ? "Redo text" : "Make text"}</button>
+        {!graded && <span className="small muted">Grade some questions or pick a result first.</span>}
+      </div>
+      {r.text !== undefined && (
+        <>
+          <textarea style={{ minHeight: 220 }} value={r.text} onChange={(e) => update({ text: e.target.value })} aria-label={`Text for ${name}`} />
+          <div className="row">
+            <button className="btn primary sm" onClick={() => copy(r.text ?? "", "Text copied")}>Copy text</button>
+            {student?.contact && <a className="btn sm" href={smsHref(student.contact, r.text ?? "")}>Open in Messages</a>}
+            <span className="spacer" />
+            <button className="btn ghost sm" onClick={() => update({ text: undefined })}>Remove text</button>
+          </div>
+        </>
+      )}
+    </section>
   );
 }
