@@ -80,6 +80,7 @@ export interface Ride extends BaseRec {
   bank: string;
   studentId?: string;
   student: string; // display name (kept for rides imported without an id)
+  contact?: string; // phone, for a student who isn't on your roster
   date: string;
   kind: string;
   prep?: string;

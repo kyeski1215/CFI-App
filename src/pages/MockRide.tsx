@@ -78,7 +78,7 @@ export default function MockRide() {
           <Link to="/mocks" className="small">← Mock checkrides</Link>
           <h1 style={{ marginTop: 6 }}>{bank.name}</h1>
           <div className="muted small">
-            {student ? <Link to={"/students/" + student.id}>{student.name}</Link> : r.student || "No student"} · {fmtDate(r.date)}
+            {student ? <Link to={"/students/" + student.id}>{student.name}</Link> : r.student ? r.student + " (not on roster)" : "No student"} · {fmtDate(r.date)}
           </div>
         </div>
         <button className="btn" onClick={() => copy(debrief(), "Grading sheet copied")}>Copy grading sheet</button>
@@ -88,14 +88,21 @@ export default function MockRide() {
         <summary><span className="ft">Checkride details</span><span className="small muted">{r.kind}{r.examiner ? ` · ${r.examiner} style` : ""}</span></summary>
         <div className="fb fields">
           <label className="f">Student
-            <select value={r.studentId ?? ""} onChange={(e) => {
+            <select value={r.studentId ?? "__other"} onChange={(e) => {
+              if (e.target.value === "__other") return update({ studentId: undefined });
               const s = students.find((x) => x.id === e.target.value);
               update({ studentId: s?.id, student: s?.name ?? "" });
             }}>
-              <option value="">{r.student && !r.studentId ? r.student + " (not on roster)" : "— None —"}</option>
+              <option value="__other">Not on my roster</option>
               {[...students].sort((a, b) => a.name.localeCompare(b.name)).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </label>
+          {!r.studentId && (
+            <>
+              <label className="f">Their name<input value={r.student ?? ""} onChange={(e) => update({ student: e.target.value })} placeholder="Name" /></label>
+              <label className="f">Phone (optional)<input type="tel" value={r.contact ?? ""} onChange={(e) => update({ contact: e.target.value })} placeholder="For texting the debrief" /></label>
+            </>
+          )}
           <label className="f">Date<input type="date" value={r.date} onChange={(e) => update({ date: e.target.value })} /></label>
           <label className="f">Type
             <select value={r.kind} onChange={(e) => update({ kind: e.target.value })}>{KINDS.map((k) => <option key={k}>{k}</option>)}</select>
@@ -267,7 +274,7 @@ function MockTextCard({ r, bank, student, update }: { r: Ride; bank: NonNullable
           <textarea style={{ minHeight: 220 }} value={r.text} onChange={(e) => update({ text: e.target.value })} aria-label={`Text for ${name}`} />
           <div className="row">
             <button className="btn primary sm" onClick={() => copy(r.text ?? "", "Text copied")}>Copy text</button>
-            {student?.contact && <a className="btn sm" href={smsHref(student.contact, r.text ?? "")}>Open in Messages</a>}
+            {(student?.contact || r.contact) && <a className="btn sm" href={smsHref(student?.contact || r.contact || "", r.text ?? "")}>Open in Messages</a>}
             <span className="spacer" />
             <button className="btn ghost sm" onClick={() => update({ text: undefined })}>Remove text</button>
           </div>

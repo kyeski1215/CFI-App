@@ -145,6 +145,8 @@ function NewMock({ students, onClose }: { students: Student[]; onClose: () => vo
   const [kind, setKind] = useState(KINDS[0]);
   const [examiner, setExaminer] = useState("");
   const [date, setDate] = useState(todayStr());
+  const [otherName, setOtherName] = useState("");
+  const [otherPhone, setOtherPhone] = useState("");
   const sorted = [...students].sort((a, b) => a.name.localeCompare(b.name));
   return (
     <Modal title="New mock checkride" onClose={onClose}>
@@ -154,7 +156,7 @@ function NewMock({ students, onClose }: { students: Student[]; onClose: () => vo
           e.preventDefault();
           const s = students.find((x) => x.id === studentId);
           const r = create<Ride>("rides", {
-            bank, studentId: s?.id, student: s?.name ?? "", date, kind, examiner,
+            bank, studentId: s?.id, student: s?.name ?? (studentId === "__other" ? otherName.trim() : ""), contact: studentId === "__other" ? otherPhone.trim() || undefined : undefined, date, kind, examiner,
             aircraft: s?.aircraft, route: BANKS[bank].route, prep: s?.goal,
             grades: {}, qnotes: {}, sections: {},
           });
@@ -168,9 +170,16 @@ function NewMock({ students, onClose }: { students: Student[]; onClose: () => vo
             if (s) setBank(bankForGoal(s.goal));
           }}>
             <option value="">— None —</option>
+            <option value="__other">Someone not on my roster…</option>
             {sorted.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </label>
+        {studentId === "__other" && (
+          <>
+            <label className="f">Their name<input autoFocus required value={otherName} onChange={(e) => setOtherName(e.target.value)} placeholder="e.g. another CFI's student" /></label>
+            <label className="f">Phone (optional)<input type="tel" value={otherPhone} onChange={(e) => setOtherPhone(e.target.value)} placeholder="For texting the debrief" /></label>
+          </>
+        )}
         <label className="f">Checkride
           <select value={bank} onChange={(e) => { setBank(e.target.value); setExaminer(""); }}>
             {BANK_IDS.map((b) => <option key={b} value={b}>{BANKS[b].name}</option>)}
