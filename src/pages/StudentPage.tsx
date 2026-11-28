@@ -8,6 +8,7 @@ import BriefingCard from "../components/BriefingCard";
 import StudentActivityCard from "../components/StudentActivityCard";
 import CheckrideModal from "../components/CheckrideModal";
 import PlanEditor from "../components/PlanEditor";
+import NoteSegments, { SegNotes, rememberSegs } from "../components/NoteSegments";
 import { hoursProgress, type ReqRow } from "../lib/hours";
 import { useSharedFleet, useSync } from "../lib/sync";
 import { buildBriefing, briefingText } from "../lib/briefing";
@@ -535,12 +536,12 @@ function LastLesson({ e }: { e: LogEntry }) {
   const [more, setMore] = useState(false);
   const facts = [fmtDate(e.date), e.kind === "ground" ? "Ground" : e.tail, e.hrs && e.hrs + " hr", e.night && e.night + " night",
     (e.ldgDay || e.ldgNight) && `${e.ldgDay || 0}/${e.ldgNight || 0} ldg`].filter(Boolean);
-  const long = (e.notes ?? "").length > 220;
+  const long = (e.notes ?? "").length > 220 || (e.segs?.filter((g) => g.text.trim()).length ?? 0) > 3;
   return (
     <div className="lastlesson">
       <div className="mono small muted">{facts.join(" · ")}</div>
       {e.lesson && <b>{e.lesson}</b>}
-      {e.notes && <p className={more ? "" : "clamp3"}>{e.notes}</p>}
+      <SegNotes e={e} clamp={!more} />
       {long && <button className="linkbtn" onClick={() => setMore(!more)}>{more ? "Show less" : "Show more"}</button>}
       {e.regs && <div className="regs">{e.regs}</div>}
     </div>
@@ -650,7 +651,7 @@ function Log({ s, update, prefillRegs }: P & { prefillRegs: string }) {
           onGrade={(key, m, p) => update({ ...setGuideMark(s, key, m), ...(p ? { logDraft: { ...draft, ...p } } : {}) })}
           title="New lesson"
           onChange={(p) => update({ logDraft: { ...draft, ...p } })}
-          primary={{ label: "Save to log", run: () => update({ log: [...(s.log ?? []), draft], logDraft: undefined }) }}
+          primary={{ label: "Save to log", run: () => { rememberSegs(draft.segs); update({ log: [...(s.log ?? []), draft], logDraft: undefined }); } }}
           remove={{ label: "Discard draft", confirm: "Discard this draft? What you typed will be deleted.", run: () => update({ logDraft: undefined }), skipConfirm: isBlank(draft) }}
           note="Draft saved automatically. It stays here until you save it to the log or discard it."
         />
@@ -685,7 +686,7 @@ function Log({ s, update, prefillRegs }: P & { prefillRegs: string }) {
                 </b>
                 <span className="mono muted">{fmtDate(e.date)}{e.tail ? " · " + e.tail : ""}{e.hrs ? " · " + e.hrs + " hr" : ""}{e.night ? ` (${e.night} night)` : ""}{e.ldgDay || e.ldgNight ? ` · ${e.ldgDay || 0}/${e.ldgNight || 0} ldg` : ""}</span>
               </div>
-              {e.notes && <p>{e.notes}</p>}
+              <SegNotes e={e} />
               <RatingChips ratings={e.ratings} />
               {e.regs && <div className="regs">{e.regs}</div>}
               <div className="row">
@@ -845,7 +846,9 @@ function EntryForm({ e, student, skills, title, onChange, primary, remove, note,
         )}
         <label className="f full">Lesson<input value={e.lesson ?? ""} placeholder="e.g. Pattern & Normal Landings" onChange={(ev) => set({ lesson: ev.target.value })} /></label>
         {onGrade && <SyllabusGrader s={student} e={e} set={set} onGrade={onGrade} />}
-        <label className="f full">Notes / debrief<textarea style={{ minHeight: 140 }} value={e.notes ?? ""} onChange={(ev) => set({ notes: ev.target.value })} /></label>
+        {e.kind === "flight"
+          ? <NoteSegments e={e} set={set} />
+          : <label className="f full">Notes / debrief<textarea style={{ minHeight: 140 }} value={e.notes ?? ""} onChange={(ev) => set({ notes: ev.target.value, segs: undefined })} /></label>}
         <SkillRater goal={student.goal} skills={skills} ratings={e.ratings ?? {}} onChange={(ratings) => set({ ratings })} />
         <StudentTextBox s={student} e={e} onText={(text) => set({ text })} />
         <label className="f full">Regs (from the Reg Logger)<input className="mono" value={e.regs ?? ""} onChange={(ev) => set({ regs: ev.target.value })} /></label>

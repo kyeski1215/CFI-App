@@ -43,14 +43,18 @@ export function studentText(s: Student, e: LogEntry, mode: TextMode = "full") {
   const work = rated.filter(([, r]) => r === "work").map(([k]) => k);
 
   // Tie each note sentence to the first rated skill it talks about (things to work on first).
-  const sentences = noteSentences(e.notes ?? "");
+  // With notes by part of the flight, the section name helps find the skill ("Landing 2" → landings),
+  // and a sentence that isn't about a rated skill keeps its section name so it still makes sense.
+  const segs = e.kind === "flight" ? e.segs?.filter((g) => g.text.trim()) : undefined;
+  const pieces = segs?.length
+    ? segs.flatMap((g) => noteSentences(g.text).map((sen) => ({ sen, about: g.label, low: (g.label + " " + sen).toLowerCase() })))
+    : noteSentences(e.notes ?? "").map((sen) => ({ sen, about: "", low: sen.toLowerCase() }));
   const tied = new Map<string, string[]>();
   const loose: string[] = [];
-  for (const sen of sentences) {
-    const low = sen.toLowerCase();
+  for (const { sen, about, low } of pieces) {
     const hit = [...work, ...good].find((k) => (tipFor(k).keys ?? []).some((w) => low.includes(w)));
     if (hit) tied.set(hit, [...(tied.get(hit) ?? []), sen]);
-    else loose.push(sen);
+    else loose.push(about && !/^(overall|notes|general)$/i.test(about) ? `${about}: ${sen}` : sen);
   }
 
   const where = `${e.tail ? ` in ${e.tail}` : ""}${facts.length ? ` (${facts.join(", ")})` : ""}`;
@@ -81,7 +85,7 @@ export function studentText(s: Student, e: LogEntry, mode: TextMode = "full") {
   }
 
   if (mode === "full" && loose.length) parts.push((good.length || work.length ? "Also: " : "") + loose.join(" "));
-  if (mode === "short" && !good.length && !work.length && sentences.length) parts.push(sentences.slice(0, 2).join(" "));
+  if (mode === "short" && !good.length && !work.length && loose.length) parts.push(loose.slice(0, 2).join(" "));
 
   if (mode === "full") {
     const chair = work.map((k) => tipFor(k).chair).filter(Boolean).slice(0, 2) as string[];

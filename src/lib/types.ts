@@ -2,6 +2,9 @@ import type { BaseRec } from "./store";
 
 export type Grade = "S" | "W" | "U";
 
+/** One part of a flight in the lesson notes: "Engine start", "Approach 2", "Landing 3"… */
+export interface NoteSeg { id: string; label: string; text: string }
+
 export interface LogEntry {
   /** Plan key of the syllabus lesson this entry was graded against, e.g. "p1.s1-emergencies". */
   syl?: string;
@@ -19,7 +22,8 @@ export interface LogEntry {
   approaches?: string; // instrument approaches flown
   prep?: boolean; // training in preparation for the practical test (61.109(a)(4), 61.65(d)(2)(i), 61.129(a)(3)(v))
   lesson?: string;
-  notes?: string;
+  notes?: string; // for flights with segs, rebuilt from them ("Taxi: …" lines)
+  segs?: NoteSeg[]; // notes by part of the flight
   regs?: string; // reg line copied from the Reg Logger
   ratings?: Record<string, "good" | "work">; // ✓ / ✗ per skill flown this lesson
   text?: string; // message sent to the student about this lesson

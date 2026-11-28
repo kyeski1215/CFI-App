@@ -847,3 +847,25 @@ h3:has(> .ichip), .row:has(> h3 > .ichip) h3 { display: inline-flex; align-items
 .irow.guest .t1 { color: var(--muted); }
 .av.guestav { --s: 40px; background: transparent !important; color: var(--muted) !important; border: 1.5px dashed var(--chev); }
 .guestnote { background: var(--fill); border-radius: 12px; padding: 8px 12px; color: var(--muted); }
+
+/* Lesson notes by part of the flight */
+.segs { display: flex; flex-direction: column; gap: 6px; }
+.seg { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 6px 8px 4px 12px; display: flex; flex-direction: column; }
+.seg.on { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.seg:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
+.seghead { display: flex; align-items: center; gap: 4px; }
+.seg .seglabel { flex: 1; min-width: 0; border: 0 !important; background: transparent !important; padding: 2px 0 !important; border-radius: 0 !important; font-weight: 700; font-size: 13px !important; box-shadow: none; outline: none; color: var(--ink); }
+.segtools { display: flex; gap: 0; opacity: .5; }
+.seg:focus-within .segtools { opacity: 1; }
+.segtools button { width: 30px; height: 26px; border: 0; background: transparent; color: var(--muted); font-size: 14px; border-radius: 8px; display: grid; place-items: center; }
+.segtools button:disabled { opacity: .3; }
+.seg textarea { border: 0 !important; background: transparent !important; padding: 0 0 4px !important; border-radius: 0 !important; min-height: 26px; resize: none; box-shadow: none; outline: none; overflow: hidden; font-size: 15px; line-height: 1.4; }
+.segadd { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.segadd.more { padding: 8px; border-radius: 12px; background: var(--fill); }
+.segadd .chip:disabled { opacity: .4; }
+.segnotes { margin: 0; display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+.segnotes div { display: flex; gap: 8px; }
+.segnotes dt { font-weight: 700; color: var(--ink); flex: 0 0 auto; min-width: 92px; }
+.segnotes dd { margin: 0; color: var(--muted); white-space: pre-line; overflow-wrap: anywhere; }
+.segnotes.clamp div:nth-child(n+4) { display: none; }
+@media (max-width: 420px) { .segnotes div { flex-direction: column; gap: 0; } }
