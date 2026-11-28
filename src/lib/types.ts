@@ -63,6 +63,9 @@ export interface Student extends BaseRec {
   guideMarks?: Record<string, { m: "Y" | "R"; d: string }>;
   /** 2 = progress carried over to the named-lesson Private Pilot syllabus. */
   pplPlan?: number;
+  /** Another CFI's student you fly with now and then: shown separately and left out of your roster counts. */
+  guest?: boolean;
+  guestCfi?: string; // their instructor
   checkrides?: Checkride[];
   /** Your replies to the student's in-app questions (published on their card). */
   qReplies?: Record<string, { text: string; at: string; inPerson?: boolean }>;

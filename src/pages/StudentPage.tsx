@@ -76,6 +76,7 @@ export default function StudentPage() {
         <Link className="btn sm" to={`/preview/${s.id}`}>Preview as student</Link>
       </div>
       <ProfileHeader s={s} />
+      {s.guest && <div className="guestnote small">Not your student{s.guestCfi ? ` · ${s.guestCfi}'s student` : ""}. Log lessons and notes here; they stay out of your roster numbers.</div>}
       <div className="pbtns">
         <button className="btn primary" onClick={() => {
           if (!s.logDraft) update({ logDraft: blankEntry() });
@@ -571,6 +572,11 @@ function ProfileEditor({ s, update, onDelete, onDone }: P & { onDelete: () => vo
           <Field s={s} update={update} k="contact" label="Phone" type="tel" />
           <Field s={s} update={update} k="email" label="Email" type="email" />
           <Field s={s} update={update} k="coInstructors" label="Other instructors" full />
+          <label className="check full" style={{ borderBottom: 0 }}>
+            <input type="checkbox" checked={!!s.guest} onChange={(e) => update({ guest: e.target.checked || undefined })} />
+            <span className="ct"><span>Not my student</span><small>Another CFI's student you fly with now and then. Listed separately and left out of your roster numbers.</small></span>
+          </label>
+          {s.guest && <Field s={s} update={update} k="guestCfi" label="Their CFI" full />}
           <label className="f">Strengths
             <textarea value={s.strengths ?? ""} onChange={(e) => update({ strengths: e.target.value })} />
           </label>

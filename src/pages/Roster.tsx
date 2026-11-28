@@ -55,7 +55,7 @@ export default function Roster() {
       return total ? done / total : 0;
     };
     const days = (s: Student) => recency(s) ?? 9999;
-    const list = [...students];
+    const list = students.filter((s) => !s.guest);
     const byName = (a: Student, b: Student) => a.name.localeCompare(b.name);
     if (sortBy === "recent") list.sort((a, b) => days(a) - days(b) || byName(a, b));
     else if (sortBy === "overdue") list.sort((a, b) => days(b) - days(a) || byName(a, b));
@@ -63,6 +63,7 @@ export default function Roster() {
     else list.sort(byName);
     return list;
   }, [students, sortBy]);
+  const guests = students.filter((s) => s.guest && (!q || s.name.toLowerCase().includes(q.toLowerCase()))).sort((a, b) => (recency(a) ?? 9999) - (recency(b) ?? 9999));
   const active = sorted.filter(isActive);
   const overdue = active.filter((s) => (recency(s) ?? 999) >= OVERDUE_DAYS);
   const ready = active.filter((s) => ["Stage check", "Checkride ready"].includes(s.status));
@@ -180,6 +181,29 @@ export default function Roster() {
         )}
       </section>
 
+      {guests.length > 0 && (
+        <section className="list">
+          <div className="ghdr"><span>Not my students · {guests.length}</span></div>
+          <div className="rows guestrows">
+            {guests.map((s) => {
+              const d = recency(s);
+              return (
+                <Link key={s.id} to={"/students/" + s.id} className="irow guest">
+                  <span className="av guestav" aria-hidden="true">{s.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>
+                  <span className="ibody">
+                    <span className="itext">
+                      <span className="t1">{s.name || "Unnamed"}</span>
+                      <span className="t2">{s.guestCfi ? s.guestCfi + "'s student" : "Another CFI's student"}{d != null ? ` · flew ${d === 0 ? "today" : d + "d ago"}` : ""}</span>
+                    </span>
+                    <Chevron />
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {adding && <AddStudent onClose={() => setAdding(false)} />}
     </div>
   );
@@ -189,6 +213,8 @@ function AddStudent({ onClose }: { onClose: () => void }) {
   const nav = useNavigate();
   const [name, setName] = useState("");
   const [goal, setGoal] = useState(GOALS[0]);
+  const [guest, setGuest] = useState(false);
+  const [cfi, setCfi] = useState("");
   return (
     <Modal title="Add student" onClose={onClose}>
       <form
@@ -196,11 +222,17 @@ function AddStudent({ onClose }: { onClose: () => void }) {
         onSubmit={(e) => {
           e.preventDefault();
           if (!name.trim()) return;
-          const s = create<Student>("students", { name: name.trim(), goal, status: STATUSES[0][0], log: [], avail: [], covered: [] });
-          nav("/students/" + s.id);
+          const s = create<Student>("students", { name: name.trim(), goal, status: STATUSES[0][0], log: [], avail: [], covered: [], ...(guest ? { guest: true, guestCfi: cfi.trim() || undefined } : {}) });
+          nav("/students/" + s.id + (guest ? "?tab=Log" : ""));
         }}
       >
+        <div className="full chips kindtabs" role="radiogroup" aria-label="Whose student">
+          <button type="button" role="radio" className="chip" aria-checked={!guest} aria-pressed={!guest} onClick={() => setGuest(false)}>My student</button>
+          <button type="button" role="radio" className="chip" aria-checked={guest} aria-pressed={guest} onClick={() => setGuest(true)}>Another CFI's student</button>
+        </div>
+        {guest && <div className="full small muted">For a flight you're covering. They're listed separately under "Not my students" and don't count in your roster numbers.</div>}
         <label className="f full">Name<input autoFocus value={name} onChange={(e) => setName(e.target.value)} required /></label>
+        {guest && <label className="f full">Their CFI (optional)<input value={cfi} onChange={(e) => setCfi(e.target.value)} placeholder="e.g. Alex Morgan" /></label>}
         <label className="f full">Training for
           <select value={goal} onChange={(e) => setGoal(e.target.value)}>{GOALS.map((g) => <option key={g}>{g}</option>)}</select>
         </label>

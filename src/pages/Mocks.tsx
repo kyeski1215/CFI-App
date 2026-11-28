@@ -23,7 +23,7 @@ function RealCheckrides({ tabs }: { tabs: React.ReactNode }) {
   const students = useCollection<Student>("students");
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<CheckrideRow | null>(null);
-  const rows = allCheckrides(students);
+  const rows = allCheckrides(students.filter((x) => !x.guest)); // other CFIs' students don't count toward your record
   const st = checkrideStats(rows);
   return (
     <div className="page">

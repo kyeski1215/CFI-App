@@ -843,3 +843,7 @@ h3:has(> .ichip), .row:has(> h3 > .ichip) h3 { display: inline-flex; align-items
 .previewbar .btn { background: var(--bg); color: var(--ink); box-shadow: none; }
 .kindtabs a.chip { text-align: center; text-decoration: none; }
 .kindtabs a.chip.on { background: var(--seg-on); font-weight: 600; box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+.guestrows { background: transparent; box-shadow: none; border: 1.5px dashed var(--line); }
+.irow.guest .t1 { color: var(--muted); }
+.av.guestav { --s: 40px; background: transparent !important; color: var(--muted) !important; border: 1.5px dashed var(--chev); }
+.guestnote { background: var(--fill); border-radius: 12px; padding: 8px 12px; color: var(--muted); }
